@@ -3,27 +3,21 @@ import { LayoutDashboard, Film, FileText, MonitorPlay, LogOut, Settings, Hash, M
 import { getAuthToken } from '../../lib/api';
 
 export default function AdminLayout() {
-  const token = getAuthToken();
   const location = useLocation();
 
-  if (!token) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    window.location.href = '/admin/login';
+  const handleLogout = async () => {
+    window.location.href = '/';
   };
 
   const navLinks = [
-    { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
-    { to: '/admin/programs', icon: Film, label: 'Programe Live' },
-    { to: '/admin/shows', icon: MonitorPlay, label: 'Emisiuni (VOD)' },
-    { to: '/admin/news', icon: FileText, label: 'Știri / Articole' },
-    { to: '/admin/tv-schedule', icon: CalendarClock, label: 'Program TV' },
-    { to: '/admin/categories', icon: Hash, label: 'Categorii Ştiri' },
-    { to: '/admin/comments', icon: MessageSquare, label: 'Comentarii' },
-    { to: '/admin/settings', icon: Settings, label: 'Setări Site' },
+    { to: '/adminadmin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+    { to: '/adminadmin/programs', icon: Film, label: 'Programe Live' },
+    { to: '/adminadmin/shows', icon: MonitorPlay, label: 'Emisiuni (VOD)' },
+    { to: '/adminadmin/news', icon: FileText, label: 'Știri / Articole' },
+    { to: '/adminadmin/tv-schedule', icon: CalendarClock, label: 'Program TV' },
+    { to: '/adminadmin/categories', icon: Hash, label: 'Categorii Ştiri' },
+    { to: '/adminadmin/comments', icon: MessageSquare, label: 'Comentarii' },
+    { to: '/adminadmin/settings', icon: Settings, label: 'Setări Site' },
   ];
 
   return (

@@ -53,7 +53,7 @@ export default function ShowEditor() {
       } else {
         await api.createShow(formData);
       }
-      navigate('/admin/shows');
+      navigate('/adminadmin/shows');
     } catch (err: any) {
       setError(err.message || 'A apărut o eroare');
       setLoading(false);

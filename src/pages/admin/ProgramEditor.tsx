@@ -66,7 +66,7 @@ export default function ProgramEditor() {
       } else {
         await api.createProgram(payload);
       }
-      navigate('/admin/programs');
+      navigate('/adminadmin/programs');
     } catch (err: any) {
       setError(err.message || 'A apărut o eroare');
       setLoading(false);

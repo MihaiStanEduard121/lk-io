@@ -28,7 +28,7 @@ export default function EpisodeList() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto w-full">
-      <Link to="/admin/shows" className="inline-flex items-center text-zinc-400 hover:text-white mb-6">
+      <Link to="/adminadmin/shows" className="inline-flex items-center text-zinc-400 hover:text-white mb-6">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Înapoi la emisiuni
       </Link>
@@ -39,7 +39,7 @@ export default function EpisodeList() {
           <p className="text-zinc-500 font-medium">Emisiune: {show?.title}</p>
         </div>
         <Link 
-          to={`/admin/shows/${showId}/episodes/new`} 
+          to={`/adminadmin/shows/${showId}/episodes/new`} 
           className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
         >
           <Plus className="w-5 h-5" />
@@ -72,7 +72,7 @@ export default function EpisodeList() {
                 </td>
                 <td className="px-6 py-4 text-right space-x-2">
                   <Link 
-                    to={`/admin/shows/${showId}/episodes/${p.id}`} 
+                    to={`/adminadmin/shows/${showId}/episodes/${p.id}`} 
                     className="inline-flex p-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md hover:bg-blue-500/20 transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />

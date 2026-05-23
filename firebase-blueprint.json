@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "Program": {
+      "title": "Programs",
+      "description": "Live TV Programs",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "url": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "banner": { "type": "string" },
+        "views": { "type": "number" },
+        "rating": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "Article": {
+      "title": "Articles",
+      "description": "News articles",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "content": { "type": "string" },
+        "coverImage": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "published"] },
+        "author": { "type": "string" },
+        "publishedAt": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "isBreakingNews": { "type": "boolean" },
+        "views": { "type": "number" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "Category": {
+      "title": "Categories",
+      "description": "Article categories",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" }
+      }
+    },
+    "Comment": {
+      "title": "Comments",
+      "description": "Comments on articles",
+      "type": "object",
+      "properties": {
+        "articleId": { "type": "string" },
+        "author": { "type": "string" },
+        "content": { "type": "string" },
+        "approved": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "Schedule": {
+      "title": "Schedule",
+      "description": "TV Schedule items",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "Homepage": {
+      "title": "Homepage configuration",
+      "description": "Settings for the homepage hero",
+      "type": "object",
+      "properties": {
+        "heroTitle": { "type": "string" },
+        "heroSubtitle": { "type": "string" },
+        "heroBackgroundImage": { "type": "string" }
+      }
+    },
+    "Show": {
+      "title": "Shows",
+      "description": "VOD Shows",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "coverImage": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "Episode": {
+      "title": "Episodes",
+      "description": "Episodes grouped by show",
+      "type": "object",
+      "properties": {
+        "showId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "seasonNumber": { "type": "number" },
+        "episodeNumber": { "type": "number" },
+        "duration": { "type": "number" },
+        "createdAt": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "programs": { "schema": { "$ref": "#/entities/Program" }, "description": "Collection of TV Programs" },
+    "articles": { "schema": { "$ref": "#/entities/Article" }, "description": "Collection of News Articles" },
+    "categories": { "schema": { "$ref": "#/entities/Category" }, "description": "Article categories" },
+    "comments": { "schema": { "$ref": "#/entities/Comment" }, "description": "Comments on articles" },
+    "schedule": { "schema": { "$ref": "#/entities/Schedule" }, "description": "TV Program Schedule" },
+    "shows": { "schema": { "$ref": "#/entities/Show" }, "description": "VOD Shows" },
+    "episodes": { "schema": { "$ref": "#/entities/Episode" }, "description": "Show Episodes" },
+    "settings": { "schema": { "$ref": "#/entities/Homepage" }, "description": "Homepage settings, use 'homepage' doc" },
+    "admins": {
+      "schema": { "title": "Admins", "description": "Admins", "type": "object", "properties": {} },
+      "description": "Authorized administrators"
+    }
+  }
+}

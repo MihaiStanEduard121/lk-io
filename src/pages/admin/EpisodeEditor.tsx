@@ -54,7 +54,7 @@ export default function EpisodeEditor() {
       } else {
         await api.createEpisode(showId!, formData);
       }
-      navigate(`/admin/shows/${showId}/episodes`);
+      navigate(`/adminadmin/shows/${showId}/episodes`);
     } catch (err: any) {
       setError(err.message || 'A apărut o eroare');
       setLoading(false);
@@ -63,7 +63,7 @@ export default function EpisodeEditor() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto w-full">
-      <Link to={`/admin/shows/${showId}/episodes`} className="inline-flex items-center text-zinc-400 hover:text-white mb-6">
+      <Link to={`/adminadmin/shows/${showId}/episodes`} className="inline-flex items-center text-zinc-400 hover:text-white mb-6">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Înapoi la episoade
       </Link>

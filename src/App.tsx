@@ -14,7 +14,6 @@ import ShowsPage from './pages/public/ShowsPage';
 import ShowDetailPage from './pages/public/ShowDetailPage';
 import SearchPage from './pages/public/SearchPage';
 
-import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProgramList from './pages/admin/ProgramList';
 import ProgramEditor from './pages/admin/ProgramEditor';
@@ -47,8 +46,7 @@ export default function App() {
         </Route>
 
         {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/adminadmin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           
           <Route path="programs" element={<ProgramList />} />

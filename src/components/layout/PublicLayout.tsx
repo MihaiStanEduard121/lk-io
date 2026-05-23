@@ -58,7 +58,7 @@ export default function PublicLayout() {
           <Link to="/schedule" className="hover:text-amber-500 font-bold">Program TV</Link>
           <Link to="/shows" className="hover:text-zinc-300">Emisiuni</Link>
           <Link to="/news" className="hover:text-zinc-300">Știri</Link>
-          <Link to="/admin/login" className="hover:text-zinc-300">Admin Panel</Link>
+          <Link to="/adminadmin" className="hover:text-zinc-300">Admin Panel</Link>
         </div>
       </footer>
     </div>

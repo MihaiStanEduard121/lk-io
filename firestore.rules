@@ -1,0 +1,150 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return true; }
+    function isAdmin() { 
+      return true;
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    // --- Programs ---
+    match /programs/{programId} {
+      function isValidProgram(data) {
+        return data.keys().hasAll(['title', 'category', 'status', 'createdAt']) &&
+               data.title is string && data.title.size() <= 200 &&
+               data.category is string && data.category.size() <= 100 &&
+               data.status is string && data.status.size() <= 50 &&
+               data.createdAt is string;
+      }
+
+      allow read: if isValidId(programId);
+      allow list: if true; // Public list
+      allow create: if isAdmin() && isValidProgram(incoming());
+      allow update: if isValidId(programId) && (
+        (isAdmin() && isValidProgram(incoming())) ||
+        // Allow public increment of views
+        (incoming().diff(existing()).affectedKeys().hasOnly(['views']) &&
+         incoming().views == existing().views + 1)
+      );
+      allow delete: if isAdmin() && isValidId(programId);
+    }
+
+    // --- Articles ---
+    match /articles/{articleId} {
+      function isValidArticle(data) {
+        return data.keys().hasAll(['title', 'slug', 'status', 'createdAt']) &&
+               data.title is string && data.title.size() <= 300 &&
+               data.slug is string && data.slug.size() <= 300 &&
+               data.status is string && data.status.size() <= 50 &&
+               data.createdAt is string;
+      }
+
+      allow read: if isValidId(articleId);
+      allow list: if true; // Public list
+      allow create: if isAdmin() && isValidArticle(incoming());
+      allow update: if isValidId(articleId) && (
+        (isAdmin() && isValidArticle(incoming())) ||
+        // Allow public increment of views
+        (incoming().diff(existing()).affectedKeys().hasOnly(['views']) &&
+         incoming().views == existing().views + 1)
+      );
+      allow delete: if isAdmin() && isValidId(articleId);
+    }
+
+    // --- Categories ---
+    match /categories/{categoryId} {
+      function isValidCategory(data) {
+        return data.keys().hasAll(['name', 'slug']) &&
+               data.name is string && data.name.size() <= 100 &&
+               data.slug is string && data.slug.size() <= 100;
+      }
+      allow read, list: if true;
+      allow create: if isAdmin() && isValidCategory(incoming());
+      allow update: if isAdmin() && isValidId(categoryId) && isValidCategory(incoming());
+      allow delete: if isAdmin() && isValidId(categoryId);
+    }
+
+    // --- Comments ---
+    match /comments/{commentId} {
+      function isValidComment(data) {
+        return data.keys().hasAll(['articleId', 'author', 'content', 'approved', 'createdAt']) &&
+               data.articleId is string && data.articleId.size() <= 128 &&
+               data.author is string && data.author.size() <= 100 &&
+               data.content is string && data.content.size() <= 1000 &&
+               data.approved is bool &&
+               data.createdAt is string;
+      }
+      allow list: if true; 
+      
+      allow read: if isAdmin() || (isValidId(commentId) && existing().approved == true);
+      allow create: if isValidComment(incoming()) && incoming().approved == false;
+      allow update: if isAdmin() && isValidId(commentId) && isValidComment(incoming());
+      allow delete: if isAdmin() && isValidId(commentId);
+    }
+
+    // --- Schedule ---
+    match /schedule/{scheduleId} {
+      function isValidSchedule(data) {
+        return data.keys().hasAll(['date', 'time', 'title']) &&
+               data.date is string && data.date.size() <= 50 &&
+               data.time is string && data.time.size() <= 50 &&
+               data.title is string && data.title.size() <= 200;
+      }
+      allow read, list: if true;
+      allow create: if isAdmin() && isValidSchedule(incoming());
+      allow update: if isAdmin() && isValidId(scheduleId) && isValidSchedule(incoming());
+      allow delete: if isAdmin() && isValidId(scheduleId);
+    }
+
+    // --- Shows ---
+    match /shows/{showId} {
+      function isValidShow(data) {
+        return data.keys().hasAll(['title', 'slug', 'createdAt']) &&
+               data.title is string && data.title.size() <= 300 &&
+               data.slug is string && data.slug.size() <= 300 &&
+               data.createdAt is string;
+      }
+      allow read: if isValidId(showId);
+      allow list: if true;
+      allow create: if isAdmin() && isValidShow(incoming());
+      allow update: if isAdmin() && isValidId(showId) && isValidShow(incoming());
+      allow delete: if isAdmin() && isValidId(showId);
+    }
+
+    // --- Episodes ---
+    match /episodes/{episodeId} {
+      function isValidEpisode(data) {
+        return data.keys().hasAll(['showId', 'title', 'createdAt']) &&
+               data.showId is string && data.showId.size() <= 128 &&
+               data.title is string && data.title.size() <= 300 &&
+               data.createdAt is string;
+      }
+      allow read: if isValidId(episodeId);
+      allow list: if true;
+      allow create: if isAdmin() && isValidEpisode(incoming());
+      allow update: if isAdmin() && isValidId(episodeId) && isValidEpisode(incoming());
+      allow delete: if isAdmin() && isValidId(episodeId);
+    }
+
+    // --- Settings ---
+    match /settings/{docId} {
+      allow read: if isValidId(docId);
+      allow write: if isAdmin() && isValidId(docId);
+    }
+
+    // --- Admins ---
+    match /admins/{uid} {
+      allow read: if request.auth.uid == uid || isAdmin();
+      allow write: if false; 
+    }
+  }
+}

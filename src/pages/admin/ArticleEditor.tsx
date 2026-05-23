@@ -65,7 +65,7 @@ export default function ArticleEditor() {
       } else {
         await api.createArticle(payload);
       }
-      navigate('/admin/news');
+      navigate('/adminadmin/news');
     } catch (err: any) {
       setError(err.message || 'A apărut o eroare');
       setLoading(false);
