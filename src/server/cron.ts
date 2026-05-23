@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { runArticleScraper } from './scraperService.js';
 
-let cronTask: cron.ScheduledTask | null = null;
+let cronTask: any = null;
 let scrapingInterval = '*/5 * * * *'; // default 5 minutes
 let isEnabled = false; // Need to load from DB
 

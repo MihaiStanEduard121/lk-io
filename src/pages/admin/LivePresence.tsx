@@ -24,14 +24,20 @@ export default function LivePresence() {
   const [maxLimit, setMaxLimit] = useState<number>(5);
   const [savingLimit, setSavingLimit] = useState(false);
   const [limitSuccess, setLimitSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStats = async () => {
     try {
       const res = await fetch('/api/presence/stats');
+      if (!res.ok) {
+        throw new Error(`Server returned HTTP ${res.status} - ${res.statusText}`);
+      }
       const data = await res.json();
       setStats(data);
-    } catch (err) {
+      setError(null);
+    } catch (err: any) {
       console.error('Failed to fetch live presence stats', err);
+      setError(err?.message || String(err));
     } finally {
       setLoading(false);
     }
@@ -78,6 +84,31 @@ export default function LivePresence() {
     const interval = setInterval(fetchStats, 3000); // 3 seconds real-time update
     return () => clearInterval(interval);
   }, [autoRefresh]);
+
+  if (error && !stats) {
+    return (
+      <div className="p-8">
+        <div className="max-w-xl bg-red-500/10 border border-red-500/20 text-red-200 p-6 rounded-2xl">
+          <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+            <ShieldAlert className="w-6 h-6 text-red-500" />
+            Eroare la încărcarea datelor de prezență
+          </h2>
+          <p className="text-sm text-zinc-400 mb-4 leading-relaxed">
+            Nu s-au putut obține statisticile în timp real de la server. Verifică dacă serverul pornește corect. Detalii eroare:
+          </p>
+          <pre className="bg-zinc-950 p-3 rounded-lg text-xs font-mono text-red-400 mb-6 overflow-auto border border-zinc-805">
+            {error}
+          </pre>
+          <button 
+            onClick={() => { setLoading(true); setError(null); fetchStats(); }}
+            className="bg-zinc-900 hover:bg-zinc-850 text-white font-medium text-xs py-2.5 px-4 rounded-xl border border-zinc-800 transition-colors"
+          >
+            Reîncearcă Conectarea
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!stats) {
     return (

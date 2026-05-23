@@ -239,7 +239,7 @@ export const api = {
     };
   },
   
-  uploadFile: async (file: File) => {
+  uploadFile: async (file: File): Promise<any> => {
     // We will just return a placeholder or handle somehow.
     // For now we can use browser's FileReader to create a base64 string, or just error.
     // Usually Firebase Storage is better but we don't have it enabled in rules here automatically.
