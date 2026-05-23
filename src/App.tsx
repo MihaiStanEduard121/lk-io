@@ -4,6 +4,7 @@
  */
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import PublicLayout from './components/layout/PublicLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import Home from './pages/public/Home';
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="tv-schedule" element={<ScheduleManager />} />
         </Route>
       </Routes>
+      <Analytics />
     </BrowserRouter>
   );
 }
