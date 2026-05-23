@@ -14,6 +14,7 @@ export default function PlayerPage() {
   const [program, setProgram] = useState<TVProgram | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [liveViewers, setLiveViewers] = useState<number>(1);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -26,6 +27,25 @@ export default function PlayerPage() {
          setError(true);
          setLoading(false);
        });
+  }, [id]);
+
+  useEffect(() => {
+    const fetchLiveCount = async () => {
+      try {
+        const res = await fetch('/api/presence/stats');
+        if (res.ok) {
+          const stats = await res.json();
+          const count = stats.pageStats[`/play/${id}`] || 1;
+          setLiveViewers(count);
+        }
+      } catch (err) {
+        console.warn('Could not fetch active viewers list', err);
+      }
+    };
+
+    fetchLiveCount();
+    const interval = setInterval(fetchLiveCount, 8000);
+    return () => clearInterval(interval);
   }, [id]);
 
   if (loading) return <div className="h-screen flex items-center justify-center text-zinc-500">Încărcare...</div>;
@@ -80,8 +100,12 @@ export default function PlayerPage() {
                 {program.rating}
               </span>
               <span className="flex items-center">
-                <Eye className="w-4 h-4 mr-1" />
+                <Eye className="w-4 h-4 mr-1 text-zinc-400" />
                 {(program.views || 0).toLocaleString()} vizualizări
+              </span>
+              <span className="flex items-center text-rose-500 font-bold bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2 animate-ping" />
+                {liveViewers} {liveViewers === 1 ? 'vizitator live' : 'vizitatori live'}
               </span>
             </div>
 

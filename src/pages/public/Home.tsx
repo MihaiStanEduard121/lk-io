@@ -11,6 +11,7 @@ export default function Home() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
+  const [liveViewers, setLiveViewers] = useState<Record<string, number>>({});
 
   useEffect(() => {
     Promise.all([
@@ -25,6 +26,32 @@ export default function Home() {
       setShows(d_shows.sort((a: Show, b: Show) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setLoading(false);
     });
+  }, []);
+
+  useEffect(() => {
+    const fetchLiveViewers = async () => {
+      try {
+        const res = await fetch('/api/presence/stats');
+        if (res.ok) {
+          const data = await res.json();
+          const viewerMap: Record<string, number> = {};
+          if (data && data.pageStats) {
+            Object.entries(data.pageStats).forEach(([page, count]) => {
+              if (page.startsWith('/play/')) {
+                const progId = page.replace('/play/', '');
+                viewerMap[progId] = Number(count);
+              }
+            });
+          }
+          setLiveViewers(viewerMap);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch live presence on home:', e);
+      }
+    };
+    fetchLiveViewers();
+    const interval = setInterval(fetchLiveViewers, 8000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -142,9 +169,17 @@ export default function Home() {
                     </div>
                   </div>
                   <h3 className="font-bold text-lg text-white group-hover:text-indigo-300 transition-colors">{p.title}</h3>
-                  <div className="flex items-center mt-2 text-xs text-zinc-500">
-                    <Eye className="w-3 h-3 mr-1" />
-                    {(p.views || 0).toLocaleString()} vizualizări
+                  <div className="flex items-center justify-between mt-2 text-xs">
+                    <div className="flex items-center text-zinc-500">
+                      <Eye className="w-3 h-3 mr-1" />
+                      {(p.views || 0).toLocaleString()} vizualizări
+                    </div>
+                    {liveViewers[p.id] > 0 && (
+                      <span className="flex items-center text-rose-500 font-semibold bg-rose-500/10 border border-rose-500/25 px-1.5 py-0.5 rounded-md text-[10px] animate-pulse">
+                        <span className="w-1 h-1 rounded-full bg-rose-500 mr-1 animate-ping" />
+                        {liveViewers[p.id]} live
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>

@@ -24,9 +24,16 @@ export const api = {
     return snapshot.docs.map(mapDoc);
   },
   getProgram: async (id: string) => {
-    const d = await getDoc(doc(db, 'programs', id));
-    if(!d.exists()) throw new Error('Not found');
-    return mapDoc(d);
+    const programRef = doc(db, 'programs', id);
+    const d = await getDoc(programRef);
+    if (!d.exists()) throw new Error('Not found');
+    try {
+      await updateDoc(programRef, { views: increment(1) });
+    } catch (err) {
+      console.warn('Could not increment program views:', err);
+    }
+    const currentData = d.data();
+    return { id: d.id, ...currentData, views: (currentData.views || 0) + 1 } as any;
   },
   createProgram: async (data: any) => {
     const ref = doc(collection(db, 'programs'));
