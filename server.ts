@@ -1,42 +1,12 @@
 import express from 'express';
 import path from 'path';
-import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-
-// --- Scraper Services ---
+import { getExpressApp } from './src/server/expressApp.js';
 import { startCronJobs } from './src/server/cron.js';
-import { initFirebaseBackend } from './src/server/firebaseAdmin.js';
-import scraperRoutes from './src/server/api/scraperRoutes.js';
-import presenceRoutes from './src/server/api/presenceRoutes.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function startServer() {
-  const app = express();
+  const app = getExpressApp();
   const PORT = 3000;
-
-  app.use(cors());
-  app.use(express.json());
-
-  // Init backend firebase connection
-  initFirebaseBackend();
-
-  // API Routes
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', time: new Date().toISOString() });
-  });
-
-  app.use('/api/scraper', scraperRoutes);
-  app.use('/api/presence', presenceRoutes);
-
-  // Serve uploads if any
-  const uploadsPath = path.join(process.cwd(), 'uploads');
-  if (!fs.existsSync(uploadsPath)) {
-    fs.mkdirSync(uploadsPath, { recursive: true });
-  }
-  app.use('/uploads', express.static(uploadsPath));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
@@ -61,3 +31,4 @@ async function startServer() {
 }
 
 startServer().catch(console.error);
+

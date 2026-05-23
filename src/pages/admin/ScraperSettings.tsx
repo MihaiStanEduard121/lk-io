@@ -74,7 +74,13 @@ export default function ScraperSettings() {
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-2xl">
         {msg.text && (
-          <div className={`p-4 rounded-lg mb-6 flex items-center ${msg.type === 'success' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' : 'bg-red-400/10 text-red-400 border border-red-400/20'}`}>
+          <div className={`p-4 rounded-lg mb-6 flex items-center ${
+            msg.type === 'success' 
+              ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' 
+              : msg.type === 'info'
+              ? 'bg-blue-400/10 text-blue-400 border border-blue-400/20'
+              : 'bg-red-400/10 text-red-400 border border-red-400/20'
+          }`}>
             {msg.type === 'success' ? <CheckCircle className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3"/>}
             {msg.text}
           </div>
