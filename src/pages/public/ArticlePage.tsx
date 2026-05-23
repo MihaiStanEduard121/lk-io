@@ -1,0 +1,134 @@
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { api } from '../../lib/api';
+import { Article, Comment, ArticleCategory } from '../../types';
+import Markdown from 'react-markdown';
+import { Calendar, User, ArrowLeft, Eye, MessageSquare, AlertCircle } from 'lucide-react';
+import { motion } from 'motion/react';
+
+export default function ArticlePage() {
+  const { slug } = useParams();
+  const [article, setArticle] = useState<Article | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [categories, setCategories] = useState<ArticleCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // New Comment state
+  const [author, setAuthor] = useState('');
+  const [content, setContent] = useState('');
+  const [submitMsg, setSubmitMsg] = useState('');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    Promise.all([
+      api.getArticle(slug!),
+      api.getComments(),
+      api.getCategories()
+    ]).then(([data, coms, cats]) => {
+      setArticle(data);
+      if (data) {
+        setComments(coms.filter((c: Comment) => c.articleId === data.id && c.approved));
+      }
+      setCategories(cats);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [slug]);
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!author.trim() || !content.trim() || !article) return;
+    try {
+      await api.createComment({ articleId: article.id, author, content });
+      setSubmitMsg('Comentariul a fost trimis spre aprobare!');
+      setAuthor('');
+      setContent('');
+    } catch {
+      setSubmitMsg('Eroare la trimiterea comentariului.');
+    }
+  };
+
+  if (loading) return <div className="h-screen flex items-center justify-center text-zinc-500">Încărcare...</div>;
+  if (!article || article.status !== 'published') return <div className="h-screen flex items-center justify-center text-rose-500">Articolul nu a fost găsit.</div>;
+
+  const category = categories.find(c => c.id === article.categoryId);
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12">
+      <Link to="/news" className="inline-flex items-center text-zinc-400 hover:text-white mb-8 transition-colors">
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Înapoi la știri
+      </Link>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        
+        {article.isBreakingNews && (
+          <div className="inline-flex items-center bg-rose-600/20 text-rose-500 px-3 py-1 rounded border border-rose-500/20 text-sm font-bold mb-6">
+            <AlertCircle className="w-4 h-4 mr-2" /> BREAKING NEWS
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-zinc-400 mb-6 border-b border-zinc-800 pb-6">
+          {category && (
+            <span className="bg-indigo-600/20 text-indigo-400 px-3 py-1 border border-indigo-500/20 rounded-full font-bold">
+              {category.name}
+            </span>
+          )}
+          <span className="flex items-center bg-zinc-900 px-3 py-1 rounded-full"><Calendar className="w-4 h-4 mr-2 text-indigo-400"/> {new Date(article.publishedAt).toLocaleDateString()}</span>
+          <span className="flex items-center bg-zinc-900 px-3 py-1 rounded-full"><User className="w-4 h-4 mr-2 text-indigo-400"/> {article.author}</span>
+          <span className="flex items-center bg-zinc-900 px-3 py-1 rounded-full"><Eye className="w-4 h-4 mr-2 text-indigo-400"/> {article.views || 0}</span>
+        </div>
+
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-8 leading-tight">
+          {article.title}
+        </h1>
+
+        {article.coverImage && (
+          <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden mb-12 border border-zinc-800 shadow-2xl">
+            <img src={article.coverImage} alt={article.title} className="w-full h-full object-cover" />
+          </div>
+        )}
+
+        <div className="prose prose-invert prose-lg max-w-none text-zinc-300">
+          <div className="markdown-body">
+            <Markdown>{article.content}</Markdown>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Comments Section */}
+      <div className="mt-16 border-t border-zinc-800 pt-12">
+        <h2 className="text-2xl font-bold text-white mb-8 flex items-center">
+          <MessageSquare className="w-6 h-6 mr-3 text-indigo-500" />
+          Comentarii ({comments.length})
+        </h2>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-12">
+          <h3 className="font-bold text-lg text-white mb-4">Adaugă un comentariu</h3>
+          {submitMsg && <div className="p-3 mb-4 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-sm font-medium">{submitMsg}</div>}
+          <form onSubmit={handleCommentSubmit} className="space-y-4">
+             <div>
+               <input type="text" value={author} onChange={e => setAuthor(e.target.value)} required placeholder="Numele tău" className="w-full md:w-1/2 bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white outline-none focus:border-indigo-500" />
+             </div>
+             <div>
+               <textarea value={content} onChange={e => setContent(e.target.value)} required placeholder="Comentariul tău..." rows={4} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white outline-none focus:border-indigo-500 text-sm"></textarea>
+             </div>
+             <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold transition-colors">Trimite Comentariu</button>
+          </form>
+        </div>
+
+        <div className="space-y-6">
+          {comments.map((c) => (
+            <div key={c.id} className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-bold text-indigo-400">{c.author}</div>
+                <div className="text-xs text-zinc-500">{new Date(c.createdAt).toLocaleDateString()}</div>
+              </div>
+              <p className="text-zinc-300 text-sm">{c.content}</p>
+            </div>
+          ))}
+          {comments.length === 0 && <p className="text-zinc-500">Fii primul care comentează!</p>}
+        </div>
+      </div>
+    </div>
+  );
+}

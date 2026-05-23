@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-zinc-950 text-zinc-50 overflow-x-hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: theme('colors.zinc.950');
+}
+::-webkit-scrollbar-thumb {
+  background: theme('colors.zinc.800');
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.zinc.700');
+}
+
+@layer utilities {
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  .animate-marquee {
+    animation: marquee 25s linear infinite;
+  }
+}
+
+.markdown-body h1 { @apply text-2xl font-bold mt-6 mb-4; }
+.markdown-body h2 { @apply text-xl font-bold mt-5 mb-3; }
+.markdown-body h3 { @apply text-lg font-bold mt-4 mb-2; }
+.markdown-body p { @apply mb-4 leading-relaxed text-zinc-300; }
+.markdown-body ul { @apply list-disc list-inside mb-4; }
+.markdown-body li { @apply mb-1 text-zinc-300; }
+.markdown-body strong { @apply text-white font-semibold; }
+.markdown-body em { @apply italic text-zinc-400; }
