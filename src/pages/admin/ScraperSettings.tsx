@@ -39,15 +39,23 @@ export default function ScraperSettings() {
   };
 
   const handleRun = async () => {
+    if (!config.targetUrl) {
+      setMsg({ text: 'Vă rugăm să introduceți un URL Sursă înainte de a porni manual!', type: 'error' });
+      return;
+    }
     setLoading(true);
     setMsg({ text: 'Rulare scraper pornită...', type: 'info' });
     try {
-      const res = await fetch('/api/scraper/run', { method: 'POST' });
+      const res = await fetch('/api/scraper/run', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUrl: config.targetUrl, force: true })
+      });
       const data = await res.json();
       if (data.success) {
         setMsg({ text: data.message, type: 'success' });
       } else {
-        setMsg({ text: data.message || 'Eroare', type: 'error' });
+        setMsg({ text: data.message || 'Eroare la rulare', type: 'error' });
       }
     } catch(err:any) {
        setMsg({ text: err.message, type: 'error' });

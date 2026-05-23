@@ -8,7 +8,11 @@ const router = Router();
 
 router.post('/run', async (req, res) => {
   try {
-    const result = await runArticleScraper();
+    const { targetUrl, force } = req.body || {};
+    const result = await runArticleScraper({ 
+      targetUrl, 
+      force: force !== undefined ? force : true 
+    });
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
