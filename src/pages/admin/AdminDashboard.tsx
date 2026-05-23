@@ -21,7 +21,7 @@ export default function AdminDashboard() {
         {[
           { label: 'Total Programe', value: stats.totalPrograms, icon: Tv, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
           { label: 'Programe TV Online', value: stats.onlinePrograms, icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-          { label: 'Total Vizualizări', value: stats.totalViews.toLocaleString(), icon: Eye, color: 'text-sky-400', bg: 'bg-sky-400/10' },
+          { label: 'Total Vizualizări', value: (stats?.totalViews || 0).toLocaleString(), icon: Eye, color: 'text-sky-400', bg: 'bg-sky-400/10' },
           { label: 'Categorii', value: Object.keys(stats.categories).length, icon: Users, color: 'text-amber-400', bg: 'bg-amber-400/10' },
         ].map((card, i) => (
           <motion.div 

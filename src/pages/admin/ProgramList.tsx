@@ -59,7 +59,7 @@ export default function ProgramList() {
                     <img src={p.thumbnail} alt="" className="w-16 h-9 object-cover rounded bg-zinc-800" />
                     <div>
                       <div className="font-bold text-white mb-0.5">{p.title}</div>
-                      <div className="text-xs text-zinc-500">{p.views.toLocaleString()} viz.</div>
+                      <div className="text-xs text-zinc-500">{(p.views || 0).toLocaleString()} viz.</div>
                     </div>
                   </div>
                 </td>

@@ -81,7 +81,7 @@ export default function PlayerPage() {
               </span>
               <span className="flex items-center">
                 <Eye className="w-4 h-4 mr-1" />
-                {program.views.toLocaleString()} vizualizări
+                {(program.views || 0).toLocaleString()} vizualizări
               </span>
             </div>
 

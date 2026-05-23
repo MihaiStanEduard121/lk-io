@@ -144,7 +144,7 @@ export default function Home() {
                   <h3 className="font-bold text-lg text-white group-hover:text-indigo-300 transition-colors">{p.title}</h3>
                   <div className="flex items-center mt-2 text-xs text-zinc-500">
                     <Eye className="w-3 h-3 mr-1" />
-                    {p.views.toLocaleString()} vizualizări
+                    {(p.views || 0).toLocaleString()} vizualizări
                   </div>
                 </div>
               </Link>
