@@ -11,6 +11,7 @@ interface ActiveSession {
 
 // In-Memory map to track presence
 const activeSessions = new Map<string, ActiveSession>();
+let maxViewersPerPage = 5; // Default limit
 
 // Cleanup stale sessions (older than 30 seconds)
 setInterval(() => {
@@ -28,6 +29,21 @@ router.post('/ping', (req, res) => {
     return res.status(400).json({ error: 'clientId is required' });
   }
 
+  // Count how many non-admin users are currently on the SAME page (excluding this clientId)
+  const sessions = Array.from(activeSessions.values());
+  const curentPageViewers = sessions.filter(s => s.page === page && s.clientId !== clientId && !s.isAdmin);
+
+  if (!isAdmin && curentPageViewers.length >= maxViewersPerPage) {
+    // Eject/Reject connection
+    // Ensure the old session of this client on this page is removed if it existed
+    activeSessions.delete(clientId);
+    return res.json({ 
+      success: false, 
+      error: 'limit_reached', 
+      message: `Această pagină (${page}) este supra-solicitată! Numărul maxim de vizitatori simultani (${maxViewersPerPage}) a fost atins. Ai fost îndepărtat pentru a evita supra-încărcarea.` 
+    });
+  }
+
   activeSessions.set(clientId, {
     clientId,
     page: page || '/',
@@ -36,6 +52,19 @@ router.post('/ping', (req, res) => {
   });
 
   res.json({ success: true });
+});
+
+router.get('/config', (req, res) => {
+  res.json({ maxViewersPerPage });
+});
+
+router.post('/config', (req, res) => {
+  const { limit } = req.body;
+  if (typeof limit === 'number' && limit > 0) {
+    maxViewersPerPage = limit;
+    return res.json({ success: true, maxViewersPerPage });
+  }
+  res.status(400).json({ error: 'Invalid config limit' });
 });
 
 router.get('/stats', (req, res) => {

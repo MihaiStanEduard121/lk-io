@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Users, Radio, RefreshCw, Eye, Landmark, Globe } from 'lucide-react';
+import { Users, Radio, RefreshCw, Eye, Landmark, Globe, ShieldAlert, Save, CheckCircle } from 'lucide-react';
 
 interface Session {
   clientId: string;
@@ -21,6 +21,9 @@ export default function LivePresence() {
   const [stats, setStats] = useState<PresenceStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [maxLimit, setMaxLimit] = useState<number>(5);
+  const [savingLimit, setSavingLimit] = useState(false);
+  const [limitSuccess, setLimitSuccess] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -34,8 +37,42 @@ export default function LivePresence() {
     }
   };
 
+  const fetchLimit = async () => {
+    try {
+      const res = await fetch('/api/presence/config');
+      const data = await res.json();
+      if (typeof data.maxViewersPerPage === 'number') {
+        setMaxLimit(data.maxViewersPerPage);
+      }
+    } catch (err) {
+      console.error('Failed to fetch load limit config', err);
+    }
+  };
+
+  const handleSaveLimit = async () => {
+    setSavingLimit(true);
+    setLimitSuccess(false);
+    try {
+      const res = await fetch('/api/presence/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: Number(maxLimit) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLimitSuccess(true);
+        setTimeout(() => setLimitSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error('Failed to save load limit config', err);
+    } finally {
+      setSavingLimit(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchLimit();
     if (!autoRefresh) return;
 
     const interval = setInterval(fetchStats, 3000); // 3 seconds real-time update
@@ -236,6 +273,48 @@ export default function LivePresence() {
 
         {/* Right side: Page Popularity / Breakdown */}
         <div className="space-y-4">
+          {/* Limit and Protection settings */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 relative overflow-hidden animate-fade-in">
+            <h3 className="text-base font-bold text-white mb-2 flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-indigo-400" />
+              Protecție Supra-solicitare
+            </h3>
+            <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
+              Limitează numărul maxim de vizitatori simultani permisi pe o singură pagină pentru a evita blocarea site-ului.
+            </p>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-zinc-400 block mb-1">Limită vizitatori publici / pagină</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="number" 
+                    min={1} 
+                    max={100}
+                    value={maxLimit} 
+                    onChange={e => setMaxLimit(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 text-center font-mono font-bold"
+                  />
+                  <button
+                    onClick={handleSaveLimit}
+                    disabled={savingLimit}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs px-4 rounded-lg flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
+                  >
+                    {savingLimit ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    Salvează
+                  </button>
+                </div>
+              </div>
+              
+              {limitSuccess && (
+                <div className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded px-2.5 py-1.5 flex items-center gap-2">
+                  <CheckCircle className="w-3.5 h-3.5 animate-pulse" />
+                  Limitarea de {maxLimit} vizitatori a fost activată!
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
             <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
               <Eye className="w-5 h-5 text-indigo-400" />
