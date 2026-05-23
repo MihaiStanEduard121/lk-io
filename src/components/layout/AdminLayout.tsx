@@ -1,5 +1,5 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Film, FileText, MonitorPlay, LogOut, Settings, Hash, MessageSquare, CalendarClock } from 'lucide-react';
+import { LayoutDashboard, Film, FileText, MonitorPlay, LogOut, Settings, Hash, MessageSquare, CalendarClock, Globe, Users } from 'lucide-react';
 import { getAuthToken } from '../../lib/api';
 
 export default function AdminLayout() {
@@ -14,6 +14,8 @@ export default function AdminLayout() {
     { to: '/adminadmin/programs', icon: Film, label: 'Programe Live' },
     { to: '/adminadmin/shows', icon: MonitorPlay, label: 'Emisiuni (VOD)' },
     { to: '/adminadmin/news', icon: FileText, label: 'Știri / Articole' },
+    { to: '/adminadmin/scraper', icon: Globe, label: 'Auto Scraper' },
+    { to: '/adminadmin/live-presence', icon: Users, label: 'Utilizatori Live' },
     { to: '/adminadmin/tv-schedule', icon: CalendarClock, label: 'Program TV' },
     { to: '/adminadmin/categories', icon: Hash, label: 'Categorii Ştiri' },
     { to: '/adminadmin/comments', icon: MessageSquare, label: 'Comentarii' },

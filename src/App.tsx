@@ -27,11 +27,15 @@ import HomepageSettings from './pages/admin/HomepageSettings';
 import CategoryList from './pages/admin/CategoryList';
 import CommentModeration from './pages/admin/CommentModeration';
 import ScheduleManager from './pages/admin/ScheduleManager';
+import ScraperSettings from './pages/admin/ScraperSettings';
+import LivePresence from './pages/admin/LivePresence';
 import SchedulePage from './pages/public/SchedulePage';
+import PresenceTracker from './components/PresenceTracker';
 
 export default function App() {
   return (
     <BrowserRouter>
+      <PresenceTracker />
       <Routes>
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
@@ -64,6 +68,8 @@ export default function App() {
           <Route path="shows/:showId/episodes" element={<EpisodeList />} />
           <Route path="shows/:showId/episodes/new" element={<EpisodeEditor />} />
           <Route path="shows/:showId/episodes/:episodeId" element={<EpisodeEditor />} />
+          <Route path="scraper" element={<ScraperSettings />} />
+          <Route path="live-presence" element={<LivePresence />} />
           <Route path="settings" element={<HomepageSettings />} />
           <Route path="categories" element={<CategoryList />} />
           <Route path="comments" element={<CommentModeration />} />
