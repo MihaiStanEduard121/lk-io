@@ -13,6 +13,7 @@ export interface TVProgram {
   views: number;
   rating: number;
   createdAt: string;
+  isFeatured?: boolean;
 }
 
 export interface AdminStats {
@@ -43,12 +44,14 @@ export interface TVScheduleItem {
   title: string;
   description: string;
   date: string;
+  channelId?: string;
 }
 
 export interface HomepageConfig {
   heroTitle: string;
   heroSubtitle: string;
   heroBackgroundImage: string;
+  heroLink?: string;
   featuredArticleId?: string;
 }
 
@@ -75,6 +78,7 @@ export interface Show {
   thumbnail: string;
   banner: string;
   createdAt: string;
+  isFeatured?: boolean;
 }
 
 export interface Episode {
@@ -83,6 +87,7 @@ export interface Episode {
   title: string;
   description: string;
   videoUrl: string;
+  embedCode?: string;
   thumbnail: string;
   episodeNumber: number;
   createdAt: string;

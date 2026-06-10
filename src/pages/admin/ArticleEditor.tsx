@@ -28,7 +28,7 @@ export default function ArticleEditor() {
     api.getCategories().then(setCategories);
     if (isEdit) {
       api.getArticle(id).then(data => {
-        setFormData(data);
+        setFormData(prev => ({ ...prev, ...data }));
       });
     }
   }, [id, isEdit]);

@@ -24,6 +24,7 @@ setInterval(() => {
 }, 10000);
 
 router.post('/ping', (req, res) => {
+  console.log('[Presence Route] POST /ping from', req.body?.clientId, 'on page', req.body?.page);
   const { clientId, page, isAdmin } = req.body;
   if (!clientId) {
     return res.status(400).json({ error: 'clientId is required' });
@@ -55,10 +56,12 @@ router.post('/ping', (req, res) => {
 });
 
 router.get('/config', (req, res) => {
+  console.log('[Presence Route] GET /config called, sending maxViewersPerPage:', maxViewersPerPage);
   res.json({ maxViewersPerPage });
 });
 
 router.post('/config', (req, res) => {
+  console.log('[Presence Route] POST /config with body:', req.body);
   const { limit } = req.body;
   if (typeof limit === 'number' && limit > 0) {
     maxViewersPerPage = limit;
@@ -68,6 +71,7 @@ router.post('/config', (req, res) => {
 });
 
 router.get('/stats', (req, res) => {
+  console.log('[Presence Route] GET /stats called');
   // Clear stale sessions first to be accurate
   const now = Date.now();
   for (const [clientId, session] of activeSessions.entries()) {
@@ -86,6 +90,8 @@ router.get('/stats', (req, res) => {
   sessions.forEach(s => {
     pageStats[s.page] = (pageStats[s.page] || 0) + 1;
   });
+
+  console.log('[Presence Route] Stats calculated:', { totalLive, sessionsCount: sessions.length });
 
   res.json({
     totalLive,

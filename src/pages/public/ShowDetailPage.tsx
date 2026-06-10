@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Show, Episode } from '../../types';
 import ReactPlayer from 'react-player';
+import { enhanceEmbedCode } from './PlayerPage';
 
 const Player = ReactPlayer as any;
 import { ArrowLeft, PlayCircle, MonitorPlay, Calendar } from 'lucide-react';
@@ -42,15 +43,27 @@ export default function ShowDetailPage() {
           </Link>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <div className="w-full aspect-video bg-zinc-900 rounded-xl overflow-hidden shadow-2xl ring-1 ring-zinc-800">
+              <div className="w-full aspect-video bg-zinc-900 rounded-xl overflow-hidden shadow-2xl ring-1 ring-zinc-800 relative player-wrapper">
                 {activeEpisode ? (
-                  <Player 
-                    url={activeEpisode.videoUrl} 
-                    controls 
-                    width="100%" 
-                    height="100%" 
-                    playing={true} 
-                  />
+                  activeEpisode.embedCode ? (
+                    <div 
+                      className="w-full h-full relative"
+                      dangerouslySetInnerHTML={{ __html: enhanceEmbedCode(activeEpisode.embedCode) }}
+                    />
+                  ) : activeEpisode.videoUrl ? (
+                    <Player 
+                      url={activeEpisode.videoUrl} 
+                      controls 
+                      width="100%" 
+                      height="100%" 
+                      playing={true} 
+                    />
+                  ) : (
+                    <div className="flex flex-col h-full items-center justify-center text-zinc-600">
+                       <MonitorPlay className="w-16 h-16 mb-4 opacity-50" />
+                       <p>Acest episod nu are asociat un format video redabil.</p>
+                    </div>
+                  )
                 ) : (
                   <div className="flex flex-col h-full items-center justify-center text-zinc-600">
                      <MonitorPlay className="w-16 h-16 mb-4 opacity-50" />

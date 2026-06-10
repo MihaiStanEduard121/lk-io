@@ -64,7 +64,8 @@
         "date": { "type": "string" },
         "time": { "type": "string" },
         "title": { "type": "string" },
-        "description": { "type": "string" }
+        "description": { "type": "string" },
+        "channelId": { "type": "string" }
       }
     },
     "Homepage": {

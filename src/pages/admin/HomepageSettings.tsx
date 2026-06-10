@@ -6,7 +6,8 @@ export default function HomepageSettings() {
   const [formData, setFormData] = useState({
     heroTitle: '',
     heroSubtitle: '',
-    heroBackgroundImage: ''
+    heroBackgroundImage: '',
+    heroLink: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -83,6 +84,11 @@ export default function HomepageSettings() {
             <div>
               <label className="block text-zinc-400 text-sm font-medium mb-2">Subtitlu (Hero Subtitle)</label>
               <textarea required name="heroSubtitle" value={formData.heroSubtitle} onChange={handleChange} rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm"></textarea>
+            </div>
+
+            <div>
+              <label className="block text-zinc-400 text-sm font-medium mb-2">Link Promoție (ex: /play/pro-tv)</label>
+              <input name="heroLink" value={formData.heroLink} onChange={handleChange} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" placeholder="/play/xyz sau lăsați gol pt default" />
             </div>
 
             <div>

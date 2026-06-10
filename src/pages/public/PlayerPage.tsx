@@ -9,9 +9,45 @@ import Markdown from 'react-markdown';
 import { Share2, Star, Eye, Tag, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
+export function enhanceEmbedCode(embedCode: string | undefined): string {
+  if (!embedCode) return '';
+  let clean = embedCode;
+
+  if (clean.includes('<iframe')) {
+    // 1. Force referrerpolicy to "no-referrer" to strip our dynamic/preview host-based referrer headers
+    if (clean.includes('referrerpolicy=')) {
+      clean = clean.replace(/referrerpolicy="[^"]*"/gi, 'referrerpolicy="no-referrer"');
+      clean = clean.replace(/referrerpolicy='[^']*'/gi, 'referrerpolicy="no-referrer"');
+    } else {
+      clean = clean.replace(/<iframe/gi, '<iframe referrerpolicy="no-referrer"');
+    }
+
+    // 2. Ensure wide-ranging permissions for stream players
+    if (clean.includes('allow=')) {
+      clean = clean.replace(/allow="[^"]*"/gi, 'allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; gamepad"');
+      clean = clean.replace(/allow='[^']*'/gi, 'allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; gamepad"');
+    } else {
+      clean = clean.replace(/<iframe/gi, '<iframe allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; gamepad"');
+    }
+
+    // 3. Force allowing fullscreen
+    if (!clean.toLowerCase().includes('allowfullscreen')) {
+      clean = clean.replace(/<iframe/gi, '<iframe allowfullscreen="true"');
+    }
+
+    // 4. Remove any restrictive custom sandboxes that break third-party cookies or scripts needed to initialize the player
+    if (clean.includes('sandbox=')) {
+      clean = clean.replace(/sandbox="[^"]*"/gi, '');
+      clean = clean.replace(/sandbox='[^']*'/gi, '');
+    }
+  }
+  return clean;
+}
+
 export default function PlayerPage() {
   const { id } = useParams();
   const [program, setProgram] = useState<TVProgram | null>(null);
+  const [recommendations, setRecommendations] = useState<TVProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [liveViewers, setLiveViewers] = useState<number>(1);
@@ -19,9 +55,25 @@ export default function PlayerPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
     api.getProgram(id || '')
-       .then(data => {
+       .then(async (data) => {
          setProgram(data);
          setLoading(false);
+         
+         // Fetch other programs in alignment with requirements
+         try {
+           const allProgs = await api.getPrograms();
+           const filtered = allProgs
+             .filter((p: any) => p.id !== id)
+             .sort((a: any, b: any) => {
+               if (a.category === data.category && b.category !== data.category) return -1;
+               if (a.category !== data.category && b.category === data.category) return 1;
+               return (b.views || 0) - (a.views || 0);
+             })
+             .slice(0, 6);
+           setRecommendations(filtered);
+         } catch (e) {
+           console.warn('Could not fetch recommendations:', e);
+         }
        })
        .catch(() => {
          setError(true);
@@ -54,11 +106,11 @@ export default function PlayerPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8">
       {/* Container Video */}
-      <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl ring-1 ring-zinc-800">
+      <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl ring-1 ring-zinc-800 relative player-wrapper">
         {program.embedCode ? (
           <div 
-            className="w-full h-full"
-            dangerouslySetInnerHTML={{ __html: program.embedCode }}
+            className="w-full h-full relative"
+            dangerouslySetInnerHTML={{ __html: enhanceEmbedCode(program.embedCode) }}
           />
         ) : program.streamUrl ? (
           <Player 
@@ -132,12 +184,52 @@ export default function PlayerPage() {
 
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <h3 className="text-lg font-bold mb-4 border-b border-zinc-800 pb-2">Recomandări</h3>
-          {/* A mock list for now */}
-          <div className="space-y-4">
-            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
-              <p className="text-sm text-zinc-400 text-center">In curând</p>
-            </div>
+          <h3 className="text-lg font-semibold text-zinc-100 mb-4 border-b border-zinc-800 pb-2">Recomandări</h3>
+          <div className="space-y-3">
+            {recommendations.length > 0 ? (
+              recommendations.map(rec => (
+                <Link
+                  key={rec.id}
+                  to={`/play/${rec.id}`}
+                  className="flex items-center space-x-3 p-2.5 rounded-xl bg-zinc-900/50 hover:bg-zinc-800/80 border border-zinc-800/50 hover:border-zinc-700/50 transition-all group"
+                >
+                  <div className="w-14 h-10 rounded-lg bg-zinc-950 flex items-center justify-center p-1.5 flex-shrink-0 relative overflow-hidden group-hover:scale-[1.03] transition-transform border border-zinc-800/80">
+                    {rec.thumbnail ? (
+                      <img 
+                        src={rec.thumbnail} 
+                        alt={rec.title} 
+                        className="w-full h-full object-contain" 
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="text-[10px] font-bold text-zinc-600 truncate">{rec.title}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-zinc-300 group-hover:text-indigo-400 transition-colors truncate">
+                      {rec.title}
+                    </h4>
+                    <div className="flex items-center space-x-2 mt-0.5">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-zinc-800 border border-zinc-800 text-zinc-400 rounded-md truncate max-w-[100px]">
+                        {rec.category}
+                      </span>
+                      {rec.status === 'online' ? (
+                        <span className="text-[10px] text-emerald-500 font-bold flex items-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
+                          Live
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-zinc-500">Offline</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                <p className="text-sm text-zinc-500 text-center">Nicio recomandare momentan</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

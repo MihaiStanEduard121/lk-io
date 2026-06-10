@@ -21,15 +21,68 @@ function expressApiPlugin() {
               req.originalUrl = req.url;
             }
             
-            app(req, res, (err: any) => {
-              if (err) {
-                console.error(`[Vite API Middleware] Express app error for ${req.url}:`, err);
-                next(err);
-              } else {
-                console.warn(`[Vite API Middleware] Request for ${req.url} was NOT handled by Express API routes`);
-                next();
-              }
-            });
+            // Inject standard Express response wrapper methods if not present
+            if (typeof res.status !== 'function') {
+              res.status = function(code: number) {
+                res.statusCode = code;
+                return res;
+              };
+            }
+            if (typeof res.json !== 'function') {
+              res.json = function(data: any) {
+                if (!res.headersSent) {
+                  res.setHeader('Content-Type', 'application/json');
+                }
+                res.end(JSON.stringify(data));
+                return res;
+              };
+            }
+            if (typeof res.send !== 'function') {
+              res.send = function(data: any) {
+                if (!res.headersSent) {
+                  if (typeof data === 'object') {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(data));
+                  } else {
+                    res.setHeader('Content-Type', 'text/html');
+                    res.end(String(data));
+                  }
+                } else {
+                  res.end(String(data));
+                }
+                return res;
+              };
+            }
+
+            const runExpress = () => {
+              app(req, res, (err: any) => {
+                if (err) {
+                  console.error(`[Vite API Middleware] Express app error for ${req.url}:`, err);
+                  next(err);
+                } else {
+                  console.warn(`[Vite API Middleware] Request for ${req.url} was NOT handled by Express API routes`);
+                  next();
+                }
+              });
+            };
+
+            // Parse request body for POST/PUT/PATCH if not already parsed
+            if (!req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
+              let bodyStr = '';
+              req.on('data', (chunk: any) => {
+                bodyStr += chunk;
+              });
+              req.on('end', () => {
+                try {
+                  req.body = bodyStr ? JSON.parse(bodyStr) : {};
+                } catch (e) {
+                  req.body = {};
+                }
+                runExpress();
+              });
+            } else {
+              runExpress();
+            }
           } catch (err) {
             console.error(`[Vite API Middleware] SSR loading error for ${req.url}:`, err);
             next(err);

@@ -12,6 +12,7 @@ export default function EpisodeEditor() {
     title: '',
     description: '',
     videoUrl: '',
+    embedCode: '',
     thumbnail: '',
     episodeNumber: 1
   });
@@ -22,7 +23,7 @@ export default function EpisodeEditor() {
   useEffect(() => {
     if (isEdit) {
       api.getEpisode(episodeId).then(data => {
-        setFormData(data);
+        setFormData(prev => ({ ...prev, ...data }));
       });
     }
   }, [episodeId, isEdit]);
@@ -101,7 +102,12 @@ export default function EpisodeEditor() {
 
             <div className="md:col-span-2">
               <label className="block text-zinc-400 text-sm font-medium mb-2">Link Video (YouTube/Vimeo sau .mp4/.m3u8)</label>
-              <input required name="videoUrl" value={formData.videoUrl} onChange={handleChange} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" placeholder="https://youtube.com/watch?v=..." />
+              <input name="videoUrl" value={formData.videoUrl} onChange={handleChange} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" placeholder="https://youtube.com/watch?v=..." />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-zinc-400 text-sm font-medium mb-2">Cod Embed VOD (dacă nu vreți să puneți doar link)</label>
+              <textarea name="embedCode" value={formData.embedCode || ''} onChange={handleChange} rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 font-mono text-sm" placeholder="<iframe src=...></iframe"></textarea>
             </div>
 
             <div className="md:col-span-2">

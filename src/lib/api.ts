@@ -205,9 +205,10 @@ export const api = {
     const d = await getDoc(doc(db, 'settings', 'homepage'));
     if (!d.exists()) {
       return {
-        heroTitle: "Bine ai venit pe StreamTV",
+        heroTitle: "Bine ai venit pe programetv.online",
         heroSubtitle: "Urmărește cele mai bune emisiuni și transmisiuni live.",
-        heroBackgroundImage: ""
+        heroBackgroundImage: "",
+        heroLink: ""
       };
     }
     return mapDoc(d);

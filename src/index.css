@@ -42,3 +42,12 @@
 .markdown-body li { @apply mb-1 text-zinc-300; }
 .markdown-body strong { @apply text-white font-semibold; }
 .markdown-body em { @apply italic text-zinc-400; }
+
+.player-wrapper iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+}

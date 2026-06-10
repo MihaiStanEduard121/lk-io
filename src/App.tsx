@@ -13,6 +13,7 @@ import ArticlePage from './pages/public/ArticlePage';
 import ShowsPage from './pages/public/ShowsPage';
 import ShowDetailPage from './pages/public/ShowDetailPage';
 import SearchPage from './pages/public/SearchPage';
+import LegalPage from './pages/public/LegalPage';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProgramList from './pages/admin/ProgramList';
@@ -24,18 +25,22 @@ import ShowEditor from './pages/admin/ShowEditor';
 import EpisodeList from './pages/admin/EpisodeList';
 import EpisodeEditor from './pages/admin/EpisodeEditor';
 import HomepageSettings from './pages/admin/HomepageSettings';
+import MediaMetadata from './pages/admin/MediaMetadata';
 import CategoryList from './pages/admin/CategoryList';
 import CommentModeration from './pages/admin/CommentModeration';
 import ScheduleManager from './pages/admin/ScheduleManager';
 import ScraperSettings from './pages/admin/ScraperSettings';
+import RedirectManager from './pages/admin/RedirectManager';
 import LivePresence from './pages/admin/LivePresence';
 import SchedulePage from './pages/public/SchedulePage';
 import PresenceTracker from './components/PresenceTracker';
+import CookieConsent from './components/CookieConsent';
 
 export default function App() {
   return (
     <BrowserRouter>
       <PresenceTracker />
+      <CookieConsent />
       <Routes>
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
@@ -47,6 +52,16 @@ export default function App() {
           <Route path="/shows/:slug" element={<ShowDetailPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/legal" element={<LegalPage />} />
+          <Route path="/privacy-policy" element={<LegalPage />} />
+          <Route path="/terms-of-service" element={<LegalPage />} />
+          <Route path="/dmca" element={<LegalPage />} />
+          <Route path="/copyright" element={<LegalPage />} />
+          <Route path="/cookie-policy" element={<LegalPage />} />
+          <Route path="/disclaimer" element={<LegalPage />} />
+          <Route path="/legal-contact" element={<LegalPage />} />
+          <Route path="/delete-my-data" element={<LegalPage />} />
+          <Route path="/accessibility" element={<LegalPage />} />
         </Route>
 
         {/* Admin Routes */}
@@ -70,6 +85,8 @@ export default function App() {
           <Route path="shows/:showId/episodes/:episodeId" element={<EpisodeEditor />} />
           <Route path="scraper" element={<ScraperSettings />} />
           <Route path="live-presence" element={<LivePresence />} />
+          <Route path="redirects" element={<RedirectManager />} />
+          <Route path="media" element={<MediaMetadata />} />
           <Route path="settings" element={<HomepageSettings />} />
           <Route path="categories" element={<CategoryList />} />
           <Route path="comments" element={<CommentModeration />} />

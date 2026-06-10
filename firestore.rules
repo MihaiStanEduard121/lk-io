@@ -141,6 +141,76 @@ service cloud.firestore {
       allow write: if isAdmin() && isValidId(docId);
     }
 
+    // --- Redirects ---
+    match /redirects/{redirectId} {
+      function isValidRedirect(data) {
+        return data.keys().hasAll(['sourcePath', 'destinationPath', 'active']) &&
+               data.sourcePath is string && data.sourcePath.size() <= 2000 &&
+               data.destinationPath is string && data.destinationPath.size() <= 2000 &&
+               data.active is bool;
+      }
+      allow read: if isValidId(redirectId);
+      allow list: if true; // Public list and checked unauthenticated by backend
+      allow create: if isAdmin() && isValidRedirect(incoming());
+      allow update: if isAdmin() && isValidId(redirectId) && isValidRedirect(incoming());
+      allow delete: if isAdmin() && isValidId(redirectId);
+    }
+
+    // --- Data Deletions (GDPR) ---
+    match /data_deletions/{deletionId} {
+      function isValidDeletion(data) {
+        return data.keys().hasAll(['name', 'email', 'reasonType', 'status', 'createdAt', 'siteYear', 'timeframeLimit']) &&
+               data.name is string && data.name.size() <= 200 &&
+               data.email is string && data.email.size() <= 200 &&
+               data.reasonType is string && data.reasonType.size() <= 100 &&
+               data.status is string && data.status.size() <= 50 &&
+               data.createdAt is string && data.createdAt.size() <= 100 &&
+               data.siteYear is number &&
+               data.timeframeLimit is string && data.timeframeLimit.size() <= 50;
+      }
+      allow read, list, update, delete: if isAdmin();
+      allow create: if isValidDeletion(incoming());
+    }
+
+    // --- Legal Claims (DMCA) ---
+    match /legal_claims/{claimId} {
+      function isValidClaim(data) {
+        return data.keys().hasAll(['claimantName', 'claimantEmail', 'claimantPhone', 'claimantAddress', 'claimType', 'workTitle', 'originalUrl', 'infringingUrl', 'claimNotes', 'digitalSignature', 'status', 'createdAt', 'siteYear', 'originalHost']) &&
+               data.claimantName is string && data.claimantName.size() <= 200 &&
+               data.claimantEmail is string && data.claimantEmail.size() <= 200 &&
+               data.claimantPhone is string && data.claimantPhone.size() <= 100 &&
+               data.claimantAddress is string && data.claimantAddress.size() <= 500 &&
+               data.claimType is string && data.claimType.size() <= 100 &&
+               data.workTitle is string && data.workTitle.size() <= 500 &&
+               data.originalUrl is string && data.originalUrl.size() <= 2000 &&
+               data.infringingUrl is string && data.infringingUrl.size() <= 2000 &&
+               data.claimNotes is string && data.claimNotes.size() <= 5000 &&
+               data.digitalSignature is string && data.digitalSignature.size() <= 200 &&
+               data.status is string && data.status.size() <= 50 &&
+               data.createdAt is string && data.createdAt.size() <= 100 &&
+               data.siteYear is number &&
+               data.originalHost is string && data.originalHost.size() <= 500;
+      }
+      allow read, list, update, delete: if isAdmin();
+      allow create: if isValidClaim(incoming());
+    }
+
+    // --- Legal Contacts ---
+    match /legal_contacts/{contactId} {
+      function isValidLegalContact(data) {
+        return data.keys().hasAll(['contactName', 'contactEmail', 'contactSubject', 'contactMessage', 'status', 'createdAt', 'siteYear']) &&
+               data.contactName is string && data.contactName.size() <= 200 &&
+               data.contactEmail is string && data.contactEmail.size() <= 200 &&
+               data.contactSubject is string && data.contactSubject.size() <= 200 &&
+               data.contactMessage is string && data.contactMessage.size() <= 5000 &&
+               data.status is string && data.status.size() <= 50 &&
+               data.createdAt is string && data.createdAt.size() <= 100 &&
+               data.siteYear is number;
+      }
+      allow read, list, update, delete: if isAdmin();
+      allow create: if isValidLegalContact(incoming());
+    }
+
     // --- Admins ---
     match /admins/{uid} {
       allow read: if request.auth.uid == uid || isAdmin();

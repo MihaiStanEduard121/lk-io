@@ -12,7 +12,8 @@ export default function ShowEditor() {
     title: '',
     description: '',
     thumbnail: '',
-    banner: ''
+    banner: '',
+    isFeatured: false
   });
 
   const [loading, setLoading] = useState(false);
@@ -21,14 +22,14 @@ export default function ShowEditor() {
   useEffect(() => {
     if (isEdit) {
       api.getShow(id).then(data => {
-        setFormData(data);
+        setFormData(prev => ({ ...prev, ...data }));
       });
     }
   }, [id, isEdit]);
 
   const handleChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleUpload = async (e: any, field: string) => {
@@ -108,6 +109,19 @@ export default function ShowEditor() {
                 </label>
               </div>
               {formData.banner && <img src={formData.banner} alt="banner" className="mt-2 h-20 w-auto rounded border border-zinc-700 object-cover" />}
+            </div>
+            
+            <div className="md:col-span-2 mt-2">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  name="isFeatured" 
+                  checked={formData.isFeatured} 
+                  onChange={handleChange} 
+                  className="w-5 h-5 rounded border-zinc-800 bg-zinc-950 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-zinc-900"
+                />
+                <span className="text-zinc-300 font-medium">Apare în Recomandate pe Homepage (Secțiunea Emisiuni)</span>
+              </label>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "programetv.online",
+  "description": "Portal media pentru canalele TV live din România cu ghid TV și noutăți, incluzând descrieri calitative generate prin AI.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

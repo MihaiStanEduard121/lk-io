@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { TVProgram, Article, Show, HomepageConfig } from '../../types';
-import { Play, Star, Eye, AlertCircle, ChevronRight, MonitorPlay } from 'lucide-react';
+import { Play, Star, Eye, AlertCircle, ChevronRight, MonitorPlay, Tv } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
@@ -55,7 +55,19 @@ export default function Home() {
   }, []);
 
   if (loading) {
-    return <div className="h-screen flex items-center justify-center text-zinc-500">Încărcare...</div>;
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-16 animate-pulse">
+        <div className="h-[50vh] bg-zinc-900 rounded-2xl mb-16"></div>
+        <div className="h-8 w-48 bg-zinc-900 rounded-lg mb-8"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+          {[1,2,3,4].map(i => <div key={i} className="aspect-video bg-zinc-900 rounded-xl"></div>)}
+        </div>
+        <div className="h-8 w-48 bg-zinc-900 rounded-lg mb-8"></div>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
+          {[1,2,3,4,5,6].map(i => <div key={i} className="aspect-[2/3] bg-zinc-900 rounded-xl"></div>)}
+        </div>
+      </div>
+    );
   }
 
   const featured = programs.length > 0 ? programs[0] : null;
@@ -78,40 +90,44 @@ export default function Home() {
       )}
 
       {/* Hero Featured */}
-      {featured && (
-        <section className="relative h-[70vh] flex items-center border-b border-zinc-900">
-          <div className="absolute inset-0">
-            <img src={config?.heroBackgroundImage || featured.banner} alt={featured.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent"></div>
-          </div>
-          
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 w-full">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-2xl"
-            >
+      <section className="relative h-[70vh] flex items-center border-b border-zinc-900">
+        <div className="absolute inset-0">
+          {config?.heroBackgroundImage ? (
+            <img src={config.heroBackgroundImage} alt="Promo" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1593789382576-54f489cea515?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40"></div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent"></div>
+        </div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 w-full">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-2xl"
+          >
+            {config?.heroLink && (
               <div className="inline-block px-3 py-1 bg-indigo-600 rounded-full text-xs font-bold text-white mb-4 shadow-lg shadow-indigo-500/20">
-                LIVE ACUM
+                PROMO LIVE
               </div>
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-4 drop-shadow-lg">
-                {config?.heroTitle || featured.title}
-              </h1>
-              <p className="text-lg text-zinc-300 mb-8 line-clamp-3">
-                {config?.heroSubtitle || featured.description.replace(/<[^>]*>?/gm, '').split('\n')[0]}
-              </p>
-              <div className="flex items-center space-x-4">
-                <Link to={`/play/${featured.id}`} className="flex items-center space-x-2 bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-zinc-200 transition-colors">
-                  <Play fill="currentColor" className="w-5 h-5" />
-                  <span>Urmărește acum</span>
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
+            )}
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-4 drop-shadow-lg">
+              {config?.heroTitle || 'programetv.online'}
+            </h1>
+            <p className="text-lg text-zinc-300 mb-8 line-clamp-3">
+              {config?.heroSubtitle || 'Urmărește cele mai populare transmisiuni, meciuri și emisiuni live într-un singur loc.'}
+            </p>
+            <div className="flex items-center space-x-4">
+              <Link to={config?.heroLink || '/#canale'} onClick={(e) => { if(!config?.heroLink) { e.preventDefault(); document.getElementById('canale')?.scrollIntoView({ behavior: 'smooth' }); } }} className="flex items-center space-x-2 bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-zinc-200 transition-colors">
+                <Play fill="currentColor" className="w-5 h-5" />
+                <span>Urmărește acum</span>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-16 space-y-24">
         
@@ -130,7 +146,7 @@ export default function Home() {
                   <Link to={`/news/${art.slug}`} className="group block h-full bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors flex flex-col">
                     {art.coverImage && (
                       <div className="aspect-video w-full overflow-hidden bg-zinc-950">
-                        <img src={art.coverImage} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <img src={art.coverImage} alt={`Imagine stire - ${art.title}`} title={art.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(art.title)}&background=random&color=fff&size=500` }} />
                       </div>
                     )}
                     <div className="p-5 flex-1 flex flex-col">
@@ -145,15 +161,58 @@ export default function Home() {
           </section>
         )}
 
+        {/* Emisiuni Recomandate / Featured */}
+        {programs.filter(p => p.isFeatured).length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-8 border-b border-zinc-800 pb-4">
+              <h2 className="text-2xl font-bold text-white tracking-tight flex items-center">
+                <Star className="w-6 h-6 mr-3 text-yellow-500" /> Transmisiuni Recomandate
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {programs.filter(p => p.isFeatured).map(p => (
+                <Link key={p.id} to={`/play/${p.id}`} className="group relative block aspect-video rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all">
+                  <img src={p.thumbnail} alt={`Logo canal ${p.title}`} title={`${p.title} Live`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-90 group-hover:opacity-100" loading="lazy" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.title)}&background=random&color=fff&size=500` }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
+                  
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <span className="px-2 py-1 bg-rose-600 rounded text-[10px] font-bold text-white flex items-center shadow-lg uppercase tracking-wider">
+                      <span className="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>
+                      LIVE
+                    </span>
+                    <span className="px-2 py-1 bg-yellow-500 rounded text-[10px] font-bold text-black flex items-center shadow-lg uppercase tracking-wider">
+                      RECOMANDAT
+                    </span>
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-white font-bold text-lg leading-tight mb-1 group-hover:text-amber-400 transition-colors drop-shadow-md flex items-center gap-2">
+                       {p.title}
+                    </h3>
+                  </div>
+
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                      <Play className="w-6 h-6 text-white ml-1" fill="currentColor" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Canale Live */}
-        <section>
+        <section id="canale">
           <div className="flex items-center justify-between mb-8 border-b border-zinc-800 pb-4">
-            <h2 className="text-2xl font-bold text-white tracking-tight">Toate canalele live</h2>
+            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center">
+              <Tv className="w-6 h-6 mr-3 text-indigo-500" /> Toate canalele live
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {programs.map(p => (
               <Link key={p.id} to={`/play/${p.id}`} className="group relative block aspect-video rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all">
-                <img src={p.thumbnail} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100" />
+                <img src={p.thumbnail} alt={`Logo / Poster TV - ${p.title}`} title={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100" loading="lazy" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.title)}&background=random&color=fff&size=500` }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/50">
@@ -198,15 +257,39 @@ export default function Home() {
                 Vezi toate emisiunile <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
             </div>
+
+            {/* Emisiuni Recomandate (daca exista) */}
+            {recentShows.filter(s => s.isFeatured).length > 0 && (
+              <div className="mb-8 p-6 bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
+                <h3 className="text-lg font-bold text-indigo-400 mb-6 flex items-center">
+                   <Star className="w-5 h-5 mr-2 text-indigo-400 fill-indigo-400/20" /> Selecția Editorului
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                  {recentShows.filter(s => s.isFeatured).map(s => (
+                    <Link key={s.id} to={`/shows/${s.slug}`} className="group cursor-pointer">
+                       <div className="aspect-[2/3] bg-zinc-900 rounded-xl overflow-hidden mb-3 ring-1 ring-zinc-800 group-hover:ring-indigo-500/50 transition-all shadow-lg relative">
+                         <img src={s.thumbnail} alt={`Poster Emisiune - ${s.title}`} title={s.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-90 group-hover:opacity-100" loading="lazy" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.title)}&background=random&color=fff&size=500` }} />
+                         <div className="absolute top-2 right-2 bg-indigo-600 rounded text-[10px] font-bold text-white px-2 py-1 shadow-md">FAVORIT</div>
+                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <Play fill="currentColor" className="w-10 h-10 text-white" />
+                         </div>
+                       </div>
+                       <h3 className="text-zinc-200 font-medium group-hover:text-white transition-colors line-clamp-1">{s.title}</h3>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {recentShows.map((show, i) => (
+              {recentShows.filter(s => !s.isFeatured).map((show, i) => (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} key={show.id}>
                   <Link to={`/shows/${show.slug}`} className="group block relative rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:ring-2 hover:ring-indigo-500 transition-all aspect-[2/3] shadow-lg">
                     {show.thumbnail ? (
                       <img 
                         src={show.thumbnail} 
-                        alt={show.title} 
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                        alt={`Poster Emisiune TV - ${show.title}`} title={show.title} 
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" loading="lazy" onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(show.title)}&background=random&color=fff&size=500` }}
                       />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950 flex justify-center items-center font-bold text-zinc-700">{show.title[0]}</div>
