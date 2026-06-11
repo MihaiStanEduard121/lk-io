@@ -91,6 +91,86 @@ router.post('/generate-chapter', async (req, res) => {
   }
 });
 
+// Advanced Writer Tools for articles with Gemini
+router.post('/generate-article-ai', async (req, res) => {
+  try {
+    const { action, title, outline, content } = req.body;
+    
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cheia GEMINI_API_KEY lipsește din secretele aplicației. Vă rugăm să o configurați în Settings > Secrets în AI Studio.' 
+      });
+    }
+
+    const ai = new GoogleGenAI({
+      apiKey: apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build"
+        }
+      }
+    });
+
+    let prompt = "";
+    let systemInstruction = "Ești un jurnalist profesionist și redactor șef din România. Scrie corect gramatical, cu diacritice, captivant, informativ și bine organizat în limba română.";
+
+    if (action === 'draft') {
+      prompt = `Scrie un articol de știri detaliat și captivant în limba română, bazat pe titlul: "${title}".
+      ${outline ? `Include următoarea structură de idei: ${outline}.` : ""}
+      Articolul trebuie să aibă între 450 și 900 de cuvinte, organizat cu subtitlu Markdown (###) și paragrafe bine articulate.`;
+    } else if (action === 'expand') {
+      prompt = `Dezvoltă și adaugă mai multe detalii interesante, context explicativ, statistici probabile sau argumente la următorul conținut jurnalistic existent:
+      ---
+      ${content}
+      ---
+      Păstrează acuratețea textului și returnează direct articolul extins complet în format Markdown.`;
+    } else if (action === 'polish') {
+      prompt = `Șlefuiește stilul, corectează eventualele greșeli de gramatică sau exprimare, asigură diacritice impecabile și îmbunătățește cursivitatea pentru textul de mai jos:
+      ---
+      ${content}
+      ---
+      Returnează direct conținutul final corectat în format Markdown, fără mesaje adiționale sau introduceri.`;
+    } else if (action === 'seo') {
+      prompt = `Generează sugestii SEO exclusive pe baza titlului "${title}". 
+      Returnează doar un obiect JSON simplu, fără formatare markdown de blocuri (NU adăuga ticks de tip \`\`\`json sau \`\`\`), cu următoarele chei sigure:
+      {
+        "metaDescription": "o descriere optimă de maximum 155 caractere gata de indexat în Google",
+        "keywords": "cuvinte, cheie, listate, prin, virgula, relevante",
+        "slug": "slug-url-optimizat-doar-litere-mici-si-cratime"
+      }
+      Conținutul textului din care să te inspiri:
+      ${(content || '').substring(0, 800)}`;
+      systemInstruction = "Ești un expert de top în tehnici de SEO On-Page și vrei să ajuți crawlerele Google să indexeze conținutul instantaneu. Răspunde exclusiv printr-un JSON cu structura cerută.";
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt,
+      config: {
+        systemInstruction,
+        temperature: action === 'seo' ? 0.3 : 0.7,
+      }
+    });
+
+    let resultText = response.text || '';
+    if (action === 'seo') {
+      // Strip any accidental markdown formatting if the model still wrapped it
+      resultText = resultText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    }
+
+    res.json({
+      success: true,
+      result: resultText
+    });
+
+  } catch (error: any) {
+    console.error('[AI Routes] generate-article-ai error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Eroare la procesarea textului cu AI.' });
+  }
+});
+
 router.post('/save-description', async (req, res) => {
   try {
     const { programId, description } = req.body;

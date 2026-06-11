@@ -1,5 +1,5 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Film, FileText, MonitorPlay, LogOut, Settings, Hash, MessageSquare, CalendarClock, Globe, Users, TrafficCone, Image } from 'lucide-react';
+import { LayoutDashboard, Film, FileText, MonitorPlay, LogOut, Settings, Hash, MessageSquare, CalendarClock, Globe, Users, TrafficCone, Image, Award, TrendingUp, Bell, Sparkles } from 'lucide-react';
 import { getAuthToken } from '../../lib/api';
 
 export default function AdminLayout() {
@@ -20,6 +20,10 @@ export default function AdminLayout() {
     { to: '/adminadmin/redirects', icon: TrafficCone, label: 'Redirecționări SEO' },
     { to: '/adminadmin/categories', icon: Hash, label: 'Categorii Ştiri' },
     { to: '/adminadmin/comments', icon: MessageSquare, label: 'Comentarii' },
+    { to: '/adminadmin/world-cup', icon: Award, label: 'Meciuri Cupă' },
+    { to: '/adminadmin/ad-revenue', icon: TrendingUp, label: 'Venituri Reclame' },
+    { to: '/adminadmin/popups', icon: Bell, label: 'Pop-up Global' },
+    { to: '/adminadmin/article-generator', icon: Sparkles, label: 'Generator Articole' },
     { to: '/adminadmin/media', icon: Image, label: 'Media & Logo-uri' },
     { to: '/adminadmin/settings', icon: Settings, label: 'Setări Site' },
   ];

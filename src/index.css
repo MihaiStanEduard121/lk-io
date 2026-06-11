@@ -51,3 +51,22 @@
   top: 0;
   left: 0;
 }
+
+/* Hide Google Translate top bar & tooltips for pristine native experience */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+}
+body {
+  top: 0px !important;
+}
+.translated-ltr {
+  margin-top: 0px !important;
+}
+font {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+

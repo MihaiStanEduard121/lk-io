@@ -107,6 +107,33 @@
         "duration": { "type": "number" },
         "createdAt": { "type": "string" }
       }
+    },
+    "MatchPlayer": {
+      "title": "Match Players",
+      "description": "Streaming sources configured of each match",
+      "type": "object",
+      "properties": {
+        "matchId": { "type": "string" },
+        "player1Active": { "type": "boolean" },
+        "player1Embed": { "type": "string" },
+        "player2Active": { "type": "boolean" },
+        "player2Embed": { "type": "string" },
+        "player3Active": { "type": "boolean" },
+        "player3Embed": { "type": "string" }
+      }
+    },
+    "WorldCupChat": {
+      "title": "World Cup Chats",
+      "description": "Live match comments sent by real fans",
+      "type": "object",
+      "properties": {
+        "matchId": { "type": "string" },
+        "user": { "type": "string" },
+        "text": { "type": "string" },
+        "time": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "team": { "type": "string" }
+      }
     }
   },
   "firestore": {
@@ -121,6 +148,8 @@
     "admins": {
       "schema": { "title": "Admins", "description": "Admins", "type": "object", "properties": {} },
       "description": "Authorized administrators"
-    }
+    },
+    "match_players": { "schema": { "$ref": "#/entities/MatchPlayer" }, "description": "Matches dynamic player streamers config" },
+    "world_cup_chats": { "schema": { "$ref": "#/entities/WorldCupChat" }, "description": "Fans supporter messages stream" }
   }
 }

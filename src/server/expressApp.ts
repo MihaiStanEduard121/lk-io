@@ -102,7 +102,7 @@ Sitemap: ${domain}/sitemap.xml`);
       xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
       // 1. Static Pages
-      const staticPages = ['', '/news', '/shows', '/schedule', '/search'];
+      const staticPages = ['', '/news', '/shows', '/schedule', '/search', '/world-cup'];
       for (const p of staticPages) {
         xml += `  <url>\n    <loc>${domain}${p}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
       }
@@ -121,6 +121,11 @@ Sitemap: ${domain}/sitemap.xml`);
       for (const p of legalPages) {
         const escapedUrl = `${domain}${p}`.replace(/&/g, '&amp;');
         xml += `  <url>\n    <loc>${escapedUrl}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`;
+      }
+
+      // 1c. World Cup Dynamic Match Pages for instant Google-indexing
+      for (let i = 1; i <= 48; i++) {
+        xml += `  <url>\n    <loc>${domain}/world-cup/wc-2026-m${i}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
       }
 
       // 2. Dynamic Live Programs (Channels)
@@ -165,6 +170,61 @@ Sitemap: ${domain}/sitemap.xml`);
       res.send(xml);
     } catch (err: any) {
       console.error("Sitemap generation failed:", err);
+      res.status(500).send("Internal Server Error");
+    }
+  });
+
+  // Dynamic public RSS Feed for rapid Google/Bing indexing
+  app.get('/rss.xml', async (req, res) => {
+    try {
+      const domain = `${req.protocol}://${req.get('host')}`;
+      const dbInstance = getDb();
+      let articles: any[] = [];
+
+      if (dbInstance) {
+        try {
+          const snapshotArticles = await getDocs(collection(dbInstance, 'articles'));
+          articles = snapshotArticles.docs.map(docSnap => {
+            const data = docSnap.data();
+            return {
+              title: data.title || '',
+              slug: data.slug || docSnap.id,
+              content: data.content || '',
+              publishedAt: data.publishedAt || new Date().toISOString()
+            };
+          }).filter(a => a.title).sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+        } catch (e) {
+          console.error("Error reading RSS articles:", e);
+        }
+      }
+
+      let rss = `<?xml version="1.0" encoding="UTF-8" ?>\n`;
+      rss += `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n`;
+      rss += `<channel>\n`;
+      rss += `  <title>programetv.online - Ultimele Știri</title>\n`;
+      rss += `  <link>${domain}</link>\n`;
+      rss += `  <description>Urmărește cele mai populare transmisiuni, știri și meciuri din România în timp real</description>\n`;
+      rss += `  <language>ro-ro</language>\n`;
+      rss += `  <atom:link href="${domain}/rss.xml" rel="self" type="application/rss+xml" />\n`;
+
+      for (const art of articles.slice(0, 25)) {
+        const cleanContent = art.content.replace(/<[^>]*>?/gm, '').substring(0, 300);
+        rss += `  <item>\n`;
+        rss += `    <title><![CDATA[${art.title}]]></title>\n`;
+        rss += `    <link>${domain}/news/${art.slug}</link>\n`;
+        rss += `    <guid>${domain}/news/${art.slug}</guid>\n`;
+        rss += `    <pubDate>${new Date(art.publishedAt).toUTCString()}</pubDate>\n`;
+        rss += `    <description><![CDATA[${cleanContent}...]]></description>\n`;
+        rss += `  </item>\n`;
+      }
+
+      rss += `</channel>\n`;
+      rss += `</rss>`;
+
+      res.header('Content-Type', 'application/xml');
+      res.send(rss);
+    } catch (err: any) {
+      console.error("RSS generation failed:", err);
       res.status(500).send("Internal Server Error");
     }
   });

@@ -4,6 +4,7 @@
  */
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { LanguageProvider } from './context/LanguageContext';
 import PublicLayout from './components/layout/PublicLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import Home from './pages/public/Home';
@@ -14,6 +15,9 @@ import ShowsPage from './pages/public/ShowsPage';
 import ShowDetailPage from './pages/public/ShowDetailPage';
 import SearchPage from './pages/public/SearchPage';
 import LegalPage from './pages/public/LegalPage';
+import WorldCupPage from './pages/public/WorldCupPage';
+import WorldCupMatchDetailPage from './pages/public/WorldCupMatchDetailPage';
+import DonationsPage from './pages/public/DonationsPage';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProgramList from './pages/admin/ProgramList';
@@ -32,16 +36,21 @@ import ScheduleManager from './pages/admin/ScheduleManager';
 import ScraperSettings from './pages/admin/ScraperSettings';
 import RedirectManager from './pages/admin/RedirectManager';
 import LivePresence from './pages/admin/LivePresence';
+import WorldCupManager from './pages/admin/WorldCupManager';
+import AdRevenueManager from './pages/admin/AdRevenueManager';
+import PopupManager from './pages/admin/PopupManager';
+import ArticleGenerator from './pages/admin/ArticleGenerator';
 import SchedulePage from './pages/public/SchedulePage';
 import PresenceTracker from './components/PresenceTracker';
 import CookieConsent from './components/CookieConsent';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <PresenceTracker />
-      <CookieConsent />
-      <Routes>
+    <LanguageProvider>
+      <BrowserRouter>
+        <PresenceTracker />
+        <CookieConsent />
+        <Routes>
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
@@ -52,6 +61,9 @@ export default function App() {
           <Route path="/shows/:slug" element={<ShowDetailPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/world-cup" element={<WorldCupPage />} />
+          <Route path="/world-cup/:id" element={<WorldCupMatchDetailPage />} />
+          <Route path="/donations" element={<DonationsPage />} />
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/privacy-policy" element={<LegalPage />} />
           <Route path="/terms-of-service" element={<LegalPage />} />
@@ -91,8 +103,13 @@ export default function App() {
           <Route path="categories" element={<CategoryList />} />
           <Route path="comments" element={<CommentModeration />} />
           <Route path="tv-schedule" element={<ScheduleManager />} />
+          <Route path="world-cup" element={<WorldCupManager />} />
+          <Route path="ad-revenue" element={<AdRevenueManager />} />
+          <Route path="popups" element={<PopupManager />} />
+          <Route path="article-generator" element={<ArticleGenerator />} />
         </Route>
       </Routes>
     </BrowserRouter>
-  );
+  </LanguageProvider>
+ );
 }

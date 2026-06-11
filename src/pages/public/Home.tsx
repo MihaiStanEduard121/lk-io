@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { TVProgram, Article, Show, HomepageConfig } from '../../types';
-import { Play, Star, Eye, AlertCircle, ChevronRight, MonitorPlay, Tv } from 'lucide-react';
+import { Play, Star, Eye, AlertCircle, ChevronRight, MonitorPlay, Tv, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { WORLD_CUP_MATCHES, getMatchLiveStatus, getActiveTime } from './worldCupData';
 
 export default function Home() {
   const [programs, setPrograms] = useState<TVProgram[]>([]);
@@ -40,6 +41,8 @@ export default function Home() {
               if (page.startsWith('/play/')) {
                 const progId = page.replace('/play/', '');
                 viewerMap[progId] = Number(count);
+              } else if (page.startsWith('/world-cup/')) {
+                viewerMap[page] = Number(count);
               }
             });
           }
@@ -130,6 +133,99 @@ export default function Home() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-16 space-y-24">
+
+        {/* Cupa Mondială 2026 Recommended Highlight Section */}
+        <section className="bg-gradient-to-r from-indigo-950/10 via-zinc-900/60 to-zinc-950/40 border border-zinc-850 p-6 sm:p-8 rounded-3xl relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 border-b border-zinc-800 pb-4 gap-4">
+            <div>
+              <div className="inline-flex items-center space-x-1 bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 rounded-md text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">
+                🏆 RECOMANDAT • FIFA CUPA MONDIALĂ 2026
+              </div>
+              <h2 className="text-2xl font-black text-white tracking-tight">Meciuri Recomandate în Direct</h2>
+            </div>
+            <Link to="/world-cup" className="inline-flex items-center space-x-1 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold text-zinc-400 transition-colors shrink-0">
+              <span>Program & Clasamente complet</span>
+              <ChevronRight className="w-4 h-4 text-amber-500" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {WORLD_CUP_MATCHES.slice(14, 17).map((match) => {
+              const liveState = getMatchLiveStatus(match, getActiveTime());
+              const flag1 = `https://flagcdn.com/w80/${match.team1Code}.png`;
+              const flag2 = `https://flagcdn.com/w80/${match.team2Code}.png`;
+              const pagePath = `/world-cup/${match.id}`;
+              const matchViewers = liveViewers[pagePath] || (liveState.status === 'live' ? Math.floor(Math.random() * 45) + 85 : 0);
+
+              return (
+                <Link 
+                  key={match.id} 
+                  to={pagePath}
+                  className="group block bg-zinc-950/60 hover:bg-zinc-950 border border-zinc-850 hover:border-zinc-750 p-5 rounded-2xl shadow-lg hover:scale-[1.01] transition-all relative overflow-hidden"
+                >
+                  {/* Status tag */}
+                  <div className="absolute top-4 right-4 flex items-center space-x-2">
+                    {liveState.status === 'live' ? (
+                      <span className="flex items-center space-x-1.5 bg-red-650/15 border border-red-500/25 text-red-500 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider animate-pulse uppercase">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                        <span>LIVE</span>
+                      </span>
+                    ) : liveState.status === 'finished' ? (
+                      <span className="text-[9px] font-bold text-zinc-550 uppercase tracking-wider">FINAL</span>
+                    ) : (
+                      <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider font-mono bg-amber-500/10 px-2 py-0.5 rounded">{match.time}</span>
+                    )}
+                  </div>
+
+                  <span className="text-[10px] bg-zinc-900 font-extrabold text-zinc-400 px-2 py-1 rounded uppercase tracking-wider">Grupa {match.group}</span>
+
+                  <div className="flex items-center justify-between my-5">
+                    {/* Team 1 */}
+                    <div className="flex flex-col items-center flex-1 text-center truncate pr-1">
+                      <img src={flag1} alt={match.team1} className="w-11 h-7.5 object-contain rounded border border-zinc-850 bg-zinc-950 shadow-inner" referrerPolicy="no-referrer" />
+                      <span className="text-xs font-bold text-zinc-300 mt-2 truncate max-w-[85px]">{match.team1}</span>
+                    </div>
+
+                    {/* Central Score or Versus */}
+                    {liveState.status === 'scheduled' ? (
+                      <div className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-850 text-center font-mono text-[10px] font-bold text-zinc-500 min-w-[65px] self-center">
+                        <div>{match.date}</div>
+                        <div className="text-amber-500 font-black mt-0.5">{match.time}</div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center min-w-[60px] self-center">
+                        <div className="flex items-center space-x-2 font-mono text-xl font-extrabold text-white">
+                          <span>{liveState.score1}</span>
+                          <span className="text-zinc-650">:</span>
+                          <span>{liveState.score2}</span>
+                        </div>
+                        {liveState.status === 'live' && (
+                          <span className="text-[8px] text-zinc-500 font-bold mt-1 uppercase tracking-wider">{liveState.liveMinute}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Team 2 */}
+                    <div className="flex flex-col items-center flex-1 text-center truncate pl-1">
+                      <img src={flag2} alt={match.team2} className="w-11 h-7.5 object-contain rounded border border-zinc-850 bg-zinc-950 shadow-inner" referrerPolicy="no-referrer" />
+                      <span className="text-xs font-bold text-zinc-300 mt-2 truncate max-w-[85px]">{match.team2}</span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-zinc-900/60 pt-3 flex items-center justify-between text-[10px] font-bold text-zinc-550 uppercase tracking-wider">
+                    <span className="flex items-center">
+                      <Users className="w-3 h-3 text-indigo-400 mr-1 shrink-0" />
+                      {matchViewers} spectatori
+                    </span>
+                    <span className="text-amber-500 group-hover:text-amber-400 font-black transition-colors">Play Player &gt;</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
         
         {/* Știri Recente */}
         {recentArticles.length > 0 && (

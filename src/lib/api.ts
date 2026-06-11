@@ -218,6 +218,30 @@ export const api = {
     return data;
   },
 
+  // Popup Config
+  getPopupConfig: async () => {
+    const d = await getDoc(doc(db, 'settings', 'popups'));
+    if (!d.exists()) {
+      return {
+        active: false,
+        type: 'info',
+        title: 'Anunț Important',
+        content: 'Bine ai venit pe platforma noastră! Dacă apreciezi munca noastră, ne poți susține printr-o mică donație.',
+        imageUrl: '',
+        linkUrl: '/donations',
+        linkText: 'Donează acum',
+        triggerType: 'once',
+        delaySeconds: 5,
+        cookieExpiryDays: 1,
+      };
+    }
+    return mapDoc(d);
+  },
+  updatePopupConfig: async (data: any) => {
+    await setDoc(doc(db, 'settings', 'popups'), data);
+    return data;
+  },
+
   // Search
   search: async (qStr: string) => {
     const queryStr = (qStr || '').toLowerCase();

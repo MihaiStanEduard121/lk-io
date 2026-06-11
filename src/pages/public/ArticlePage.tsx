@@ -28,6 +28,69 @@ export default function ArticlePage() {
       setArticle(data);
       if (data) {
         setComments(coms.filter((c: Comment) => c.articleId === data.id && c.approved));
+        
+        // 1. Dynamic document title
+        document.title = `${data.title} - Știri programetv.online`;
+
+        // 2. Clear clean text for description
+        const plainTextExcerpt = data.content
+          ? data.content.replace(/<[^>]*>?/gm, '').substring(0, 155).trim()
+          : '';
+
+        // 3. Structured Data JSON-LD
+        const schema = {
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "headline": data.title,
+          "image": data.coverImage ? [data.coverImage] : [],
+          "datePublished": data.publishedAt || new Date().toISOString(),
+          "dateModified": data.publishedAt || new Date().toISOString(),
+          "author": [{
+            "@type": "Person",
+            "name": data.author || 'Redactor'
+          }],
+          "publisher": {
+            "@type": "Organization",
+            "name": "programetv.online",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://images.unsplash.com/photo-1593789382576-54f489cea515?q=80&w=200"
+            }
+          },
+          "description": plainTextExcerpt
+        };
+
+        const existingScript = document.getElementById('jsonld-article-schema');
+        if (existingScript) existingScript.remove();
+
+        const script = document.createElement('script');
+        script.id = 'jsonld-article-schema';
+        script.type = 'application/ld+json';
+        script.text = JSON.stringify(schema);
+        document.head.appendChild(script);
+
+        // 4. Update or create Meta Tags
+        const updateOrCreateMeta = (nameAttr: string, propertyAttr: string, contentVal: string) => {
+          let element = nameAttr 
+            ? document.querySelector(`meta[name="${nameAttr}"]`) 
+            : document.querySelector(`meta[property="${propertyAttr}"]`);
+            
+          if (!element) {
+            element = document.createElement('meta');
+            if (nameAttr) element.setAttribute('name', nameAttr);
+            if (propertyAttr) element.setAttribute('property', propertyAttr);
+            document.head.appendChild(element);
+          }
+          element.setAttribute('content', contentVal);
+        };
+
+        updateOrCreateMeta('description', '', plainTextExcerpt);
+        updateOrCreateMeta('keywords', '', `stiri, tv, live, program, ${data.title.toLowerCase().split(' ').join(', ')}`);
+        updateOrCreateMeta('', 'og:title', data.title);
+        updateOrCreateMeta('', 'og:description', plainTextExcerpt);
+        if (data.coverImage) {
+          updateOrCreateMeta('', 'og:image', data.coverImage);
+        }
       }
       setCategories(cats);
       setLoading(false);
