@@ -14,12 +14,12 @@ export function enhanceEmbedCode(embedCode: string | undefined): string {
   let clean = embedCode;
 
   if (clean.includes('<iframe')) {
-    // 1. Force referrerpolicy to "no-referrer" to strip our dynamic/preview host-based referrer headers
+    // 1. Force referrerpolicy to "strict-origin-when-cross-origin" to allow necessary referrer information for embedding
     if (clean.includes('referrerpolicy=')) {
-      clean = clean.replace(/referrerpolicy="[^"]*"/gi, 'referrerpolicy="no-referrer"');
-      clean = clean.replace(/referrerpolicy='[^']*'/gi, 'referrerpolicy="no-referrer"');
+      clean = clean.replace(/referrerpolicy="[^"]*"/gi, 'referrerpolicy="strict-origin-when-cross-origin"');
+      clean = clean.replace(/referrerpolicy='[^']*'/gi, 'referrerpolicy="strict-origin-when-cross-origin"');
     } else {
-      clean = clean.replace(/<iframe/gi, '<iframe referrerpolicy="no-referrer"');
+      clean = clean.replace(/<iframe/gi, '<iframe referrerpolicy="strict-origin-when-cross-origin"');
     }
 
     // 2. Ensure wide-ranging permissions for stream players
