@@ -188,12 +188,12 @@ export const WORLD_CUP_MATCHES: WCMatch[] = MATCH_TEMPLATES.map((tpl, i) => {
   // High-performance streaming options: embed free player loops that bypass iframe security
   // or a custom HTML5 test streaming file, or YouTube Live embeds
   const embedCodeMap: Record<string, string> = {
-    'Mexic': `<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
-    'SUA': `<iframe src="https://www.youtube.com/embed/3A8Ksc0ZzGg?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
-    'Canada': `<iframe src="https://www.youtube.com/embed/mAL6390Hj_8?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
+    'Mexic': `<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
+    'SUA': `<iframe src="https://www.youtube.com/embed/3A8Ksc0ZzGg?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
+    'Canada': `<iframe src="https://www.youtube.com/embed/mAL6390Hj_8?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
   };
 
-  const defaultEmbed = `<iframe src="https://player.vimeo.com/video/521799279?autoplay=1&muted=1&loop=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
+  const defaultEmbed = `<iframe src="https://player.vimeo.com/video/521799279?autoplay=1&muted=1&loop=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
 
   return {
     id: `wc-2026-m${i + 1}`,

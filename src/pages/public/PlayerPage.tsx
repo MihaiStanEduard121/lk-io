@@ -14,20 +14,20 @@ export function enhanceEmbedCode(embedCode: string | undefined): string {
   let clean = embedCode;
 
   if (clean.includes('<iframe')) {
-    // 1. Force referrerpolicy to "strict-origin-when-cross-origin" to allow necessary referrer information for embedding
+    // 1. Force referrerpolicy to "no-referrer"
     if (clean.includes('referrerpolicy=')) {
-      clean = clean.replace(/referrerpolicy="[^"]*"/gi, 'referrerpolicy="strict-origin-when-cross-origin"');
-      clean = clean.replace(/referrerpolicy='[^']*'/gi, 'referrerpolicy="strict-origin-when-cross-origin"');
+      clean = clean.replace(/referrerpolicy="[^"]*"/gi, 'referrerpolicy="no-referrer"');
+      clean = clean.replace(/referrerpolicy='[^']*'/gi, 'referrerpolicy="no-referrer"');
     } else {
-      clean = clean.replace(/<iframe/gi, '<iframe referrerpolicy="strict-origin-when-cross-origin"');
+      clean = clean.replace(/<iframe/gi, '<iframe referrerpolicy="no-referrer"');
     }
 
-    // 2. Ensure wide-ranging permissions for stream players
+    // 2. Ensure required permissions for stream players
     if (clean.includes('allow=')) {
-      clean = clean.replace(/allow="[^"]*"/gi, 'allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; gamepad"');
-      clean = clean.replace(/allow='[^']*'/gi, 'allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; gamepad"');
+      clean = clean.replace(/allow="[^"]*"/gi, 'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"');
+      clean = clean.replace(/allow='[^']*'/gi, 'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"');
     } else {
-      clean = clean.replace(/<iframe/gi, '<iframe allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; gamepad"');
+      clean = clean.replace(/<iframe/gi, '<iframe allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"');
     }
 
     // 3. Force allowing fullscreen
