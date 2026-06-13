@@ -1,23 +1,30 @@
-import { useState, useEffect } from 'react';
-import { db, handleFirestoreError } from '../../lib/firebase';
+import { useState, useEffect, useRef } from 'react';
+import { db, handleFirestoreError, storage } from '../../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { WORLD_CUP_MATCHES, WCMatch } from '../public/worldCupData';
-import { Award, Tv, Ban, Save, CheckCircle, RefreshCcw, HelpCircle } from 'lucide-react';
+import { Award, Tv, Save, CheckCircle, RefreshCcw, HelpCircle, Upload } from 'lucide-react';
 import { motion } from 'motion/react';
+import UploadProgressBar from '../../components/UploadProgressBar';
 
 export default function WorldCupManager() {
   const [selectedMatch, setSelectedMatch] = useState<WCMatch>(WORLD_CUP_MATCHES[0]);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [estimatedTime, setEstimatedTime] = useState<number>(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Configuration settings for Player 1, 2, 3
+  // Configuration settings for Player 1, 2, 3 and Replay
   const [config, setConfig] = useState({
     player1Active: true,
     player1Embed: '',
     player2Active: false,
     player2Embed: '',
     player3Active: false,
-    player3Embed: ''
+    player3Embed: '',
+    replayEmbed: ''
   });
 
   // Load configuration for the selected match
@@ -36,7 +43,8 @@ export default function WorldCupManager() {
             player2Active: !!data.player2Active,
             player2Embed: data.player2Embed || '',
             player3Active: !!data.player3Active,
-            player3Embed: data.player3Embed || ''
+            player3Embed: data.player3Embed || '',
+            replayEmbed: data.replayEmbed || ''
           });
         } else {
           // Pre-populate with defaults from static match details
@@ -46,7 +54,8 @@ export default function WorldCupManager() {
             player2Active: false,
             player2Embed: '',
             player3Active: false,
-            player3Embed: ''
+            player3Embed: '',
+            replayEmbed: ''
           });
         }
       } catch (error) {
@@ -85,11 +94,62 @@ export default function WorldCupManager() {
     }));
   };
 
-  const handleTextChange = (key: 'player1Embed' | 'player2Embed' | 'player3Embed', value: string) => {
+  const handleTextChange = (key: 'player1Embed' | 'player2Embed' | 'player3Embed' | 'replayEmbed', value: string) => {
     setConfig(prev => ({
       ...prev,
       [key]: value
     }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Limit to 50MB - inform user as per previous experience
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      alert('Fișierul este prea mare (>50MB). Te rugăm să-l încarci pe un serviciu de hosting video (YouTube/Vimeo) și să folosești link-ul direct.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+    const startTime = Date.now();
+
+    try {
+      const storageRef = ref(storage, `match_replays/${selectedMatch.id}/${Date.now()}_${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+      
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+          
+          const timeElapsed = (Date.now() - startTime) / 1000;
+          const uploadSpeed = snapshot.bytesTransferred / timeElapsed; // bytes/sec
+          const bytesRemaining = snapshot.totalBytes - snapshot.bytesTransferred;
+          const remainingTime = bytesRemaining / uploadSpeed;
+          setEstimatedTime(remainingTime);
+        },
+        (error) => {
+          console.error('Error uploading file:', error);
+          alert('A apărut o eroare la încărcarea fișierului: ' + error.message);
+          setUploading(false);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setConfig(prev => ({
+            ...prev,
+            replayEmbed: downloadURL
+          }));
+          setUploading(false);
+          setEstimatedTime(0);
+        }
+      );
+    } catch (error) {
+      console.error('Error starting upload:', error);
+      setUploading(false);
+    }
   };
 
   return (
@@ -257,6 +317,50 @@ export default function WorldCupManager() {
                       rows={3}
                       className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-zinc-300 font-mono focus:outline-none focus:border-indigo-500 transition-colors"
                     />
+                  </div>
+                </div>
+
+                {/* Replay Options */}
+                <div className="p-4.5 bg-indigo-900/10 border border-indigo-500/20 rounded-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <RefreshCcw className="w-4.5 h-4.5 text-indigo-400" />
+                      <span className="text-sm font-bold text-indigo-300">Configurare Replay (MP4)</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-400">URL Sursă MP4 (Replay Meci)</label>
+                    <div className="flex gap-2">
+                       <input
+                         type="url"
+                         value={config.replayEmbed}
+                         onChange={(e) => handleTextChange('replayEmbed', e.target.value)}
+                         placeholder="https://exemplu.ro/replay-meci.mp4"
+                         className="flex-grow bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-zinc-300 font-mono focus:outline-none focus:border-indigo-500 transition-colors"
+                       />
+                       <input 
+                         type="file" 
+                         ref={fileInputRef} 
+                         onChange={handleFileUpload} 
+                         className="hidden" 
+                         accept="video/*" 
+                       />
+                       <button
+                         type="button"
+                         onClick={() => fileInputRef.current?.click()}
+                         disabled={uploading}
+                         className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl flex items-center justify-center gap-2 transition-colors relative"
+                       >
+                         <Upload className="w-4 h-4" />
+                       </button>
+                    </div>
+                    {uploading && (
+                      <UploadProgressBar 
+                        progress={uploadProgress} 
+                        isUploading={uploading} 
+                        estimatedTimeSeconds={estimatedTime} 
+                      />
+                    )}
                   </div>
                 </div>
 

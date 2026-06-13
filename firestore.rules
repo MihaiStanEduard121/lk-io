@@ -219,15 +219,12 @@ service cloud.firestore {
 
     // --- Match Players ---
     match /match_players/{matchId} {
-      allow read, list: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // --- World Cup Chats ---
     match /world_cup_chats/{chatId} {
-      allow read, list: if true;
-      allow create: if true;
-      allow update, delete: if isAdmin();
+      allow read, write: if true;
     }
   }
 }

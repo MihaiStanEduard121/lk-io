@@ -17,7 +17,7 @@ export default function WorldCupMatchDetailPage() {
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0, isLive: false });
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [newMsg, setNewMsg] = useState('');
-  const [activeTab, setActiveTab ] = useState<'stream' | 'stats' | 'lineups'>('stream');
+  const [activeTab, setActiveTab ] = useState<'stream' | 'stats' | 'lineups' | 'replay'>('stream');
   
   // Custom Player Config States
   const [activePlayerSource, setActivePlayerSource] = useState<'player1' | 'player2' | 'player3'>('player1');
@@ -502,6 +502,7 @@ export default function WorldCupMatchDetailPage() {
                 { id: 'stream', label: 'Transmisiune Live Player' },
                 { id: 'stats', label: 'Statistici & Predicții' },
                 { id: 'lineups', label: 'Echipe Probabile' },
+                { id: 'replay', label: 'Replay (MP4)' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -689,7 +690,7 @@ export default function WorldCupMatchDetailPage() {
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : activeTab === 'lineups' ? (
               /* Probable Lineups */
               <div className="bg-zinc-900/25 border border-zinc-850 rounded-2xl p-6">
                 <div className="grid grid-cols-2 gap-8 text-xs font-medium">
@@ -729,6 +730,20 @@ export default function WorldCupMatchDetailPage() {
                     </ul>
                   </div>
                 </div>
+              </div>
+            ) : (
+              /* Replay */
+              <div className="bg-zinc-900/25 border border-zinc-850 rounded-2xl p-6 text-zinc-300">
+                {playerConfig?.replayEmbed ? (
+                  <video controls className="w-full rounded-xl border border-zinc-800">
+                    <source src={playerConfig.replayEmbed} type="video/mp4" />
+                    Browser-ul tău nu suportă redarea video.
+                  </video>
+                ) : (
+                  <div className="text-center py-10 text-zinc-500 text-sm">
+                    Replay-ul meciului nu este încă disponibil.
+                  </div>
+                )}
               </div>
             )}
           </div>

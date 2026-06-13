@@ -11,21 +11,28 @@ export default function Home() {
   const [config, setConfig] = useState<HomepageConfig | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [shows, setShows] = useState<Show[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+  const [loadingPrograms, setLoadingPrograms] = useState(true);
+  const [loadingArticles, setLoadingArticles] = useState(true);
+  const [loadingShows, setLoadingShows] = useState(true);
   const [liveViewers, setLiveViewers] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    Promise.all([
-      api.getPrograms(),
-      api.getHomepageConfig(),
-      api.getArticles(),
-      api.getShows()
-    ]).then(([d_progs, d_conf, d_arts, d_shows]) => {
+    api.getPrograms().then((d_progs) => {
       setPrograms(d_progs.filter((p: any) => p.status === 'online'));
+      setLoadingPrograms(false);
+    });
+    api.getHomepageConfig().then((d_conf) => {
       setConfig(d_conf);
+      setLoadingConfig(false);
+    });
+    api.getArticles().then((d_arts) => {
       setArticles(d_arts.filter((a: Article) => a.status === 'published').sort((a: Article, b: Article) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()));
+      setLoadingArticles(false);
+    });
+    api.getShows().then((d_shows) => {
       setShows(d_shows.sort((a: Show, b: Show) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      setLoading(false);
+      setLoadingShows(false);
     });
   }, []);
 
@@ -57,23 +64,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-16 animate-pulse">
-        <div className="h-[50vh] bg-zinc-900 rounded-2xl mb-16"></div>
-        <div className="h-8 w-48 bg-zinc-900 rounded-lg mb-8"></div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-          {[1,2,3,4].map(i => <div key={i} className="aspect-video bg-zinc-900 rounded-xl"></div>)}
-        </div>
-        <div className="h-8 w-48 bg-zinc-900 rounded-lg mb-8"></div>
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
-          {[1,2,3,4,5,6].map(i => <div key={i} className="aspect-[2/3] bg-zinc-900 rounded-xl"></div>)}
-        </div>
-      </div>
-    );
-  }
-
-  const featured = programs.length > 0 ? programs[0] : null;
   const breakingNews = articles.filter(a => a.isBreakingNews);
   const recentArticles = articles.slice(0, 4);
   const recentShows = shows.slice(0, 6);
