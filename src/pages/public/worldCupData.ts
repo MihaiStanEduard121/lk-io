@@ -188,9 +188,10 @@ export const WORLD_CUP_MATCHES: WCMatch[] = MATCH_TEMPLATES.map((tpl, i) => {
   // High-performance streaming options: embed free player loops that bypass iframe security
   // or a custom HTML5 test streaming file, or YouTube Live embeds
   const embedCodeMap: Record<string, string> = {
-    'Mexic': `<video width="100%" height="auto" controls preload="metadata"><source src="https://archive.org/download/world-cup-2026-match-1-mexico-vs-south-africa-full-match-11-jun-2026-1/FIFA%20World%20Cup%202026-06-11%20Opening%20Ceremony%20Mexico%20City%20%28Shakira%20%26%20Burna%20Boy%29.mkv">Browserul tău nu suportă redarea video.</video>`,
+    'Mexic': `<video class="plyr-video" playsinline><source src="https://archive.org/download/world-cup-2026-match-1-mexico-vs-south-africa-full-match-11-jun-2026-1/FIFA%20World%20Cup%202026-06-11%20Opening%20Ceremony%20Mexico%20City%20%28Shakira%20%26%20Burna%20Boy%29.mkv">Browserul tău nu suportă redarea video.</video>`,
     'SUA': `<iframe src="https://www.youtube.com/embed/3A8Ksc0ZzGg?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
     'Canada': `<iframe src="https://www.youtube.com/embed/mAL6390Hj_8?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
+    'Coreea de Sud': `<div class="rounded-xl border border-zinc-700 overflow-hidden shadow-2xl"><video class="plyr-video" playsinline><source src="https://archive.org/download/fifa-world-cup-2026-06-11-south-korea-vs-czechia-group-a-stv-itv/FIFA%20World%20Cup%202026-06-11%20South%20Korea%20vs%20Czechia%20%28Group%20A%29_STV-ITV.mkv" type="video/x-matroska"></video></div>`,
   };
 
   const defaultEmbed = `<iframe src="https://player.vimeo.com/video/521799279?autoplay=1&muted=1&loop=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`;

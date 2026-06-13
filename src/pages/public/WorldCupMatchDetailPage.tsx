@@ -108,6 +108,28 @@ export default function WorldCupMatchDetailPage() {
     }
   }, [id]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const win = window as any;
+      if (win.Plyr) {
+        win.Plyr.setup('.plyr-video', {
+          autoplay: false,
+          controls: [
+            'play',
+            'progress',
+            'current-time',
+            'mute',
+            'volume',
+            'fullscreen'
+          ],
+          playsinline: true,
+        });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [activeTab, activePlayerSource, playerConfig]);
+
   // Handle countdown calculation
   useEffect(() => {
     if (!match) return;
@@ -735,7 +757,7 @@ export default function WorldCupMatchDetailPage() {
               /* Replay */
               <div className="bg-zinc-900/25 border border-zinc-850 rounded-2xl p-6 text-zinc-300">
                 {playerConfig?.replayEmbed ? (
-                  <video controls className="w-full rounded-xl border border-zinc-800">
+                  <video className="plyr-video w-full rounded-xl border border-zinc-800">
                     <source src={playerConfig.replayEmbed} type="video/mp4" />
                     Browser-ul tău nu suportă redarea video.
                   </video>
