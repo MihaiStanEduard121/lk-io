@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Tv, Search } from 'lucide-react';
+import { Tv, Search, User } from 'lucide-react';
 import { useState } from 'react';
 import { useAppLanguage } from '../../context/LanguageContext';
 import LanguageSelector from '../LanguageSelector';
@@ -33,6 +33,9 @@ export default function PublicLayout() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <Link to="/profile" className="p-2 text-zinc-400 hover:text-white transition-colors">
+                <User className="h-5 w-5" />
+              </Link>
               <LanguageSelector />
               <button onClick={() => setSearchOpen(!searchOpen)} className="p-2 text-zinc-400 hover:text-white transition-colors select-none cursor-pointer">
                 <Search className="h-5 w-5" />

@@ -200,6 +200,36 @@ export const api = {
     return { success: true };
   },
 
+  // World Cup Matches
+  getWorldCupMatches: async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'world_cup_matches'));
+      if (snapshot.empty) {
+        const { WORLD_CUP_MATCHES } = await import('../pages/public/worldCupData');
+        return WORLD_CUP_MATCHES;
+      }
+      return snapshot.docs.map(mapDoc);
+    } catch(err) {
+      console.warn("Could not fetch world cup matches from DB", err);
+      const { WORLD_CUP_MATCHES } = await import('../pages/public/worldCupData');
+      return WORLD_CUP_MATCHES;
+    }
+  },
+  getWorldCupMatch: async (id: string) => {
+    try {
+      const d = await getDoc(doc(db, 'world_cup_matches', id));
+      if (!d.exists()) {
+         const { WORLD_CUP_MATCHES } = await import('../pages/public/worldCupData');
+         return WORLD_CUP_MATCHES.find(m => m.id === id) || null;
+      }
+      return mapDoc(d);
+    } catch(err) {
+      console.warn("Could not fetch world cup match details", err);
+      const { WORLD_CUP_MATCHES } = await import('../pages/public/worldCupData');
+      return WORLD_CUP_MATCHES.find(m => m.id === id) || null;
+    }
+  },
+
   // Homepage Config
   getHomepageConfig: async () => {
     const d = await getDoc(doc(db, 'settings', 'homepage'));

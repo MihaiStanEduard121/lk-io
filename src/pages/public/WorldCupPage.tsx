@@ -2,14 +2,24 @@ import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Search, Trophy, Calendar, MapPin, PlayCircle, Eye, ArrowRight, Table } from 'lucide-react';
-import { WORLD_CUP_MATCHES, TEAM_FLAGS, WCMatch, getMatchLiveStatus, getActiveTime } from './worldCupData';
+import { TEAM_FLAGS, WCMatch, getMatchLiveStatus, getActiveTime } from './worldCupData';
+import { api } from '../../lib/api';
 
 export default function WorldCupPage() {
+  const [matches, setMatches] = useState<WCMatch[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedRound, setSelectedRound] = useState<number>(0); // 0 means All, 1, 2, 3
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'matches' | 'standings'>('matches');
   const [simulationActive, setSimulationActive] = useState(localStorage.getItem('wc_simulation_active') === 'true');
   const [liveViewersStats, setLiveViewersStats] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    api.getWorldCupMatches().then((data) => {
+      setMatches(data);
+      setLoading(false);
+    });
+  }, []);
 
   // Sync simulation checkbox if modified on other screens
   useEffect(() => {
@@ -40,7 +50,7 @@ export default function WorldCupPage() {
 
   // Filter matches based on round and query
   const filteredMatches = useMemo(() => {
-    return WORLD_CUP_MATCHES.filter(match => {
+    return matches.filter(match => {
       const matchRound = selectedRound === 0 || match.round === selectedRound;
       const matchQuery = searchQuery === '' || 
         match.team1.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -81,7 +91,7 @@ export default function WorldCupPage() {
     const activeTime = getActiveTime();
     
     return groups.map(gName => {
-      const matchesInGroup = WORLD_CUP_MATCHES.filter(m => m.group === gName);
+      const matchesInGroup = matches.filter(m => m.group === gName);
       
       // Get all unique teams in this group
       const teamsInGroup = Array.from(new Set(
@@ -183,8 +193,12 @@ export default function WorldCupPage() {
       </div>
 
       <div className="max-w-7xl mx-auto">
-
-
+        {loading ? (
+          <div className="py-12 text-center text-zinc-500 font-bold">Se încarcă meciurile...</div>
+        ) : matches.length === 0 ? (
+          <div className="py-12 text-center text-zinc-500 font-bold">Nu sunt meciuri disponibile.</div>
+        ) : (
+          <>
         {/* Navigation Tabs */}
         <div className="flex border-b border-zinc-800 mb-8 max-w-md">
           <button
@@ -355,7 +369,7 @@ export default function WorldCupPage() {
                               <span className="text-zinc-500 font-medium flex items-center">
                                 <Eye className="w-3.5 h-3.5 text-indigo-400 mr-1.5 shrink-0" />
                                 <span className="text-zinc-400 font-extrabold mr-1">
-                                  {liveViewersStats[`/world-cup/${match.id}`] || (match.liveState.status === 'live' ? Math.floor(Math.random() * 45) + 85 : 0)}
+                                  {liveViewersStats[`/world-cup/${match.id}`] || 0}
                                 </span>
                                 <span>{match.liveState.status === 'live' ? 'privesc acum' : 'vizite recente'}</span>
                               </span>
@@ -420,6 +434,8 @@ export default function WorldCupPage() {
               </div>
             ))}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

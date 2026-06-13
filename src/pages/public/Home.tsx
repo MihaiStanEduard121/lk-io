@@ -4,17 +4,19 @@ import { TVProgram, Article, Show, HomepageConfig } from '../../types';
 import { Play, Star, Eye, AlertCircle, ChevronRight, MonitorPlay, Tv, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { WORLD_CUP_MATCHES, getMatchLiveStatus, getActiveTime } from './worldCupData';
+import { getMatchLiveStatus, getActiveTime, WCMatch } from './worldCupData';
 
 export default function Home() {
   const [programs, setPrograms] = useState<TVProgram[]>([]);
   const [config, setConfig] = useState<HomepageConfig | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [shows, setShows] = useState<Show[]>([]);
+  const [worldCupMatches, setWorldCupMatches] = useState<WCMatch[]>([]);
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [loadingPrograms, setLoadingPrograms] = useState(true);
   const [loadingArticles, setLoadingArticles] = useState(true);
   const [loadingShows, setLoadingShows] = useState(true);
+  const [loadingWcMatches, setLoadingWcMatches] = useState(true);
   const [liveViewers, setLiveViewers] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -33,6 +35,10 @@ export default function Home() {
     api.getShows().then((d_shows) => {
       setShows(d_shows.sort((a: Show, b: Show) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setLoadingShows(false);
+    });
+    api.getWorldCupMatches().then((d_matches) => {
+       setWorldCupMatches(d_matches);
+       setLoadingWcMatches(false);
     });
   }, []);
 
@@ -142,12 +148,16 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {WORLD_CUP_MATCHES.slice(14, 17).map((match) => {
+            {loadingWcMatches ? (
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-zinc-500 font-bold py-8">
+                Se încarcă meciurile recomandate...
+              </div>
+            ) : worldCupMatches.slice(14, 17).map((match) => {
               const liveState = getMatchLiveStatus(match, getActiveTime());
               const flag1 = `https://flagcdn.com/w80/${match.team1Code}.png`;
               const flag2 = `https://flagcdn.com/w80/${match.team2Code}.png`;
               const pagePath = `/world-cup/${match.id}`;
-              const matchViewers = liveViewers[pagePath] || (liveState.status === 'live' ? Math.floor(Math.random() * 45) + 85 : 0);
+              const matchViewers = liveViewers[pagePath] || 0;
 
               return (
                 <Link 

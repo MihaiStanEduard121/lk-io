@@ -23,6 +23,7 @@ const LegalPage = lazy(() => import('./pages/public/LegalPage'));
 const WorldCupPage = lazy(() => import('./pages/public/WorldCupPage'));
 const WorldCupMatchDetailPage = lazy(() => import('./pages/public/WorldCupMatchDetailPage'));
 const DonationsPage = lazy(() => import('./pages/public/DonationsPage'));
+const ProfilePage = lazy(() => import('./pages/public/ProfilePage'));
 const SchedulePage = lazy(() => import('./pages/public/SchedulePage'));
 
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -68,6 +69,7 @@ export default function App() {
               <Route path="/world-cup" element={<WorldCupPage />} />
               <Route path="/world-cup/:id" element={<WorldCupMatchDetailPage />} />
               <Route path="/donations" element={<DonationsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/legal" element={<LegalPage />} />
               <Route path="/privacy-policy" element={<LegalPage />} />
               <Route path="/terms-of-service" element={<LegalPage />} />

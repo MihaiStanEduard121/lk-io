@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
-import { WORLD_CUP_MATCHES, WCMatch } from '../public/worldCupData';
+import { WCMatch } from '../public/worldCupData';
 import { 
   Sparkles, Calendar, Award, MapPin, CheckCircle2, ArrowRight, 
   ChevronRight, Volume2, Globe, Heart, Newspaper, Flame, Loader2,
@@ -9,6 +9,8 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function ArticleGenerator() {
+  const [matches, setMatches] = useState<WCMatch[]>([]);
+  const [selectedMatchId, setSelectedMatchId] = useState<string>('');
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'prematch' | 'live-event'>('prematch');
@@ -16,7 +18,6 @@ export default function ArticleGenerator() {
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
 
   // Form states for manual/live event article creation
-  const [selectedMatchId, setSelectedMatchId] = useState<string>(WORLD_CUP_MATCHES[0].id);
   const [eventType, setEventType] = useState<'goal' | 'kickoff' | 'card' | 'final'>('goal');
   const [eventMinute, setEventMinute] = useState<number>(45);
   const [playerName, setPlayerName] = useState<string>('');
@@ -25,6 +26,17 @@ export default function ArticleGenerator() {
   const [finalScore, setFinalScore] = useState<string>('2 - 1');
   const [manOfTheMatch, setManOfTheMatch] = useState<string>('');
   const [extraDetails, setExtraDetails] = useState<string>('');
+
+  useEffect(() => {
+    Promise.all([api.getCategories(), api.getWorldCupMatches()]).then(([cats, wcMatches]) => {
+      setCategories(cats);
+      setMatches(wcMatches);
+      if (wcMatches.length > 0) {
+        setSelectedMatchId(wcMatches[0].id);
+      }
+      setLoading(false);
+    });
+  }, []);
 
   // Auto-fill mock players on match or team change for quick administration
   const mockPlayers: Record<string, string[]> = {
@@ -40,23 +52,19 @@ export default function ArticleGenerator() {
     'Italia': ['Federico Chiesa', 'Gianluca Scamacca', 'Nicolò Barella', 'Davide Frattesi']
   };
 
-  const selectedMatch = WORLD_CUP_MATCHES.find(m => m.id === selectedMatchId) || WORLD_CUP_MATCHES[0];
+  const selectedMatch = matches.find(m => m.id === selectedMatchId) || matches[0];
 
   // Pick a random player according to selected team for convenience
   useEffect(() => {
+    if(!selectedMatch) return;
     const currentTeam = selectedTeamSide === 'team1' ? selectedMatch.team1 : selectedMatch.team2;
     const players = mockPlayers[currentTeam] || ['Starul echipei', 'Căpitanul Selecționatei', 'Atacantul principal'];
-    const randomPlayer = players[Math.floor(Math.random() * players.length)];
+    const randomPlayer = players[0];
     setPlayerName(randomPlayer);
     setManOfTheMatch(randomPlayer);
-  }, [selectedMatchId, selectedTeamSide]);
+  }, [selectedMatchId, selectedTeamSide, selectedMatch]);
 
-  useEffect(() => {
-    api.getCategories().then((data) => {
-      setCategories(data);
-      setLoading(false);
-    });
-  }, []);
+  // Removed second categories fetch useEffect
 
   const getCategoryImageId = () => {
     const wcCategory = categories.find(c => c.name.toLowerCase().includes('cupa') || c.name.toLowerCase().includes('sport'));
@@ -337,7 +345,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
   }
 
   // Live preview details for reactive UI component
-  const calculatedPreview = getSimulatedArticleDetails();
+  const calculatedPreview = selectedMatch ? getSimulatedArticleDetails() : null;
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto w-full">
@@ -398,7 +406,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
             </div>
 
             <div className="grid grid-cols-1 gap-3.5">
-              {WORLD_CUP_MATCHES.map((match, i) => {
+              {matches.map((match, i) => {
                 const isGenerating = generatingFor === match.id;
                 const isSuccess = successMatch === match.id;
 
@@ -511,7 +519,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                     onChange={(e) => setSelectedMatchId(e.target.value)}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500"
                   >
-                    {WORLD_CUP_MATCHES.map((m) => (
+                    {matches.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.team1} vs {m.team2} (Grupa {m.group} - {m.city})
                       </option>
@@ -742,14 +750,16 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                   <span>Previzualizare Live în timp real (Cum va apărea pe platformă)</span>
                 </h4>
 
-                {/* Main cover sport image mockup */}
+                  {/* Main cover sport image mockup */}
                 <div className="relative w-full h-44 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 mb-4">
+                  {selectedMatch && (
                   <img 
                     src={getCoverImageForId(selectedMatch.id + eventType + playerName)} 
                     alt="Sport Image" 
                     className="w-full h-full object-cover opacity-80"
                     referrerPolicy="no-referrer"
                   />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
                   
                   {/* Category overlay */}
@@ -758,6 +768,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                   </span>
 
                   {/* Flag layouts overlay */}
+                  {selectedMatch && (
                   <div className="absolute bottom-3 left-3 flex items-center space-x-2.5">
                     <div className="flex -space-x-1.5">
                       <img 
@@ -777,6 +788,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                       {selectedMatch.team1} vs {selectedMatch.team2}
                     </span>
                   </div>
+                  )}
                 </div>
 
                 {/* Preview text sections */}

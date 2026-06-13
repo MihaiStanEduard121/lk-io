@@ -8,6 +8,7 @@ import scraperRoutes from './api/scraperRoutes.js';
 import presenceRoutes from './api/presenceRoutes.js';
 import aiRoutes from './api/aiRoutes.js';
 import mediaRoutes from './api/mediaRoutes.js';
+import liveScoresRoutes from './api/liveScoresRoutes.js';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
@@ -242,6 +243,7 @@ Sitemap: ${domain}/sitemap.xml`);
   app.use('/api/presence', presenceRoutes);
   app.use('/api/ai', aiRoutes);
   app.use('/api/media', mediaRoutes);
+  app.use('/api/live-scores', liveScoresRoutes);
 
   // Serve uploads
   const uploadsPath = path.join(process.cwd(), 'uploads');

@@ -2,19 +2,30 @@ import { useState, useEffect, useRef } from 'react';
 import { db, handleFirestoreError, storage } from '../../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { WORLD_CUP_MATCHES, WCMatch } from '../public/worldCupData';
+import { WCMatch } from '../public/worldCupData';
+import { api } from '../../lib/api';
 import { Award, Tv, Save, CheckCircle, RefreshCcw, HelpCircle, Upload } from 'lucide-react';
 import { motion } from 'motion/react';
 import UploadProgressBar from '../../components/UploadProgressBar';
 
 export default function WorldCupManager() {
-  const [selectedMatch, setSelectedMatch] = useState<WCMatch>(WORLD_CUP_MATCHES[0]);
+  const [matches, setMatches] = useState<WCMatch[]>([]);
+  const [selectedMatch, setSelectedMatch] = useState<WCMatch | null>(null);
   const [loading, setLoading] = useState(false);
+  const [matchesLoading, setMatchesLoading] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    api.getWorldCupMatches().then(data => {
+      setMatches(data);
+      if (data.length > 0) setSelectedMatch(data[0]);
+      setMatchesLoading(false);
+    });
+  }, []);
 
   // Configuration settings for Player 1, 2, 3 and Replay
   const [config, setConfig] = useState({
@@ -30,6 +41,7 @@ export default function WorldCupManager() {
   // Load configuration for the selected match
   useEffect(() => {
     async function loadConfig() {
+      if (!selectedMatch) return;
       setLoading(true);
       try {
         const docRef = doc(db, 'match_players', selectedMatch.id);
@@ -69,6 +81,7 @@ export default function WorldCupManager() {
   }, [selectedMatch]);
 
   const handleSave = async () => {
+    if(!selectedMatch) return;
     setLoading(true);
     setSaveSuccess(false);
     try {
@@ -171,8 +184,12 @@ export default function WorldCupManager() {
         <div className="lg:col-span-1 space-y-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Selectează Meciul</h2>
           <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-4 space-y-2 max-h-[600px] overflow-y-auto scrollbar-none shadow-xl">
-            {WORLD_CUP_MATCHES.map((m) => {
-              const active = m.id === selectedMatch.id;
+            {matchesLoading ? (
+               <div className="text-center text-zinc-500 py-4">Se încarcă meciurile...</div>
+            ) : matches.length === 0 ? (
+               <div className="text-center text-zinc-500 py-4">Niciun meci.</div>
+            ) : matches.map((m) => {
+              const active = selectedMatch?.id === m.id;
               return (
                 <button
                   key={m.id}
@@ -198,6 +215,11 @@ export default function WorldCupManager() {
 
         {/* Players Configuration Station */}
         <div className="lg:col-span-2 space-y-6">
+          {!selectedMatch ? (
+             <div className="bg-zinc-905 border border-zinc-800 rounded-2xl p-6 text-center text-zinc-500 shadow-2xl">
+                Selecționează un meci pentru a-l edita.
+             </div>
+          ) : (
           <div className="bg-zinc-905 border border-zinc-800 rounded-2xl p-6 space-y-6 shadow-2xl relative overflow-hidden">
             <div className="flex items-center justify-between border-b border-zinc-800/60 pb-4">
               <div>
@@ -366,9 +388,9 @@ export default function WorldCupManager() {
 
                 {/* Submitting Trigger actions */}
                 <div className="flex items-center justify-end space-x-3 pt-3 border-t border-zinc-850">
-                  <button
+                   <button
                     onClick={handleSave}
-                    disabled={loading}
+                    disabled={loading || !selectedMatch}
                     className="w-full md:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-all pointer-events-auto shadow-lg"
                   >
                     <Save className="w-4 h-4" />
@@ -378,6 +400,7 @@ export default function WorldCupManager() {
               </div>
             )}
           </div>
+          )}
 
           {/* Quick instructions widget block */}
           <div className="bg-zinc-900/20 border border-zinc-850 p-5 rounded-2xl flex items-start space-x-3 text-xs leading-relaxed text-zinc-450">

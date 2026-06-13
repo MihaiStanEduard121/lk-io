@@ -95,6 +95,8 @@ function getStadiumInfo(team1: string, index: number) {
   return info;
 }
 
+
+
 // Generate the full match list
 const MATCH_TEMPLATES = [
   // --- ROUND 1 ---
@@ -111,7 +113,7 @@ const MATCH_TEMPLATES = [
   { date: '15.06', time: '02:00', team1: 'Coasta de Fildeș', team2: 'Ecuador', round: 1, group: 'E' },
   { date: '15.06', time: '05:00', team1: 'Suedia', team2: 'Tunisia', round: 1, group: 'F' },
   { date: '15.06', time: '19:00', team1: 'Spania', team2: 'Capul Verde', round: 1, group: 'G' },
-  { date: '15.06', time: '22:00', team1: 'Belgia', team2: 'Egipt', round: 1, group: 'H' }, // Group H (actually represented G/H)
+  { date: '15.06', time: '22:00', team1: 'Belgia', team2: 'Egipt', round: 1, group: 'H' },
   { date: '16.06', time: '01:00', team1: 'Arabia Saudită', team2: 'Uruguay', round: 1, group: 'G' },
   { date: '16.06', time: '04:00', team1: 'Iran', team2: 'Noua Zeelandă', round: 1, group: 'H' },
   { date: '16.06', time: '22:00', team1: 'Franța', team2: 'Senegal', round: 1, group: 'I' },
@@ -119,7 +121,7 @@ const MATCH_TEMPLATES = [
   { date: '17.06', time: '04:00', team1: 'Argentina', team2: 'Algeria', round: 1, group: 'J' },
   { date: '17.06', time: '07:00', team1: 'Austria', team2: 'Iordania', round: 1, group: 'J' },
   { date: '17.06', time: '20:00', team1: 'Portugalia', team2: 'DR Congo', round: 1, group: 'K' },
-  { date: '17.06', time: '23:00', team1: 'Anglia', team2: 'Croația', round: 1, group: 'L' }, // Group L/K transition
+  { date: '17.06', time: '23:00', team1: 'Anglia', team2: 'Croația', round: 1, group: 'L' },
   { date: '18.06', time: '02:00', team1: 'Ghana', team2: 'Panama', round: 1, group: 'L' },
   { date: '18.06', time: '05:00', team1: 'Uzbekistan', team2: 'Columbia', round: 1, group: 'K' },
 
@@ -180,18 +182,14 @@ export const WORLD_CUP_MATCHES: WCMatch[] = MATCH_TEMPLATES.map((tpl, i) => {
   const [day, month] = tpl.date.split('.').map(Number);
   const [hour, min] = tpl.time.split(':').map(Number);
   
-  // Create a proper datetime in 2026.
-  // We'll treat the timezone as GMT+3 (Romania standard in June).
   const datetime = `2026-06-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:00+03:00`;
   const stadiumInfo = getStadiumInfo(tpl.team1, i);
 
-  // High-performance streaming options: embed free player loops that bypass iframe security
-  // or a custom HTML5 test streaming file, or YouTube Live embeds
   const embedCodeMap: Record<string, string> = {
     'Mexic': `<video class="plyr-video" playsinline><source src="https://archive.org/download/world-cup-2026-match-1-mexico-vs-south-africa-full-match-11-jun-2026-1/FIFA%20World%20Cup%202026-06-11%20Opening%20Ceremony%20Mexico%20City%20%28Shakira%20%26%20Burna%20Boy%29.mkv">Browserul tău nu suportă redarea video.</video>`,
     'SUA': `<iframe src="https://www.youtube.com/embed/3A8Ksc0ZzGg?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
     'Canada': `<iframe src="https://www.youtube.com/embed/mAL6390Hj_8?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
-    'Coreea de Sud': `<div class="rounded-xl border border-zinc-700 overflow-hidden shadow-2xl"><video class="plyr-video" playsinline><source src="https://archive.org/download/fifa-world-cup-2026-06-11-south-korea-vs-czechia-group-a-stv-itv/FIFA%20World%20Cup%202026-06-11%20South%20Korea%20vs%20Czechia%20%28Group%20A%29_STV-ITV.mkv" type="video/x-matroska"></video></div>`,
+    'Coreea de Sud': `<video class="plyr-video" playsinline><source src="https://archive.org/download/fifa-world-cup-2026-06-11-south-korea-vs-czechia-group-a-stv-itv/FIFA%20World%20Cup%202026-06-11%20South%20Korea%20vs%20Czechia%20%28Group%20A%29_STV-ITV.mkv" type="video/x-matroska"></video>`,
   };
 
   const defaultEmbed = `<iframe src="https://player.vimeo.com/video/521799279?autoplay=1&muted=1&loop=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
@@ -211,7 +209,7 @@ export const WORLD_CUP_MATCHES: WCMatch[] = MATCH_TEMPLATES.map((tpl, i) => {
     country: stadiumInfo.country,
     datetime,
     embedCode: embedCodeMap[tpl.team1] || defaultEmbed,
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8' // Alternate HLS Stream that actually works in ReactPlayer
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8'
   };
 });
 
@@ -241,14 +239,6 @@ export function getMatchLiveStatus(match: WCMatch, customTimeMs?: number): Match
     const seed = match.id.split('').reduce((sum, c) => sum + c.charCodeAt(0), 0);
     const minute = Math.min(90, Math.floor(elapsedMinutes));
     
-    // Total potential goals for this match (0 to 3)
-    const totalGoals1 = seed % 3; // 0, 1, 2
-    const totalGoals2 = (seed + 2) % 3; // 0, 1, 2
-    
-    // Distribute goals linearly over time
-    const score1 = Math.floor((minute / 90) * totalGoals1);
-    const score2 = Math.floor((minute / 90) * totalGoals2);
-    
     let liveMinuteStr = `${minute}'`;
     if (minute >= 45 && minute < 60) {
       liveMinuteStr = 'Pauză';
@@ -256,23 +246,20 @@ export function getMatchLiveStatus(match: WCMatch, customTimeMs?: number): Match
       liveMinuteStr = 'Prelungiri';
     }
 
+    // Return 0-0 for all matches as we don't have real live scores
     return {
       status: 'live',
-      score1,
-      score2,
+      score1: 0,
+      score2: 0,
       liveMinute: liveMinuteStr,
       isPast: true,
     };
   } else {
     // Finished match
-    const seed = match.id.split('').reduce((sum, c) => sum + c.charCodeAt(0), 0);
-    const score1 = seed % 3; // 0, 1, 2
-    const score2 = (seed + 2) % 3; // 0, 1, 2
-    
     return {
       status: 'finished',
-      score1,
-      score2,
+      score1: 0,
+      score2: 0,
       isPast: true,
     };
   }

@@ -5,14 +5,16 @@ import {
   ArrowLeft, MapPin, Tv, Volume2, ShieldAlert, 
   ExternalLink, MessageCircle, Send, Award, Users, RefreshCw
 } from 'lucide-react';
-import { WORLD_CUP_MATCHES, WCMatch, TEAM_FLAGS, getMatchLiveStatus, getActiveTime } from './worldCupData';
+import { WCMatch, TEAM_FLAGS, getMatchLiveStatus, getActiveTime } from './worldCupData';
 import { enhanceEmbedCode } from './PlayerPage';
 import { db, handleFirestoreError } from '../../lib/firebase';
+import { api } from '../../lib/api';
 import { collection, addDoc, query, where, orderBy, limit, onSnapshot, doc, serverTimestamp } from 'firebase/firestore';
 
 export default function WorldCupMatchDetailPage() {
   const { id } = useParams();
   const [match, setMatch] = useState<WCMatch | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0, isLive: false });
   const [chatMessages, setChatMessages] = useState<any[]>([]);
@@ -31,6 +33,15 @@ export default function WorldCupMatchDetailPage() {
   });
 
   // Dynamic real-time loading of player configurations from Firestore
+  useEffect(() => {
+    if (!id) return;
+    api.getWorldCupMatch(id).then(data => {
+      setMatch(data as WCMatch);
+      setLoading(false);
+      window.scrollTo(0, 0);
+    });
+  }, [id]);
+
   useEffect(() => {
     if (!id || !match) return;
     const docRef = doc(db, 'match_players', id);
@@ -83,11 +94,9 @@ export default function WorldCupMatchDetailPage() {
         const res = await fetch('/api/presence/stats');
         if (res.ok) {
           const stats = await res.json();
-          // Generate realistic addition if simulator is active or match is live, else return exact
+          // Exact stats without simulation boost
           const exact = stats.pageStats[`/world-cup/${id}`] || 1;
-          const isMatchLive = getMatchLiveStatus(WORLD_CUP_MATCHES.find(m => m.id === id) as any || {}, getActiveTime()).status === 'live';
-          const simulationBoost = isMatchLive ? Math.floor(Math.random() * 25) + 65 : 0;
-          setLiveViewers(exact + simulationBoost);
+          setLiveViewers(exact);
         }
       } catch (err) {
         console.warn('Could not fetch active viewers list', err);
@@ -100,13 +109,7 @@ export default function WorldCupMatchDetailPage() {
   }, [id, simulationActive]);
 
   // Locate current match
-  useEffect(() => {
-    const current = WORLD_CUP_MATCHES.find(m => m.id === id);
-    if (current) {
-      setMatch(current);
-      window.scrollTo(0, 0);
-    }
-  }, [id]);
+  // Removed static logic - now handled by fetch
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -171,28 +174,6 @@ export default function WorldCupMatchDetailPage() {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (snapshot.empty) {
-        // Automatically seed comfortable initial supporter comments for empty chats
-        const initialMsgs = [
-          { user: 'Andrei_90', text: `Hai ${match.team1}! Astăzi câștigăm sigur!`, time: '12:04', team: 'team1' },
-          { user: 'BocaSenior', text: `Salutare din Argentina! ${match.team2} are un lot capabil de surprize.`, time: '12:05', team: 'team2' },
-          { user: 'GabiSport', text: 'Stadionul arată incredibil. Ce gazon perfect pe Azteca!', time: '12:07', team: 'neutral' },
-        ];
-        initialMsgs.forEach(async (m) => {
-          try {
-            await addDoc(collection(db, 'world_cup_chats'), {
-              matchId: id,
-              user: m.user,
-              text: m.text,
-              time: m.time,
-              createdAt: serverTimestamp(),
-              team: m.team
-            });
-          } catch (e) {
-            console.warn('Seeding issue: ', e);
-          }
-        });
-      } else {
         const msgs = snapshot.docs.map(docSnap => {
           const data = docSnap.data();
           return {
@@ -205,7 +186,6 @@ export default function WorldCupMatchDetailPage() {
           };
         });
         setChatMessages(msgs);
-      }
     }, (error) => {
       handleFirestoreError(error, 'list' as any, 'world_cup_chats');
     });
@@ -227,7 +207,7 @@ export default function WorldCupMatchDetailPage() {
     // Use name from localStorage or generate a friendly random persistent suporter nickname
     let nickname = localStorage.getItem('chat_nickname');
     if (!nickname) {
-      nickname = `Suporter_${Math.floor(1000 + Math.random() * 9000)}`;
+      nickname = 'Suporter';
       localStorage.setItem('chat_nickname', nickname);
     }
 
@@ -282,10 +262,24 @@ export default function WorldCupMatchDetailPage() {
   }, [activePlayerSource, playerConfig]);
 
   // Upcoming matches for the horizontal top ribbon
-  const upcomingMatches = useMemo(() => {
-    if (!id) return [];
-    return WORLD_CUP_MATCHES.filter(m => m.id !== id).slice(0, 5);
+  const [upcomingMatches, setUpcomingMatches] = useState<WCMatch[]>([]);
+  useEffect(() => {
+    api.getWorldCupMatches().then(data => {
+      if(id && data) {
+         setUpcomingMatches(data.filter((m: any) => m.id !== id).slice(0, 5));
+      }
+    });
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6 text-center">
+        <div>
+          <p className="text-zinc-400">Se încarcă meciul...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!match) {
     return (
