@@ -22,7 +22,7 @@ export default function ArticleGenerator() {
   const [eventMinute, setEventMinute] = useState<number>(45);
   const [playerName, setPlayerName] = useState<string>('');
   const [selectedTeamSide, setSelectedTeamSide] = useState<'team1' | 'team2'>('team1');
-  const [cardColor, setCardColor] = useState<'galben' | 'roșu'>('galben');
+  const [cardColor, setCardColor] = useState<'galben' | 'red'>('galben');
   const [finalScore, setFinalScore] = useState<string>('2 - 1');
   const [manOfTheMatch, setManOfTheMatch] = useState<string>('');
   const [extraDetails, setExtraDetails] = useState<string>('');
@@ -96,12 +96,12 @@ export default function ArticleGenerator() {
     setSuccessMatch(null);
 
     const catId = getCategoryImageId();
-    const title = `🔥 Unde vedem live ${match.team1} - ${match.team2} la Cupa Mondială 2026? Avanpremieră, echipe probabile și ponturi bune`;
+    const title = `🔥 Where to watch live ${match.team1} - ${match.team2} at the 2026 World Cup? Preview, probable lineups and good tips`;
     const coverImage = getCoverImageForId(match.id);
 
-    const content = `# 🏆 Cupa Mondială 2026: Blockbuster-ul Zilei între ${match.team1} și ${match.team2}!
+    const content = `# 🏆 2026 World Cup: Match of the Day between ${match.team1} și ${match.team2}!
 
-Spectacolul fotbalistic de pe planetă atinge cote maxime la Cupa Mondială FIFA 2026, iar confruntarea epică din Grupa ${match.group} dintre super-puterile **${match.team1}** și **${match.team2}** se anunță a fi un adevărat roller-coaster de emoții! Arena de clasă mondială **${match.stadium}** din orașul gazdă **${match.city}** (${match.country}) va găzdui un meci crucial pentru soarta calificării în optimi.
+The football spectacle reaches new heights at the 2026 FIFA World Cup, and the epic Group ${match.group} clash between superpowers **${match.team1}** și **${match.team2}** promises to be a true roller-coaster of emotions! The world-class arena **${match.stadium}** in host city **${match.city}** (${match.country}) will host a crucial match for the qualification.
 
 Partida este programată de FIFA pe data de **${match.date}**, începând cu ora **${match.time}** (ora oficială a României). Dacă ești în căutarea celei mai bune metode de vizionare online sau vrei să afli unde vezi live stream-ul meciului, rămâi cu noi pentru că am pregătit detalii esențiale și link-urile oficiale!
 
@@ -132,7 +132,7 @@ Pentru a veni în sprijinul iubitorilor de fotbal din România, redacția **prog
 
 ## 📈 Integrare SEO, Cuvinte Cheie & Tag-uri Google Search
 * **Titlul original căutat:** *Unde pot vedea meciul ${match.team1} cu ${match.team2} live de pe telefon?*
-* **Cuvinte cheie de interes major:** Cupa Mondială 2026 deținători drepturi, stream video gratis fotbal live comentat română, ponturi fotbal gratis ${match.team1} vs ${match.team2}, meciuri online gratis, program TV transmisiuni sportive.
+* **High interest keywords:** Cupa Mondială 2026 broadcasting rights, free live stream video football commentary, free football tips ${match.team1} vs ${match.team2}, free online matches, sports broadcast TV schedule.
 * **Tag-uri de top:** \`#CupaMondiala2026\` \`#${match.team1.replace(/\s+/g, '')}\` \`#${match.team2.replace(/\s+/g, '')}\` \`#FotbalLiveStream\` \`#MeciuriLiveOnline\` \`#ProgramTVOnline\` \`#PonturiFotbal\` \`#${match.city}\`
 
 ---
@@ -177,7 +177,7 @@ Pentru a veni în sprijinul iubitorilor de fotbal din România, redacția **prog
       generatedTitle = `⚽ GOOOL! ${cleanPlayer} a înscris pentru ${teamName} în duelul cu ${opponentTeamName}! (Minutul ${eventMinute}')`;
       generatedContent = `# 🥅 GOOOL MAGNIFIC! ${cleanPlayer} deschide scorul în meciul de foc ${actingMatch.team1} - ${actingMatch.team2}!
 
-Tensiunile au atins cote stratosferice pe arena **${actingMatch.stadium}** din **${actingMatch.city}**! În **minutul ${eventMinute}** al meciului de la Cupa Mondială 2026, tabela de marcaj s-a schimbat spectaculos în favoarea selecționatei din **${teamName}**, grație unei sclipiri de geniu semnate de **${cleanPlayer}**!
+Tensions have reached stratospheric levels at the arena **${actingMatch.stadium}** din **${actingMatch.city}**! In the **minute ${eventMinute}** of the 2026 World Cup match, the scoreboard spectacularly changed in favor of **${teamName}**, thanks to a stroke of genius by **${cleanPlayer}**!
 
 O pasă excelentă de la marginea careului a destabilizat complet defensiva celor de la **${opponentTeamName}**. Pe fază, **${cleanPlayer}** a preluat perfect, s-a întors fulgerător și a trimis o minge de neoprit chiar sub bara transversală a porții adverse. O execuție absolut remarcabilă care va fi analizată pe parcursul întregii zile!
 
@@ -209,25 +209,25 @@ Nu rata nicio secundă din acest duel pasionant! Redacția **programetv.online**
     } 
     else if (eventType === 'kickoff') {
       generatedTitle = `🚀 Fluier de start în derby-ul ${actingMatch.team1} - ${actingMatch.team2}! S-a dat startul bătăliei din Grupa ${actingMatch.group}`;
-      generatedContent = `# ⚔️ A Început Bătălia! ${actingMatch.team1} vs ${actingMatch.team2} în Direct la Cupa Mondială 2026
+      generatedContent = `# ⚔️ The Battle Has Begun! ${actingMatch.team1} vs ${actingMatch.team2} Live at the 2026 World Cup
 
 Atmosferă electrizantă de mari dimensiuni pe arena **${actingMatch.stadium}** din **${actingMatch.city}**! Arbitrul a fluierat startul faimoaselor 90 de minute de duel titanic între marile super-puteri fotbalistice ale globului: **${actingMatch.team1}** și **${actingMatch.team2}** în cadrul grupelor turneului mondial.
 
-Fanii din ambele țări au creat un decor colorat formidabil în tribune, iar tensiunea tactică este palpabilă încă din primele secunde. Obiectivul ambelor formații este unic: victoria, care ar simplifica radical traseul către marea finală.
+Fans from both countries have created a formidable colorful setup in the stands, iar tensiunea tactică este palpabilă încă din primele secunde. The goal of both formations este unic: victoria, care ar simplifica radical traseul către marea finală.
 
 ---
 
-## 📋 Detalii de Ultimă Oră & Echipe de Start
-Comentatorii noștri sportivi subliniază tacticile extrem de ambițioase alese pentru acest blockbuster:
-* **Sistemul tactic ales:** ${extraDetails || 'O așezare dinamică bazată pe o defensivă mobilă de 4-3-3 de atac și o linie mediană extrem de agresivă.'}
-* **Atmosfera pe stadion:** Un cor imens de urale și cântece de susținere care răsună spectaculos în aerul curat din orașul **${actingMatch.city}**.
+## 📋 Last Minute Details & Starting Lineups
+Our sports commentators emphasize tacticile extrem de ambițioase alese pentru acest blockbuster:
+* **Tactical system chosen:** ${extraDetails || 'O așezare dinamică bazată pe o defensivă mobilă de 4-3-3 de atac și o linie mediană extrem de agresivă.'}
+* **Stadium atmosphere:** Un cor imens de urale și cântece de susținere care răsună spectaculos în aerul curat din orașul **${actingMatch.city}**.
 
 ---
 
-## 🖥️ Conectează-te ACUM la Live Stream-ul Video
-Vrei să fii în alertă cu fiecare pasă, fiecare duel aerian și fază de poartă? Platforma noastră îți aduce stream-urile stabile în timp real direct în player:
+## 🖥️ Connect NOW to the Live Video Stream
+Want to stay alert with every pass, fiecare duel aerian și fază de poartă? Platforma noastră îți aduce stream-urile stabile în timp real direct în player:
 
-[👉 TELESPECTATOR: INTRĂ LIVE ÎN CADRUL PLAYERULUI COMENTAT](/world-cup)
+[👉 VIEWER: ENTER LIVE IN THE PLAYER COMENTAT](/world-cup)
 
 ---
 
@@ -236,24 +236,24 @@ Vrei să fii în alertă cu fiecare pasă, fiecare duel aerian și fază de poar
 * **Tag-uri:** \`#Kickoff\` \`#CupaMondiala2026\` \`#${actingMatch.team1.replace(/\s+/g, '')}vs${actingMatch.team2.replace(/\s+/g, '')}\` \`#FotbalDirect\` \`#${actingMatch.city}\``;
     } 
     else if (eventType === 'card') {
-      generatedTitle = `⚠️ Momente Tensionate! Jucătorul ${cleanPlayer} de la ${teamName} a văzut cartonașul ${cardColor.toUpperCase()}! (Minutul ${eventMinute}')`;
-      generatedContent = `# 🟥 Tensiuni uriașe în minutul ${eventMinute}! Cartonaș ${cardColor.toUpperCase()} încasat de ${cleanPlayer}
+      generatedTitle = `⚠️ Tense Moments! Jucătorul ${cleanPlayer} de la ${teamName} saw the card ${cardColor.toUpperCase()}! (Minutul ${eventMinute}')`;
+      generatedContent = `# 🟥 Huge tensions in minute ${eventMinute}! Card ${cardColor.toUpperCase()} received by ${cleanPlayer}
 
-Atmosfera s-a încins la maximum pe gazonul stadionului **${actingMatch.stadium}** din **${actingMatch.city}**! În **minutul ${eventMinute}** al meciului intens disputat între **${actingMatch.team1}** și **${actingMatch.team2}**, centralul partidei a fost forțat de împrejurări să îl avertizeze dur pe fotbalistul **${cleanPlayer}** de la echipa **${teamName}**, arătându-i direct cartonașul **${cardColor}**.
+The atmosphere heated up to the maximum pe gazonul stadionului **${actingMatch.stadium}** din **${actingMatch.city}**! In the **minute ${eventMinute}** al meciului intens disputat între **${actingMatch.team1}** și **${actingMatch.team2}**, the main referee was forced de împrejurări să îl avertizeze dur pe fotbalistul **${cleanPlayer}** de la echipa **${teamName}**, arătându-i direct cartonașul **${cardColor}**.
 
-Faza a pornit de la un duel extrem de fizic la mijlocul terenului. Jucătorul avertizat a intrat cu întârziere într-un tackling masiv, doborându-și direct adversarul din selecționata adversă **${opponentTeamName}**. Intervenția dură a iscat spirite nervoase extrem de aprinse pe gazon între staff-urile tehnice și jucători!
+The phase started from an extremely physical duel la mijlocul terenului. Jucătorul avertizat a intrat cu întârziere într-un tackling masiv, doborându-și direct adversarul din selecționata adversă **${opponentTeamName}**. The harsh intervention sparked nervous spirits extrem de aprinse pe gazon între staff-urile tehnice și jucători!
 
 ---
 
 ## 🚨 Impactul Tactic General pe Teren
-${cardColor === 'roșu' 
-  ? `Această eliminare definitivă determină ca **${teamName}** să funcționeze în inferioritate numerică (în doar 10 oameni) până la sfârșitul partidei! O lovitură devastatoare pentru antrenor, care acum trebuie să renunțe la un vârf ofensiv pentru a acoperi spațiile libere defensiv.` 
-  : `Deși a scăpat doar cu avertisment, **${cleanPlayer}** va trebui să fie pe deplin precaut la fiecare intersecție următoare, deoarece o nouă greșeală îi va atrage automat excluderea din joc pe soarta meciului.`}
+${cardColor === 'red' 
+  ? `This definitive elimination determină ca **${teamName}** să funcționeze în numerical inferiority (în doar 10 oameni) până la sfârșitul partidei! A devastating blow for the coach, care acum trebuie să renunțe la un vârf ofensiv pentru a acoperi spațiile libere defensiv.` 
+  : `Although he escaped only with a warning, **${cleanPlayer}** va trebui să fie pe deplin precaut la fiecare intersecție următoare, deoarece o nouă greșeală îi va atrage automat excluderea din joc pe soarta meciului.`}
 
 ---
 
-## 📱 Urmărește Meciul Live în Direct Online
-Fiecare moment suplimentar din meci escaladează intensitatea! Rămâi conectat în direct pe net de pe mobil sau laptop accesând playerul:
+## 📱 Watch the Match Live Online
+Every supplementary moment of the match escalates the intensity! Rămâi conectat în direct pe net de pe mobil sau laptop accesând playerul:
 
 [👉 CLICK PENTRU PLAYER CONFLICTE LIVE DIRECT](/world-cup)
 
@@ -261,34 +261,34 @@ Fiecare moment suplimentar din meci escaladează intensitatea! Rămâi conectat 
 
 ## 🏷️ Tag-uri Google Search & SEO Keywords:
 * **Căutări relevante:** fault grav ${cleanPlayer} azi, meciuri tensionate ${actingMatch.team1} cu ${actingMatch.team2}, imagini cartonas rosu fotbal, ponturi online live gratis.
-* **Tag-uri:** \`#Cartonas${cardColor === 'roșu' ? 'Rosu' : 'Galben'}\` \`#Fault\` \`#${cleanPlayer.replace(/\s+/g, '')}\` \`#CupaMondiala2026\` \`#NervitFotbal\``;
+* **Tag-uri:** \`#Cartonas${cardColor === 'red' ? 'Rosu' : 'Galben'}\` \`#Fault\` \`#${cleanPlayer.replace(/\s+/g, '')}\` \`#CupaMondiala2026\` \`#NervitFotbal\``;
     } 
     else { // final
-      generatedTitle = `🏁 Fluier Final! Meci istoric la Cupa Mondială: ${actingMatch.team1} ${finalScore} ${actingMatch.team2}. Vezi rezumatul complet și omul meciului`;
-      generatedContent = `# 🏆 Epic! Meciul ${actingMatch.team1} - ${actingMatch.team2} s-a încheiat cu scorul spectaculos ${finalScore}!
+      generatedTitle = `🏁 Final Whistle! Historic World Cup match: ${actingMatch.team1} ${finalScore} ${actingMatch.team2}. See the full summary and man of the match`;
+      generatedContent = `# 🏆 Epic! The match ${actingMatch.team1} - ${actingMatch.team2} ended with the spectacular score ${finalScore}!
 
-S-a auzit fluierul de final al arbitrului pe impunătoarea arenă **${actingMatch.stadium}** din **${actingMatch.city}**! Într-una dintre cele mai complexe și atractive etape ale Cupei Mondiale 2026, selecționata din **${actingMatch.team1}** și rivala sa **${actingMatch.team2}** au terminat duelul direct din grupa ${actingMatch.group} la un scor absolut incredibil de **${finalScore}**!
+The final whistle was heard al arbitrului pe impunătoarea arenă **${actingMatch.stadium}** din **${actingMatch.city}**! In one of the most complex and attractive stages ale Cupei Mondiale 2026, selecționata din **${actingMatch.team1}** și rivala sa **${actingMatch.team2}** au terminat duelul direct din grupa ${actingMatch.group} la un scor absolut incredibil de **${finalScore}**!
 
-Ambele tabere au dat tot ce aveau mai bun pe teren, punând în joc o dăruire fizică incredibilă și execuții artistice memorabile care au generat mii de aplauze în tribune.
+Both sides gave their best on the pitch, punând în joc o dăruire fizică incredibilă și execuții artistice memorabile care au generat mii de aplauze în tribune.
 
 ---
 
 ## 🔥 Omul Meciului: Super-Eroul Serii
-Marele merit pentru dinamica acestei partide îi revine fără îndoială jucătorului **${manOfTheMatch || cleanPlayer}**. Cu un efort fizic inepuizabil, o dinamică perfectă de pase și abilități extraordinare în situații limită de unu la unu, acesta a ghidat tactica propriei echipe pe parcursul celor 90 de minute epice.
+The great merit for the dynamics of this match goes to fără îndoială jucătorului **${manOfTheMatch || cleanPlayer}**. With inexhaustible physical effort, o dinamică perfectă de pase și abilități extraordinare în situații limită de unu la unu, acesta a ghidat tactica propriei echipe pe parcursul celor 90 de minute epice.
 
 ---
 
-## 📊 Configurația Clasamentului în Grupa ${actingMatch.group}
-Cu acest deznodământ captivant, lupta pentru primele două locuri din clasament devine o adevărată nebunie! Runda următoare va fi definitorie pentru calificarea în fazele cu eliminare directă.
+## 📊 Group Standings Configuration ${actingMatch.group}
+With this captivating outcome, the fight for the top two spots in the standings becomes true madness! Runda următoare va fi definitorie pentru calificarea în fazele cu eliminare directă.
 
-Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interviurile la vestiare sau clasamentul complet actualizat interactiv la minut? Accesează panoul nostru:
+Do you want to rewatch the most thrilling video phases, golurile de generic, interviurile la vestiare sau clasamentul complet actualizat interactiv la minut? Accesează panoul nostru:
 
-[👉 VEZI REZUMAT VIDEO & CLASAMENT GRUPĂ INTERACTIV](/world-cup)
+[👉 SEE VIDEO SUMMARY & INTERACTIVE GROUP STANDINGS](/world-cup)
 
 ---
 
 ## 🏷️ Tag-uri Google Search & SEO Keywords:
-* **Cuvinte cheie:** cine a câștigat meciul ${actingMatch.team1} vs ${actingMatch.team2} azi, scor final meciuri de fotbal, rezumat video goluri tv romania, statistici fotbalisti cupa mondiala.
+* **Cuvinte cheie:** who won the match ${actingMatch.team1} vs ${actingMatch.team2} azi, scor final meciuri de fotbal, rezumat video goluri tv romania, statistici fotbalisti cupa mondiala.
 * **Tag-uri:** \`#FluierFinal\` \`#RezultatScor\` \`#${actingMatch.team1.replace(/\s+/g, '')}\` \`#${actingMatch.team2.replace(/\s+/g, '')}\` \`#ScorCorect\` \`#CupaMondiala2026\` \`#PonturiPonturi\``;
     }
 
@@ -309,7 +309,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
       content,
       coverImage,
       status: 'published',
-      author: 'Redacția Sport Live',
+      author: 'Sport Live Newsroom',
       publishedAt: new Date().toISOString(),
       categoryId: catId,
       isBreakingNews: eventType === 'goal' || eventType === 'final',
@@ -325,7 +325,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
       }, 5000);
     } catch (err) {
       console.error(err);
-      alert('Eroare la scrierea articolului eveniment live în Firestore!');
+      alert('Error writing article eveniment live în Firestore!');
     } finally {
       setGeneratingFor(null);
     }
@@ -339,7 +339,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
     return (
       <div className="p-8 text-zinc-500 flex flex-col items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-2" />
-        <span className="font-medium text-xs">Se încarcă listele de meciuri și categoriile...</span>
+        <span className="font-medium text-xs">Loading match lists și categoriile...</span>
       </div>
     );
   }
@@ -357,7 +357,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
             <span>Sistem Inteligent de Articole Sportive</span>
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
-            Generează instantaneu articole SEO pre-completate în limba română pentru pre-meciuri sau evenimente live (goluri, faulturi, cartonașe, kickoff, rezultate).
+            Instantly generate SEO articles pre-completate în limba română pentru pre-meciuri sau evenimente live (goluri, faulturi, cartonașe, kickoff, rezultate).
           </p>
         </div>
 
@@ -401,7 +401,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
             <div className="bg-zinc-900/40 border border-zinc-850 p-4 rounded-xl flex items-start gap-3 text-xs text-zinc-400">
               <Settings className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
               <p>
-                Apasă pe butonul de generare de pe rândul meciului dorit. Sistemul va compila automat datele oficiale din loturi, stadium, ora, oraș, referințe și va stoca textul pre-completat instant în colecția publică de articole cu statut <strong>Publicat</strong>.
+                Press the generate button de pe rândul meciului dorit. Sistemul va compila automat datele oficiale din loturi, stadium, ora, oraș, referințe și va stoca textul pre-completat instant în colecția publică de articole cu statut <strong>Publicat</strong>.
               </p>
             </div>
 
@@ -482,7 +482,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                           ) : (
                             <>
                               <Sparkles className="w-3.5 h-3.5" />
-                              <span>Generează Avanpremieră (Auto-SEO)</span>
+                              <span>Generate Preview (Auto-SEO)</span>
                             </>
                           )}
                         </button>
@@ -513,7 +513,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
 
                 {/* Match Picker Selector */}
                 <div>
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Selectează Confruntarea</label>
+                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Select Clash</label>
                   <select
                     value={selectedMatchId}
                     onChange={(e) => setSelectedMatchId(e.target.value)}
@@ -529,12 +529,12 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
 
                 {/* Event Type Grid Selector */}
                 <div>
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Tip Fază sau Eveniment</label>
+                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Phase or Event Type</label>
                   <div className="grid grid-cols-4 gap-2">
                     {[
                       { type: 'goal', label: '⚽ Gol Marcat' },
                       { type: 'kickoff', label: '🚀 Fluier Start' },
-                      { type: 'card', label: '🟨🟥 Cartonaș' },
+                      { type: 'card', label: '🟨🟥 Card' },
                       { type: 'final', label: '🏁 Fluier Final' }
                     ].map((item) => (
                       <button
@@ -559,7 +559,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                 {/* Team Selection Radio Box (Only for Goals/Cards) */}
                 {(eventType === 'goal' || eventType === 'card') && (
                   <div>
-                    <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Echipa implicată direct</label>
+                    <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Directly involved team</label>
                     <div className="flex space-x-3">
                       <button
                         type="button"
@@ -594,7 +594,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                           alt="t2"
                           referrerPolicy="no-referrer"
                         />
-                        <span>{selectedMatch.team2} (Oaspeți)</span>
+                        <span>{selectedMatch.team2} (Guests)</span>
                       </button>
                     </div>
                   </div>
@@ -617,7 +617,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Nume Jucător Vizat</label>
+                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Targeted Player Name</label>
                         <input
                           type="text"
                           required
@@ -633,7 +633,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                   {/* Card specific parameters */}
                   {eventType === 'card' && (
                     <div>
-                      <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Severitate Cartonaș</label>
+                      <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Severity Card</label>
                       <div className="flex gap-4">
                         <label className="flex items-center space-x-2 cursor-pointer text-xs font-bold text-zinc-300">
                           <input 
@@ -644,18 +644,18 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                             onChange={() => setCardColor('galben')}
                             className="bg-zinc-950 accent-amber-500"
                           />
-                          <span className="text-amber-400 font-black">🟨 Cartonaș Galben (Avertisment)</span>
+                          <span className="text-amber-400 font-black">🟨 Card Yellow (Warning)</span>
                         </label>
                         <label className="flex items-center space-x-2 cursor-pointer text-xs font-bold text-zinc-300">
                           <input 
                             type="radio" 
                             name="cardColor" 
-                            value="roșu" 
-                            checked={cardColor === 'roșu'} 
-                            onChange={() => setCardColor('roșu')}
+                            value="red" 
+                            checked={cardColor === 'red'} 
+                            onChange={() => setCardColor('red')}
                             className="bg-zinc-950 accent-rose-500"
                           />
-                          <span className="text-rose-500 font-black">🟥 Cartonaș Roșu (Eliminare)</span>
+                          <span className="text-rose-500 font-black">🟥 Card Red (Elimination)</span>
                         </label>
                       </div>
                     </div>
@@ -665,7 +665,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                   {eventType === 'final' && (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Scor Final înregistrat</label>
+                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Recorded Final Score</label>
                         <input
                           type="text"
                           required
@@ -692,12 +692,12 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                   {/* Extra textual inputs */}
                   {eventType === 'kickoff' && (
                     <div>
-                      <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Detaliu tactici de start / Arbitraj (Opțional)</label>
+                      <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Tactic details de start / Arbitraj (Opțional)</label>
                       <input
                         type="text"
                         value={extraDetails}
                         onChange={(e) => setExtraDetails(e.target.value)}
-                        placeholder="Ex: Formație compactă de 4-3-3, arbitru din Argentina la centru"
+                        placeholder="Ex: Compact 4-3-3 formation, arbitru din Argentina la centru"
                         className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -715,12 +715,12 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                     {generatingFor === 'live_event_gen' ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Se compune și se stochează articolul...</span>
+                        <span>Composing and storing article...</span>
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>Generează și Publică Articol Eveniment Live!</span>
+                        <span>Generate and Publish Article Eveniment Live!</span>
                       </>
                     )}
                   </button>
@@ -735,7 +735,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                       className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold flex items-center gap-2 block animate-in fade-in"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Articolul evenimentului a fost generat și publicat cu succes pe site!</span>
+                      <span>The event article has been successfully generated and published cu succes pe site!</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -747,7 +747,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
               <div className="bg-zinc-900/60 border border-zinc-850 rounded-2xl p-5 shadow-xl">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center space-x-2 pb-1.5 border-b border-zinc-850">
                   <Tv className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>Previzualizare Live în timp real (Cum va apărea pe platformă)</span>
+                  <span>Real-time Live Preview (Cum va apărea pe platformă)</span>
                 </h4>
 
                   {/* Main cover sport image mockup */}
@@ -764,7 +764,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                   
                   {/* Category overlay */}
                   <span className="absolute top-3 left-3 text-[9px] bg-indigo-600 text-white font-extrabold px-2 py-0.5 rounded tracking-wide uppercase shadow">
-                    CUPA MONDIALĂ 2026
+                    WORLD CUP 2026
                   </span>
 
                   {/* Flag layouts overlay */}
@@ -795,7 +795,7 @@ Vrei să revizionezi cele mai palpitante faze video, golurile de generic, interv
                 <div className="space-y-3 px-1">
                   <div className="flex items-center space-x-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                    <span className="text-[10px] font-bold tracking-widest text-[#E05424] uppercase">REPRODUCERE ÎN DIRECT / PROMO</span>
+                    <span className="text-[10px] font-bold tracking-widest text-[#E05424] uppercase">LIVE REPRODUCTION / PROMO</span>
                   </div>
 
                   <h3 className="text-base md:text-lg font-extrabold text-white leading-snug tracking-tight">

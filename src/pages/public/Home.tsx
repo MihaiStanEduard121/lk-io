@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
-import { TVProgram, Article, Show, HomepageConfig } from '../../types';
+import { TVSchedule, Article, Show, HomepageConfig } from '../../types';
 import { Play, Star, Eye, AlertCircle, ChevronRight, MonitorPlay, Tv, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { getMatchLiveStatus, getActiveTime, WCMatch } from './worldCupData';
 
 export default function Home() {
-  const [programs, setPrograms] = useState<TVProgram[]>([]);
+  const [programs, setSchedules] = useState<TVSchedule[]>([]);
   const [config, setConfig] = useState<HomepageConfig | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [shows, setShows] = useState<Show[]>([]);
   const [worldCupMatches, setWorldCupMatches] = useState<WCMatch[]>([]);
   const [loadingConfig, setLoadingConfig] = useState(true);
-  const [loadingPrograms, setLoadingPrograms] = useState(true);
+  const [loadingSchedules, setLoadingSchedules] = useState(true);
   const [loadingArticles, setLoadingArticles] = useState(true);
   const [loadingShows, setLoadingShows] = useState(true);
   const [loadingWcMatches, setLoadingWcMatches] = useState(true);
   const [liveViewers, setLiveViewers] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    api.getPrograms().then((d_progs) => {
-      setPrograms(d_progs.filter((p: any) => p.status === 'online'));
-      setLoadingPrograms(false);
+    api.getSchedule().then((d_progs) => {
+      setSchedules(d_progs.filter((p: any) => p.status === 'online'));
+      setLoadingSchedules(false);
     });
     api.getHomepageConfig().then((d_conf) => {
       setConfig(d_conf);
@@ -116,12 +116,12 @@ export default function Home() {
               {config?.heroTitle || 'programetv.online'}
             </h1>
             <p className="text-lg text-zinc-300 mb-8 line-clamp-3">
-              {config?.heroSubtitle || 'Urmărește cele mai populare transmisiuni, meciuri și emisiuni live într-un singur loc.'}
+              {config?.heroSubtitle || 'Watch the most popular live streams, matches, and shows in one place.'}
             </p>
             <div className="flex items-center space-x-4">
               <Link to={config?.heroLink || '/#canale'} onClick={(e) => { if(!config?.heroLink) { e.preventDefault(); document.getElementById('canale')?.scrollIntoView({ behavior: 'smooth' }); } }} className="flex items-center space-x-2 bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-zinc-200 transition-colors">
                 <Play fill="currentColor" className="w-5 h-5" />
-                <span>Urmărește acum</span>
+                <span>Watch now</span>
               </Link>
             </div>
           </motion.div>
@@ -130,19 +130,19 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-16 space-y-24">
 
-        {/* Cupa Mondială 2026 Recommended Highlight Section */}
+        {/* World Cup 2026 Recommended Highlight Section */}
         <section className="bg-gradient-to-r from-indigo-950/10 via-zinc-900/60 to-zinc-950/40 border border-zinc-850 p-6 sm:p-8 rounded-3xl relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 border-b border-zinc-800 pb-4 gap-4">
             <div>
               <div className="inline-flex items-center space-x-1 bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 rounded-md text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">
-                🏆 RECOMANDAT • FIFA CUPA MONDIALĂ 2026
+                🏆 RECOMMENDED • FIFA WORLD CUP 2026
               </div>
-              <h2 className="text-2xl font-black text-white tracking-tight">Meciuri Recomandate în Direct</h2>
+              <h2 className="text-2xl font-black text-white tracking-tight">Recommended Live Matches</h2>
             </div>
             <Link to="/world-cup" className="inline-flex items-center space-x-1 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold text-zinc-400 transition-colors shrink-0">
-              <span>Program & Clasamente complet</span>
+              <span>Full Schedule & Standings</span>
               <ChevronRight className="w-4 h-4 text-amber-500" />
             </Link>
           </div>
@@ -150,7 +150,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loadingWcMatches ? (
               <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-zinc-500 font-bold py-8">
-                Se încarcă meciurile recomandate...
+                Loading recommended matches...
               </div>
             ) : worldCupMatches.slice(14, 17).map((match) => {
               const liveState = getMatchLiveStatus(match, getActiveTime());
@@ -179,7 +179,7 @@ export default function Home() {
                     )}
                   </div>
 
-                  <span className="text-[10px] bg-zinc-900 font-extrabold text-zinc-400 px-2 py-1 rounded uppercase tracking-wider">Grupa {match.group}</span>
+                  <span className="text-[10px] bg-zinc-900 font-extrabold text-zinc-400 px-2 py-1 rounded uppercase tracking-wider">Group {match.group}</span>
 
                   <div className="flex items-center justify-between my-5">
                     {/* Team 1 */}
@@ -217,7 +217,7 @@ export default function Home() {
                   <div className="border-t border-zinc-900/60 pt-3 flex items-center justify-between text-[10px] font-bold text-zinc-550 uppercase tracking-wider">
                     <span className="flex items-center">
                       <Users className="w-3 h-3 text-indigo-400 mr-1 shrink-0" />
-                      {matchViewers} spectatori
+                      {matchViewers} viewers
                     </span>
                     <span className="text-amber-500 group-hover:text-amber-400 font-black transition-colors">Play Player &gt;</span>
                   </div>
@@ -227,13 +227,13 @@ export default function Home() {
           </div>
         </section>
         
-        {/* Știri Recente */}
+        {/* Recent News */}
         {recentArticles.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-8 border-b border-zinc-800 pb-4">
-              <h2 className="text-2xl font-bold text-white tracking-tight">Ultimele Știri</h2>
+              <h2 className="text-2xl font-bold text-white tracking-tight">Latest News</h2>
               <Link to="/news" className="text-zinc-400 hover:text-white flex items-center transition-colors text-sm font-medium">
-                Vezi toate știrile <ChevronRight className="w-4 h-4 ml-1" />
+                View all news <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -257,7 +257,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* Emisiuni Recomandate / Featured */}
+        {/* Shows Recomandate / Featured */}
         {programs.filter(p => p.isFeatured).length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-8 border-b border-zinc-800 pb-4">
@@ -327,7 +327,7 @@ export default function Home() {
                   <div className="flex items-center justify-between mt-2 text-xs">
                     <div className="flex items-center text-zinc-500">
                       <Eye className="w-3 h-3 mr-1" />
-                      {(p.views || 0).toLocaleString()} vizualizări
+                      {(p.views || 0).toLocaleString()} views
                     </div>
                     {liveViewers[p.id] > 0 && (
                       <span className="flex items-center text-rose-500 font-semibold bg-rose-500/10 border border-rose-500/25 px-1.5 py-0.5 rounded-md text-[10px] animate-pulse">
@@ -342,23 +342,23 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Emisiuni Recente */}
+        {/* Shows Recente */}
         {recentShows.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-8 border-b border-zinc-800 pb-4">
               <h2 className="text-2xl font-bold text-white tracking-tight flex items-center">
-                 <MonitorPlay className="w-6 h-6 mr-3 text-indigo-500" /> Emisiuni pe Demand
+                 <MonitorPlay className="w-6 h-6 mr-3 text-indigo-500" /> Shows pe Demand
               </h2>
               <Link to="/shows" className="text-zinc-400 hover:text-white flex items-center transition-colors text-sm font-medium">
-                Vezi toate emisiunile <ChevronRight className="w-4 h-4 ml-1" />
+                View all shows <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
             </div>
 
-            {/* Emisiuni Recomandate (daca exista) */}
+            {/* Shows Recomandate (daca exista) */}
             {recentShows.filter(s => s.isFeatured).length > 0 && (
               <div className="mb-8 p-6 bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
                 <h3 className="text-lg font-bold text-indigo-400 mb-6 flex items-center">
-                   <Star className="w-5 h-5 mr-2 text-indigo-400 fill-indigo-400/20" /> Selecția Editorului
+                   <Star className="w-5 h-5 mr-2 text-indigo-400 fill-indigo-400/20" /> Editor's Pick
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                   {recentShows.filter(s => s.isFeatured).map(s => (

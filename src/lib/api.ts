@@ -57,18 +57,32 @@ export const api = {
     return snapshot.docs.map(mapDoc);
   },
   getArticle: async (identifier: string) => {
+    // Try to decode identifier just in case it came url-encoded
+    try { identifier = decodeURIComponent(identifier); } catch(e) {}
+    
     // Try by ID first
-    let d = await getDoc(doc(db, 'articles', identifier));
-    if (d.exists()) {
-      await updateDoc(doc(db, 'articles', identifier), { views: increment(1) });
-      return { ...mapDoc(d), views: (d.data().views || 0) + 1 };
+    try {
+      let d = await getDoc(doc(db, 'articles', identifier));
+      if (d.exists()) {
+        try {
+          await updateDoc(doc(db, 'articles', identifier), { views: increment(1) });
+        } catch(e) {}
+        return { ...mapDoc(d), views: (d.data().views || 0) + 1 };
+      }
+    } catch(e) {
+      // Ignore permission/format errors for getDoc by ID and fallback to query by slug
     }
+    
     // Try by slug
     const q = query(collection(db, 'articles'), where('slug', '==', identifier));
     const snapshot = await getDocs(q);
     if (!snapshot.empty) {
       const docR = snapshot.docs[0];
-      await updateDoc(doc(db, 'articles', docR.id), { views: increment(1) });
+      try {
+        await updateDoc(doc(db, 'articles', docR.id), { views: increment(1) });
+      } catch(e) {
+        // Ignore permission errors for guests
+      }
       return { ...mapDoc(docR), views: (docR.data().views || 0) + 1 };
     }
     throw new Error('Not found');
@@ -97,8 +111,11 @@ export const api = {
     return snapshot.docs.map(mapDoc);
   },
   getShow: async (identifier: string) => {
-    let d = await getDoc(doc(db, 'shows', identifier));
-    if (d.exists()) return mapDoc(d);
+    try { identifier = decodeURIComponent(identifier); } catch(e) {}
+    try {
+      let d = await getDoc(doc(db, 'shows', identifier));
+      if (d.exists()) return mapDoc(d);
+    } catch(e) {}
     const q = query(collection(db, 'shows'), where('slug', '==', identifier));
     const snap = await getDocs(q);
     if (!snap.empty) return mapDoc(snap.docs[0]);
@@ -213,6 +230,70 @@ export const api = {
       console.warn("Could not fetch world cup matches from DB", err);
       const { WORLD_CUP_MATCHES } = await import('../pages/public/worldCupData');
       return WORLD_CUP_MATCHES;
+    }
+  },
+  getWorldCupMatchViews: async () => {
+    try {
+      const q = collection(db, 'articles');
+      const snapshot = await getDocs(q);
+      const articles = snapshot.docs.map(mapDoc);
+      const viewsMap: Record<string, number> = {};
+      const { WORLD_CUP_MATCHES } = await import('../pages/public/worldCupData');
+      
+      for (const match of WORLD_CUP_MATCHES) {
+        let matchViews = 0;
+        const pt1 = match.team1.toLowerCase();
+        const pt2 = match.team2.toLowerCase();
+        
+        for (const art of articles) {
+          if (art.categoryId === 'world-cup' && art.title) {
+            const title = art.title.toLowerCase();
+            // Try to match both teams in title, accounting for language variations (e.g. Țările de Jos = Netherlands, dar in RO au scris Olanda, etc. wait!)
+            // I should map manual translations just in case, or just do a generic check.
+            const mapTe = (t: string) => {
+              if(t === 'south africa') return ['africa de sud', 'south africa'];
+              if(t === 'mexico') return ['mexic', 'mexico'];
+              if(t === 'south korea') return ['coreea de sud', 'south korea'];
+              if(t === 'czechia') return ['cehia', 'czechia'];
+              if(t === 'bosnia & herzegovina') return ['bosnia', 'bosnia și herțegovina'];
+              if(t === 'paraguay') return ['paraguay'];
+              if(t === 'usa') return ['sua', 'usa'];
+              if(t === 'qatar') return ['qatar'];
+              if(t === 'switzerland') return ['elveția', 'switzerland', 'elvetia'];
+              if(t === 'brazil') return ['brazilia', 'brazil'];
+              if(t === 'morocco') return ['maroc', 'morocco'];
+              if(t === 'haiti') return ['haiti'];
+              if(t === 'scotland') return ['scoția', 'scotia', 'scotland'];
+              if(t === 'australia') return ['australia'];
+              if(t === 'turkey') return ['turcia', 'turkey'];
+              if(t === 'germany') return ['germania', 'germany'];
+              if(t === 'curacao') return ['curacao', 'curaçao'];
+              if(t === 'netherlands') return ['olanda', 'țările de jos', 'netherlands'];
+              if(t === 'japan') return ['japonia', 'japan'];
+              if(t === 'ivory coast') return ['coasta de fildeș', 'coasta de fildes', 'ivory coast'];
+              if(t === 'ecuador') return ['ecuador'];
+              if(t === 'sweden') return ['suedia', 'sweden'];
+              if(t === 'tunisia') return ['tunisia'];
+              return [t];
+            };
+            
+            const aliases1 = mapTe(pt1);
+            const aliases2 = mapTe(pt2);
+            
+            const hasT1 = aliases1.some(a => title.includes(a));
+            const hasT2 = aliases2.some(a => title.includes(a));
+            
+            if (hasT1 && hasT2) {
+              matchViews += (art.views || 0);
+            }
+          }
+        }
+        viewsMap[`/world-cup/${match.id}`] = matchViews;
+      }
+      return viewsMap;
+    } catch(e) {
+      console.warn('Error fetching wc views', e);
+      return {};
     }
   },
   getWorldCupMatch: async (id: string) => {

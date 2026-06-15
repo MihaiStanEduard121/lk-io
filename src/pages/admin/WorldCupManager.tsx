@@ -121,7 +121,7 @@ export default function WorldCupManager() {
     // Limit to 50MB - inform user as per previous experience
     const MAX_SIZE = 50 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      alert('Fișierul este prea mare (>50MB). Te rugăm să-l încarci pe un serviciu de hosting video (YouTube/Vimeo) și să folosești link-ul direct.');
+      alert('File is too large (>50MB). Please upload it to a video hosting service (YouTube/Vimeo) and use the direct link.');
       return;
     }
 
@@ -146,7 +146,7 @@ export default function WorldCupManager() {
         },
         (error) => {
           console.error('Error uploading file:', error);
-          alert('A apărut o eroare la încărcarea fișierului: ' + error.message);
+          alert('An error occurred while uploading the file: ' + error.message);
           setUploading(false);
         },
         async () => {
@@ -171,10 +171,10 @@ export default function WorldCupManager() {
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
             <Award className="text-amber-500 h-8 h-8" />
-            <span>Meciuri Cupă & Playeri Stream</span>
+            <span>Cup Matches & Stream Players</span>
           </h1>
           <p className="text-zinc-500 text-xs mt-1">
-            Gestionează disponibilitatea Player 1, 2, 3 și actualizează în timp real codurile iFrame (embed) pentru transmisiunile live.
+            Manage availability of Player 1, 2, 3 and update iFrame embed codes for live streams in real-time.
           </p>
         </div>
       </div>
@@ -182,12 +182,12 @@ export default function WorldCupManager() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Match Selection Sidebar */}
         <div className="lg:col-span-1 space-y-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Selectează Meciul</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Select Match</h2>
           <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-4 space-y-2 max-h-[600px] overflow-y-auto scrollbar-none shadow-xl">
             {matchesLoading ? (
-               <div className="text-center text-zinc-500 py-4">Se încarcă meciurile...</div>
+               <div className="text-center text-zinc-500 py-4">Loading matches...</div>
             ) : matches.length === 0 ? (
-               <div className="text-center text-zinc-500 py-4">Niciun meci.</div>
+               <div className="text-center text-zinc-500 py-4">No matches.</div>
             ) : matches.map((m) => {
               const active = selectedMatch?.id === m.id;
               return (
@@ -201,7 +201,7 @@ export default function WorldCupManager() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Grup {m.group}</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Group {m.group}</span>
                     <span className="font-mono text-[10px] bg-zinc-950 px-2 py-0.5 rounded text-zinc-500">{m.date} - {m.time}</span>
                   </div>
                   <div className="text-xs font-bold font-sans">
@@ -217,13 +217,13 @@ export default function WorldCupManager() {
         <div className="lg:col-span-2 space-y-6">
           {!selectedMatch ? (
              <div className="bg-zinc-905 border border-zinc-800 rounded-2xl p-6 text-center text-zinc-500 shadow-2xl">
-                Selecționează un meci pentru a-l edita.
+                Select a match to edit.
              </div>
           ) : (
           <div className="bg-zinc-905 border border-zinc-800 rounded-2xl p-6 space-y-6 shadow-2xl relative overflow-hidden">
             <div className="flex items-center justify-between border-b border-zinc-800/60 pb-4">
               <div>
-                <span className="text-[10px] uppercase tracking-widest text-[#E05424] font-black">Editare configurare</span>
+                <span className="text-[10px] uppercase tracking-widest text-[#E05424] font-black">Edit Configuration</span>
                 <h3 className="text-base font-bold text-white mt-1">
                   {selectedMatch.team1} vs {selectedMatch.team2} ({selectedMatch.city})
                 </h3>
@@ -231,7 +231,7 @@ export default function WorldCupManager() {
               <button 
                 onClick={() => setSelectedMatch({ ...selectedMatch })}
                 className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800 transition-colors"
-                title="Reîncărcare"
+                title="Reload"
               >
                 <RefreshCcw className="w-4 h-4 text-zinc-400" />
               </button>
@@ -239,7 +239,7 @@ export default function WorldCupManager() {
 
             {loading ? (
               <div className="py-20 text-center text-zinc-500 text-xs font-semibold">
-                Se încarcă setările canelelor...
+                Loading channel settings...
               </div>
             ) : (
               <div className="space-y-6">
@@ -351,7 +351,7 @@ export default function WorldCupManager() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-400">URL Sursă MP4 (Replay Meci)</label>
+                    <label className="text-xs font-bold text-zinc-400">URL Sursă MP4 (Match Replay)</label>
                     <div className="flex gap-2">
                        <input
                          type="url"

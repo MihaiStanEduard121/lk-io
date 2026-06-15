@@ -19,6 +19,9 @@ export default function WorldCupPage() {
       setMatches(data);
       setLoading(false);
     });
+    api.getWorldCupMatchViews().then(views => {
+      setLiveViewersStats(views);
+    });
   }, []);
 
   // Sync simulation checkbox if modified on other screens
@@ -30,23 +33,7 @@ export default function WorldCupPage() {
     return () => window.removeEventListener('wc_sim_change', handleSync);
   }, []);
 
-  // Poll server-side viewer stats automatically in alignment with real-time requirements
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch('/api/presence/stats');
-        if (res.ok) {
-          const stats = await res.json();
-          setLiveViewersStats(stats.pageStats || {});
-        }
-      } catch (e) {
-        console.warn('Could not fetch presence stats:', e);
-      }
-    };
-    fetchStats();
-    const interval = setInterval(fetchStats, 8000);
-    return () => clearInterval(interval);
-  }, []);
+  // Remove automatic polling of dummy stats
 
   // Filter matches based on round and query
   const filteredMatches = useMemo(() => {
@@ -59,7 +46,7 @@ export default function WorldCupPage() {
         match.city.toLowerCase().includes(searchQuery.toLowerCase());
       return matchRound && matchQuery;
     });
-  }, [selectedRound, searchQuery]);
+  }, [matches, selectedRound, searchQuery]);
 
   // Enrich filtered matches with their real-time live or simulation score states
   const renderedMatches = useMemo(() => {
@@ -163,7 +150,7 @@ export default function WorldCupPage() {
         standings
       };
     });
-  }, [simulationActive]);
+  }, [matches, simulationActive]);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -179,10 +166,10 @@ export default function WorldCupPage() {
               <span>FIFA World Cup 2026</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-              Cupa Mondială 2026
+              World Cup 2026
             </h1>
             <p className="mt-4 text-base sm:text-lg text-zinc-400 max-w-2xl leading-relaxed">
-              Urmărește în direct toate meciurile turneului final care are loc în Statele Unite ale Americii, Mexic și Canada. Transmisiuni live, statistici grupa, orele de difuzare și countdown complet.
+              Watch all tournament matches live taking place in the United States, Mexico, and Canada. Live streams, group statistics, broadcast times, and full countdown.
             </p>
           </div>
 
@@ -194,9 +181,9 @@ export default function WorldCupPage() {
 
       <div className="max-w-7xl mx-auto">
         {loading ? (
-          <div className="py-12 text-center text-zinc-500 font-bold">Se încarcă meciurile...</div>
+          <div className="py-12 text-center text-zinc-500 font-bold">Loading matches...</div>
         ) : matches.length === 0 ? (
-          <div className="py-12 text-center text-zinc-500 font-bold">Nu sunt meciuri disponibile.</div>
+          <div className="py-12 text-center text-zinc-500 font-bold">No matches available.</div>
         ) : (
           <>
         {/* Navigation Tabs */}
@@ -207,7 +194,7 @@ export default function WorldCupPage() {
           >
             <div className="flex items-center justify-center space-x-2">
               <Calendar className="w-4 h-4" />
-              <span>Meciuri Live & Program</span>
+              <span>Live Matches & Schedule</span>
             </div>
           </button>
           <button
@@ -216,7 +203,7 @@ export default function WorldCupPage() {
           >
             <div className="flex items-center justify-center space-x-2">
               <Table className="w-4 h-4" />
-              <span>Clasamente Grupe</span>
+              <span>Group Standings</span>
             </div>
           </button>
         </div>
@@ -228,10 +215,10 @@ export default function WorldCupPage() {
               {/* Round Tabs */}
               <div className="flex flex-wrap gap-2">
                 {[
-                  { value: 0, label: 'Toate Rundele' },
-                  { value: 1, label: 'Runda 1' },
-                  { value: 2, label: 'Runda 2' },
-                  { value: 3, label: 'Runda 3' },
+                  { value: 0, label: 'All Rounds' },
+                  { value: 1, label: 'Round 1' },
+                  { value: 2, label: 'Round 2' },
+                  { value: 3, label: 'Round 3' },
                 ].map(tab => (
                   <button
                     key={tab.value}
@@ -252,7 +239,7 @@ export default function WorldCupPage() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-550" />
                 <input
                   type="text"
-                  placeholder="Caută o țară, grupă sau oraș..."
+                  placeholder="Search for a country, group or city..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-zinc-900/60 border border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-sm text-zinc-200 placeholder-zinc-550 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all font-medium"
@@ -270,8 +257,8 @@ export default function WorldCupPage() {
                   <div key={roundNum} className="space-y-4">
                     <div className="flex items-center space-x-3 border-b border-zinc-900 pb-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500 filter drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]" />
-                      <h2 className="text-lg font-bold tracking-wider text-zinc-350 uppercase">Runda {roundNum}</h2>
-                      <span className="text-xs text-zinc-550 font-semibold font-mono">({matchesInRound.length} meciuri)</span>
+                      <h2 className="text-lg font-bold tracking-wider text-zinc-350 uppercase">Round {roundNum}</h2>
+                      <span className="text-xs text-zinc-550 font-semibold font-mono">({matchesInRound.length} matches)</span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -291,7 +278,7 @@ export default function WorldCupPage() {
                             {/* Header group and stadium info */}
                             <div className="flex justify-between items-center text-xs text-zinc-500 mb-3.5 font-semibold font-sans">
                               <span className="px-2 py-0.5 bg-zinc-800 border border-zinc-800 text-zinc-400 rounded-md">
-                                Grupa {match.group}
+                                Group {match.group}
                               </span>
                               <span className="flex items-center max-w-[200px] truncate text-zinc-550 font-medium">
                                 <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
@@ -371,11 +358,11 @@ export default function WorldCupPage() {
                                 <span className="text-zinc-400 font-extrabold mr-1">
                                   {liveViewersStats[`/world-cup/${match.id}`] || 0}
                                 </span>
-                                <span>{match.liveState.status === 'live' ? 'privesc acum' : 'vizite recente'}</span>
+                                <span>vizualizări totale</span>
                               </span>
                               <div className="flex items-center space-x-1.5 text-zinc-400 group-hover:text-amber-500 transition-colors">
                                 <PlayCircle className="w-4 h-4 fill-amber-500/10 text-amber-500 animate-pulse" />
-                                <span>Meci detaliat</span>
+                                <span>Match details</span>
                                 <ArrowRight className="w-3.5 h-3.5" />
                               </div>
                             </div>
@@ -394,7 +381,7 @@ export default function WorldCupPage() {
             {groupStandings.map(group => (
               <div key={group.group} className="bg-zinc-900/40 rounded-2xl border border-zinc-800/80 p-5 shadow-xl">
                 <div className="flex justify-between items-center mb-4 pb-2 border-b border-zinc-850">
-                  <h3 className="font-bold text-zinc-300">Grupa {group.group}</h3>
+                  <h3 className="font-bold text-zinc-300">Group {group.group}</h3>
                   <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Stage 3/3</span>
                 </div>
 
@@ -402,7 +389,7 @@ export default function WorldCupPage() {
                   <table className="w-full text-left border-collapse text-xs font-sans">
                     <thead>
                       <tr className="text-zinc-550 border-b border-zinc-850 pb-2 font-bold uppercase text-[10px]">
-                        <th className="py-2">Echipă</th>
+                        <th className="py-2">Team</th>
                         <th className="py-2 text-center">M</th>
                         <th className="py-2 text-center">GM</th>
                         <th className="py-2 text-center">+/-</th>
@@ -413,7 +400,7 @@ export default function WorldCupPage() {
                       {group.standings.map((row, index) => (
                         <tr key={row.team} className="hover:bg-zinc-950/40 transition-colors font-medium">
                           <td className="py-2.5 flex items-center space-x-2 truncate max-w-[130px]">
-                            <span className={`w-1.5 h-1.5 rounded-full ${index < 2 ? 'bg-emerald-500' : 'bg-transparent'}`} title={index < 2 ? 'Calificare majoră' : ''} />
+                            <span className={`w-1.5 h-1.5 rounded-full ${index < 2 ? 'bg-emerald-500' : 'bg-transparent'}`} title={index < 2 ? 'Major Qualification' : ''} />
                             <img 
                               src={`https://flagcdn.com/w80/${row.code}.png`} 
                               alt={row.team} 

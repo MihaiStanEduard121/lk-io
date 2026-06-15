@@ -91,21 +91,15 @@ export default function WorldCupMatchDetailPage() {
   useEffect(() => {
     const fetchLiveCount = async () => {
       try {
-        const res = await fetch('/api/presence/stats');
-        if (res.ok) {
-          const stats = await res.json();
-          // Exact stats without simulation boost
-          const exact = stats.pageStats[`/world-cup/${id}`] || 1;
-          setLiveViewers(exact);
-        }
+        const viewsMap = await api.getWorldCupMatchViews();
+        const exact = viewsMap[`/world-cup/${id}`] || 0;
+        setLiveViewers(exact);
       } catch (err) {
         console.warn('Could not fetch active viewers list', err);
       }
     };
 
     fetchLiveCount();
-    const interval = setInterval(fetchLiveCount, 8000);
-    return () => clearInterval(interval);
   }, [id, simulationActive]);
 
   // Locate current match
@@ -178,7 +172,7 @@ export default function WorldCupMatchDetailPage() {
           const data = docSnap.data();
           return {
             id: docSnap.id,
-            user: data.user || 'Anonim',
+            user: data.user || 'Anonymous',
             text: data.text || '',
             time: data.time || '12:00',
             team: data.team || 'neutral',
@@ -207,7 +201,7 @@ export default function WorldCupMatchDetailPage() {
     // Use name from localStorage or generate a friendly random persistent suporter nickname
     let nickname = localStorage.getItem('chat_nickname');
     if (!nickname) {
-      nickname = 'Suporter';
+      nickname = 'Supporter';
       localStorage.setItem('chat_nickname', nickname);
     }
 
@@ -275,7 +269,7 @@ export default function WorldCupMatchDetailPage() {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6 text-center">
         <div>
-          <p className="text-zinc-400">Se încarcă meciul...</p>
+          <p className="text-zinc-400">Loading match...</p>
         </div>
       </div>
     );
@@ -285,10 +279,10 @@ export default function WorldCupMatchDetailPage() {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6 text-center">
         <div>
-          <p className="text-zinc-400">Se încarcă detaliile meciului...</p>
+          <p className="text-zinc-400">Loading match details...</p>
           <Link to="/world-cup" className="mt-4 inline-flex items-center space-x-2 text-amber-500 hover:underline">
             <ArrowLeft className="w-4 h-4" />
-            <span>Înapoi la Cupa Mondială</span>
+            <span>Back to World Cup</span>
           </Link>
         </div>
       </div>
@@ -334,7 +328,7 @@ export default function WorldCupMatchDetailPage() {
       {upcomingMatches.length > 0 && (
         <div className="max-w-6xl mx-auto mb-8 overflow-x-auto scrollbar-none">
           <div className="flex items-center space-x-3 pb-2 min-w-max">
-            <span className="text-[10px] uppercase font-black tracking-wider text-zinc-500 mr-2 bg-zinc-900 border border-zinc-850 px-2.5 py-1.5 rounded-lg">Meciuri Următoare:</span>
+            <span className="text-[10px] uppercase font-black tracking-wider text-zinc-500 mr-2 bg-zinc-900 border border-zinc-850 px-2.5 py-1.5 rounded-lg">Upcoming Matches:</span>
             {upcomingMatches.map((m) => {
               const upFlag1 = `https://flagcdn.com/w80/${m.team1Code}.png`;
               const upFlag2 = `https://flagcdn.com/w80/${m.team2Code}.png`;
@@ -372,7 +366,7 @@ export default function WorldCupMatchDetailPage() {
       <div className="max-w-6xl mx-auto mb-6">
         <Link to="/world-cup" className="inline-flex items-center space-x-2 text-sm text-zinc-400 hover:text-white transition-colors font-semibold group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Toate Meciurile Cupa Mondială</span>
+          <span>All World Cup Matches</span>
         </Link>
       </div>
 
@@ -380,7 +374,7 @@ export default function WorldCupMatchDetailPage() {
         {/* --- MAIN HEADER METADATA (Pic 7 layout) --- */}
         <div className="text-center mb-8">
           <span className="inline-flex px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-xs font-bold uppercase tracking-widest text-zinc-400">
-            GROUP STAGE • Grupa {match.group}
+            GROUP STAGE • Group {match.group}
           </span>
           <h2 className="text-md font-semibold text-zinc-400 mt-2 flex items-center justify-center space-x-1">
             <MapPin className="w-3.5 h-3.5 text-zinc-500" />
@@ -396,11 +390,11 @@ export default function WorldCupMatchDetailPage() {
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
             <span className="inline-flex items-center space-x-1.5 bg-red-500/10 border border-red-500/25 text-red-400 text-xs px-3.5 py-1.5 rounded-full font-extrabold uppercase tracking-widest animate-pulse shadow-sm">
               <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span>{liveViewers} Spectatori în Direct</span>
+              <span>{liveViewers} vizualizări totale</span>
             </span>
             <span className="inline-flex items-center space-x-1.5 bg-zinc-900/80 border border-zinc-800 text-zinc-400 text-xs px-3.5 py-1.5 rounded-full font-bold">
               <Users className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{liveState.status === 'live' ? 'Vizionare Activă' : 'Urmărit de cititori'}</span>
+              <span>{liveState.status === 'live' ? 'Active Viewing' : 'Watched by readers'}</span>
             </span>
           </div>
         </div>
@@ -438,7 +432,7 @@ export default function WorldCupMatchDetailPage() {
             ) : (
               <div className="flex flex-col items-center justify-center px-7 py-4 rounded-2xl bg-zinc-950 border border-zinc-800 text-white font-sans shadow-2xl min-w-[145px] hover:border-amber-500/35 transition-all self-center select-none relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 to-transparent pointer-events-none" />
-                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-550 mb-1">Meci {liveState.status === 'live' ? 'Live' : 'Încheiat'}</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-550 mb-1">Match {liveState.status === 'live' ? 'Live' : 'Finished'}</span>
                 <div className="flex items-center space-x-2 font-mono text-3xl font-black text-white leading-none">
                   <span>{liveState.score1}</span>
                   <span className="text-amber-500">:</span>
@@ -515,9 +509,9 @@ export default function WorldCupMatchDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="flex border-b border-zinc-850 pb-px">
               {[
-                { id: 'stream', label: 'Transmisiune Live Player' },
-                { id: 'stats', label: 'Statistici & Predicții' },
-                { id: 'lineups', label: 'Echipe Probabile' },
+                { id: 'stream', label: 'Live Stream Player' },
+                { id: 'stats', label: 'Stats & Predictions' },
+                { id: 'lineups', label: 'Probable Lineups' },
                 { id: 'replay', label: 'Replay (MP4)' },
               ].map(tab => (
                 <button
@@ -546,16 +540,16 @@ export default function WorldCupMatchDetailPage() {
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center select-none bg-zinc-950">
                           <Tv className="w-8 h-8 text-zinc-650 mb-3 animate-pulse" />
-                          <p className="text-zinc-400 font-bold text-sm">Semnal indisponibil momentan</p>
-                          <p className="text-zinc-600 text-xs mt-1">Acest player nu are un cod de stream configurat în panoul de administrare.</p>
+                          <p className="text-zinc-400 font-bold text-sm">Signal currently unavailable</p>
+                          <p className="text-zinc-600 text-xs mt-1">This player does not have a stream code configured in the admin panel.</p>
                         </div>
                       )
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center select-none bg-gradient-to-br from-zinc-950 to-zinc-900 border border-red-500/10">
                         <ShieldAlert className="w-12 h-12 text-rose-500 mb-4 animate-bounce" />
-                        <p className="text-white font-black text-sm sm:text-base uppercase tracking-wider">PLAYER INDISPONIBIL</p>
+                        <p className="text-white font-black text-sm sm:text-base uppercase tracking-wider">PLAYER UNAVAILABLE</p>
                         <p className="text-zinc-550 font-medium text-xs mt-2 max-w-sm px-4 leading-relaxed font-sans">
-                          Acest player a fost dezactivat de administrator. Vă rugăm să alegeți o altă sursă disponibilă (Player 1, 2 sau 3) de mai jos.
+                          This player has been disabled by the administrator. Please choose another available source (Player 1, 2, or 3) below.
                         </p>
                       </div>
                     )
@@ -563,17 +557,17 @@ export default function WorldCupMatchDetailPage() {
                     <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center select-none bg-gradient-to-br from-zinc-900 to-zinc-950">
                       <div className="absolute top-4 right-4 z-20 flex items-center space-x-1.5 bg-zinc-900/80 border border-zinc-800 px-2.5 py-1 rounded-full">
                         <span className="w-2 h-2 rounded-full bg-zinc-650" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-450">Așteptare</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-450">Waiting</span>
                       </div>
                       <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
                         <Tv className="w-8 h-8 text-amber-500 animate-pulse" />
                       </div>
-                      <p className="text-zinc-200 font-extrabold text-sm sm:text-base">Transmisiune încorporată indisponibilă momentan</p>
+                      <p className="text-zinc-200 font-extrabold text-sm sm:text-base">Embedded broadcast currently unavailable</p>
                       <p className="text-zinc-450 font-medium text-xs mt-1.5 max-w-md px-4 leading-relaxed font-sans">
-                        Player-ul TV securizat se va activa automat la începerea oficială a jocului ({match.date} la ora {match.time}).
+                        The secure TV player will activate automatically when the game officially starts ({match.date} at {match.time}).
                       </p>
                       <div className="mt-5 flex items-center space-x-2 bg-zinc-950 border border-zinc-850 px-4 py-2.5 rounded-xl text-xs font-mono text-amber-500 font-bold shadow-inner">
-                        <span>Așteptare:</span>
+                        <span>Waiting:</span>
                         <span>{countdown.hours.toString().padStart(2, '0')}h {countdown.minutes.toString().padStart(2, '0')}m {countdown.seconds.toString().padStart(2, '0')}s</span>
                       </div>
                     </div>
@@ -590,9 +584,9 @@ export default function WorldCupMatchDetailPage() {
                 <div className="bg-zinc-900/10 border border-zinc-850 p-4.5 rounded-2xl">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Canale de Redare (Surse alternative)</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Playback Channels (Alternative Sources)</h4>
                       <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">
-                        Dacă o sursă are întreruperi, vă rugăm să selectați un alt player din listă.
+                        If a source has interruptions, please select another player from the list.
                       </p>
                     </div>
 
@@ -614,7 +608,7 @@ export default function WorldCupMatchDetailPage() {
                           <span>{p.label}</span>
                           {!p.active && (
                             <span className="text-[9px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-1.5 py-0.5 rounded uppercase font-black tracking-tight scale-90">
-                              Indisponibil
+                              Unavailable
                             </span>
                           )}
                         </button>
@@ -628,7 +622,7 @@ export default function WorldCupMatchDetailPage() {
                 <div>
                   <h4 className="text-sm font-bold text-zinc-300 mb-4 flex items-center space-x-2">
                     <Award className="w-4 h-4 text-amber-500" />
-                    <span>Predicții Comunitate: Cine va câștiga?</span>
+                    <span>Community Predictions: Who will win?</span>
                   </h4>
 
                   {voted ? (
@@ -647,7 +641,7 @@ export default function WorldCupMatchDetailPage() {
                       {/* Draw result */}
                       <div>
                         <div className="flex justify-between text-xs font-bold mb-1.5 text-zinc-400">
-                          <span>Egalitate</span>
+                          <span>Draw</span>
                           <span className="text-zinc-550">{votePercentages.draw}%</span>
                         </div>
                         <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -666,7 +660,7 @@ export default function WorldCupMatchDetailPage() {
                         </div>
                       </div>
 
-                      <p className="text-[10px] text-zinc-550 text-center font-semibold italic">Mulțumim pentru vot! Votul tău a fost prelucrat.</p>
+                      <p className="text-[10px] text-zinc-550 text-center font-semibold italic">Thank you for voting! Your vote has been processed.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 gap-3">
@@ -680,7 +674,7 @@ export default function WorldCupMatchDetailPage() {
                         onClick={() => handleVote('draw')}
                         className="p-3.5 bg-zinc-950 hover:bg-zinc-850 rounded-xl border border-zinc-850 hover:border-zinc-700 text-center text-xs font-bold transition-all text-zinc-400"
                       >
-                        Egal
+                        Draw
                       </button>
                       <button
                         onClick={() => handleVote('team2')}
@@ -693,14 +687,14 @@ export default function WorldCupMatchDetailPage() {
                 </div>
 
                 <div className="border-t border-zinc-850/60 pt-6">
-                  <h4 className="text-sm font-bold text-zinc-300 mb-4">Meciuri Directe (H2H)</h4>
+                  <h4 className="text-sm font-bold text-zinc-300 mb-4">Head-to-Head (H2H)</h4>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between p-2.5 bg-zinc-950/40 rounded-lg text-zinc-400 font-semibold">
-                      <span>Cupa Mondială 2022</span>
+                      <span>World Cup 2022</span>
                       <span className="font-mono text-white">{match.team1} 2 - 1 {match.team2}</span>
                     </div>
                     <div className="flex justify-between p-2.5 bg-zinc-950/40 rounded-lg text-zinc-400 font-semibold">
-                      <span>Amical Internațional 2024</span>
+                      <span>International Friendly 2024</span>
                       <span className="font-mono text-white">{match.team1} 1 - 1 {match.team2}</span>
                     </div>
                   </div>
@@ -753,11 +747,11 @@ export default function WorldCupMatchDetailPage() {
                 {playerConfig?.replayEmbed ? (
                   <video className="plyr-video w-full rounded-xl border border-zinc-800">
                     <source src={playerConfig.replayEmbed} type="video/mp4" />
-                    Browser-ul tău nu suportă redarea video.
+                    Your browser does not support video playback.
                   </video>
                 ) : (
                   <div className="text-center py-10 text-zinc-500 text-sm">
-                    Replay-ul meciului nu este încă disponibil.
+                    Match replay is not yet available.
                   </div>
                 )}
               </div>
@@ -770,7 +764,7 @@ export default function WorldCupMatchDetailPage() {
               <div className="p-4 border-b border-zinc-850 bg-zinc-900/60 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <MessageCircle className="w-4.5 h-4.5 text-amber-500" />
-                  <span className="text-sm font-bold text-zinc-200">Chat Suporteri</span>
+                  <span className="text-sm font-bold text-zinc-200">Supporter Chat</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Users className="w-3.5 h-3.5 text-zinc-550" />
@@ -802,7 +796,7 @@ export default function WorldCupMatchDetailPage() {
               <form onSubmit={handleSendMessage} className="p-3 border-t border-zinc-850 bg-zinc-900/60 flex items-center space-x-2">
                 <input
                   type="text"
-                  placeholder="Trimite un comentariu..."
+                  placeholder="Send a comment..."
                   value={newMsg}
                   onChange={(e) => setNewMsg(e.target.value)}
                   className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
@@ -817,12 +811,12 @@ export default function WorldCupMatchDetailPage() {
 
               {/* Dynamic user nickname adjustment display */}
               <div className="px-3 pb-3 pt-1.5 bg-zinc-900/45 border-t border-zinc-850/60 text-[10px] text-zinc-550 flex items-center justify-between">
-                <span>Trimiți ca: <strong className="text-zinc-350 font-bold">{typeof window !== 'undefined' ? localStorage.getItem('chat_nickname') || 'Suporter_Nou' : 'Suporter'}</strong></span>
+                <span>Sending as: <strong className="text-zinc-350 font-bold">{typeof window !== 'undefined' ? localStorage.getItem('chat_nickname') || 'New_Supporter' : 'Supporter'}</strong></span>
                 <button
                   type="button"
                   onClick={() => {
-                    const currentNick = localStorage.getItem('chat_nickname') || 'Suporter_Nou';
-                    const customName = prompt('Introduceți porecla personalizată pentru chat:', currentNick);
+                    const currentNick = localStorage.getItem('chat_nickname') || 'New_Supporter';
+                    const customName = prompt('Enter custom chat nickname:', currentNick);
                     if (customName && customName.trim()) {
                       localStorage.setItem('chat_nickname', customName.trim().substring(0, 25));
                       window.location.reload();
@@ -830,7 +824,7 @@ export default function WorldCupMatchDetailPage() {
                   }}
                   className="text-amber-500 font-bold hover:underline hover:text-amber-400 transition-colors"
                 >
-                  Schimbă Poreclă
+                  Change Nickname
                 </button>
               </div>
             </div>

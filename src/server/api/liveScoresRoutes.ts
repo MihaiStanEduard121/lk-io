@@ -14,7 +14,7 @@ router.get('/sync', async (req, res) => {
     if (!geminiKey) {
        return res.status(400).json({ 
         success: false, 
-        message: 'Cheia GEMINI_API_KEY lipsește. Este necesară pentru generarea articolului.' 
+        message: 'GEMINI_API_KEY is missing. It is required for article generation.' 
       });
     }
 
@@ -75,7 +75,7 @@ router.get('/sync', async (req, res) => {
       // If we don't have an article for this specific score yet, and someone scored (>0)
       if (artDocs.empty && (goalsHome > 0 || goalsAway > 0)) {
          
-         eventLogs.push(`Gol detectat: ${homeTeam} ${goalsHome} - ${goalsAway} ${awayTeam}`);
+         eventLogs.push(`Goal detected: ${homeTeam} ${goalsHome} - ${goalsAway} ${awayTeam}`);
          
          // Generate an Article using Gemini
          const ai = new GoogleGenAI({
@@ -83,9 +83,9 @@ router.get('/sync', async (req, res) => {
           httpOptions: { headers: { "User-Agent": "aistudio-build" } }
          });
 
-         const prompt = `Ești un jurnalist sportiv. S-a marcat un gol în meciul live dintre ${homeTeam} și ${awayTeam}. 
-         Scorul curent este ${homeTeam} ${goalsHome} - ${goalsAway} ${awayTeam} (Minutul: ${matchClock}).
-         Scrie un articol scurt de breaking news foarte captivant, de maxim 200 cuvinte, detaliind impactul acestui scor. Scrie direct, pe un ton alert, fără alte introduceri. Limba română.`;
+         const prompt = `You are a sports journalist. A goal has been scored in the live match between ${homeTeam} and ${awayTeam}. 
+         The current score is ${homeTeam} ${goalsHome} - ${goalsAway} ${awayTeam} (Minute: ${matchClock}).
+         Write a short highly engaging breaking news article of max 200 words detailing the impact of this score. Write directly, in an alert tone, without introductions. English language.`;
 
          const aiResponse = await ai.models.generateContent({
             model: 'gemini-3.5-flash',
@@ -96,7 +96,7 @@ router.get('/sync', async (req, res) => {
          });
 
          const content = aiResponse.text || '';
-         const title = `GOOOOL! ${homeTeam} vs ${awayTeam}: Scorul ajunge la ${goalsHome}-${goalsAway} în minutul ${matchClock}`;
+         const title = `GOOAL! ${homeTeam} vs ${awayTeam}: The score reaches ${goalsHome}-${goalsAway} in minute ${matchClock}`;
          
          let rawSlug = slugify(title, { lower: true, strict: true, locale: 'ro' });
          
@@ -124,14 +124,14 @@ router.get('/sync', async (req, res) => {
 
     res.json({ 
       success: true, 
-      message: `Sincronizare ESPN completă. Articole generate: ${generatedCount}`,
+      message: `ESPN Sync complete. Articles generated: ${generatedCount}`,
       logs: eventLogs,
       fixturesScanned: events.length
     });
 
   } catch (error: any) {
     console.error('[Live Scores] Sync error:', error);
-    res.status(500).json({ success: false, message: error.message || 'Eroare la sincronizarea scorurilor live ESPN.' });
+    res.status(500).json({ success: false, message: error.message || 'Error syncing ESPN live scores.' });
   }
 });
 
