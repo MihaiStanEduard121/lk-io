@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Show, Episode } from '../../types';
 import ReactPlayer from 'react-player';
@@ -15,6 +15,7 @@ export default function ShowDetailPage() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [activeEpisode, setActiveEpisode] = useState<Episode | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isDark } = useOutletContext<{ isDark: boolean }>();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -30,20 +31,39 @@ export default function ShowDetailPage() {
     }).catch(() => setLoading(false));
   }, [slug]);
 
-  if (loading) return <div className="h-screen flex items-center justify-center text-zinc-500">Încărcare...</div>;
-  if (!show) return <div className="h-screen flex items-center justify-center text-rose-500">Emisiunea nu a fost găsită.</div>;
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center font-bold">
+        <div className="flex h-3 w-3 relative mb-3">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+        </div>
+        <span className={isDark ? 'text-zinc-550' : 'text-zinc-400'}>Se încarcă detaliile emisiunii...</span>
+      </div>
+    );
+  }
+
+  if (!show) {
+    return (
+      <div className="h-screen flex items-center justify-center flex-col p-4 text-center">
+        <ArrowLeft className="w-8 h-8 text-rose-500 mb-4" />
+        <h3 className="text-xl font-bold text-rose-550">Emisiunea nu a fost găsită</h3>
+        <Link to="/shows" className="mt-4 px-4 py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold">Înapoi la emisiuni</Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-zinc-950 min-h-screen">
+    <div className={`transition-colors duration-300 ${isDark ? 'bg-zinc-950 text-white' : 'bg-slate-50 text-zinc-900'} min-h-screen`}>
       {/* Featured Video Area */}
-      <div className="bg-black border-b border-zinc-900 w-full pt-16">
+      <div className={`pt-16 border-b transition-colors duration-300 ${isDark ? 'bg-black border-zinc-900' : 'bg-white border-zinc-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link to="/shows" className="inline-flex items-center text-zinc-400 hover:text-white mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Toate emisiunile
+          <Link to="/shows" className={`inline-flex items-center text-xs font-bold uppercase tracking-wider mb-6 transition-colors ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-indigo-650'}`}>
+            <ArrowLeft className="w-4 h-4 mr-2 text-indigo-505" /> Toate emisiunile
           </Link>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <div className="w-full aspect-video bg-zinc-900 rounded-xl overflow-hidden shadow-2xl ring-1 ring-zinc-800 relative player-wrapper">
+              <div className={`w-full aspect-video rounded-2xl overflow-hidden shadow-2xl relative player-wrapper border ${isDark ? 'bg-zinc-900 border-zinc-850' : 'bg-slate-100 border-zinc-200/50'}`}>
                 {activeEpisode ? (
                   activeEpisode.embedCode ? (
                     <div 
@@ -56,52 +76,60 @@ export default function ShowDetailPage() {
                       controls 
                       width="100%" 
                       height="100%" 
-                      playing={true} 
+                      playing={false} 
                     />
                   ) : (
-                    <div className="flex flex-col h-full items-center justify-center text-zinc-600">
-                       <MonitorPlay className="w-16 h-16 mb-4 opacity-50" />
-                       <p>Acest episod nu are asociat un format video redabil.</p>
+                    <div className="flex flex-col h-full items-center justify-center text-zinc-500 p-4">
+                       <MonitorPlay className="w-16 h-16 mb-4 opacity-50 text-indigo-500" />
+                       <p className="font-extrabold text-sm uppercase tracking-wider">Format Video indisponibil</p>
                     </div>
                   )
                 ) : (
-                  <div className="flex flex-col h-full items-center justify-center text-zinc-600">
-                     <MonitorPlay className="w-16 h-16 mb-4 opacity-50" />
-                     <p>Selectați un episod pentru a viziona</p>
+                  <div className="flex flex-col h-full items-center justify-center text-zinc-500 p-4">
+                     <MonitorPlay className="w-16 h-16 mb-4 opacity-50 text-indigo-400" />
+                     <p className="font-semibold text-sm">Selectați un episod pentru a viziona</p>
                   </div>
                 )}
               </div>
               
-              <div className="mt-6 border-b border-zinc-800/50 pb-6">
-                <h1 className="text-3xl font-bold text-white mb-2">{show.title}</h1>
+              <div className={`mt-6 border-b pb-6 ${isDark ? 'border-zinc-800/50' : 'border-zinc-200'}`}>
+                <h1 className={`text-3xl font-black tracking-tight mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>{show.title}</h1>
                 {activeEpisode && (
-                  <h2 className="text-xl font-medium text-zinc-300 mb-4 flex items-center">
-                    <span className="bg-indigo-600/20 text-indigo-400 px-2 py-0.5 rounded text-sm font-bold mr-3">
+                  <h2 className={`text-lg font-bold mb-4 flex items-center ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                    <span className="bg-indigo-600 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest mr-3">
                       Episod {activeEpisode.episodeNumber}
                     </span>
                     {activeEpisode.title}
                   </h2>
                 )}
-                <p className="text-zinc-400 leading-relaxed max-w-3xl">
+                <p className={`leading-relaxed max-w-3xl text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-650'}`}>
                   {activeEpisode?.description || show.description}
                 </p>
               </div>
             </div>
 
-            <div className="lg:col-span-1 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl p-4 max-h-[800px] overflow-y-auto custom-scrollbar">
-              <h3 className="font-bold text-lg text-white mb-4 px-2">Episoade Disponibile ({episodes.length})</h3>
+            <div className={`lg:col-span-1 rounded-2xl p-4 max-h-[800px] overflow-y-auto border ${
+              isDark ? 'bg-zinc-900/40 border-zinc-850' : 'bg-white border-zinc-200'
+            }`}>
+              <h3 className={`font-black text-xs uppercase tracking-widest mb-4 px-2 ${isDark ? 'text-zinc-300' : 'text-zinc-750'}`}>
+                Episoade Disponibile ({episodes.length})
+              </h3>
               <div className="space-y-3">
                 {episodes.map(ep => (
                   <button 
                     key={ep.id}
                     onClick={() => { setActiveEpisode(ep); window.scrollTo(0, 0); }}
-                    className={`w-full text-left flex items-start space-x-3 p-3 rounded-xl transition-all ${
+                    className={`w-full text-left flex items-start space-x-3 p-3 rounded-2xl transition-all cursor-pointer border ${
                       activeEpisode?.id === ep.id 
-                        ? 'bg-zinc-800 ring-1 ring-indigo-500' 
-                        : 'hover:bg-zinc-800/50'
+                        ? isDark 
+                          ? 'bg-zinc-800 border-indigo-500' 
+                          : 'bg-indigo-50/40 border-indigo-300'
+                        : isDark
+                          ? 'bg-transparent border-transparent hover:bg-zinc-800/40'
+                          : 'bg-transparent border-transparent hover:bg-slate-50'
                     }`}
                   >
-                    <div className="relative w-28 aspect-video rounded bg-zinc-950 flex-shrink-0 overflow-hidden">
+                    <div className="relative w-28 aspect-video rounded-xl bg-zinc-950 flex-shrink-0 overflow-hidden shadow-sm">
                       {ep.thumbnail ? (
                         <img src={ep.thumbnail} alt="" className="w-full h-full object-cover" />
                       ) : show.thumbnail ? (
@@ -117,12 +145,16 @@ export default function ShowDetailPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                       <h4 className={`text-sm font-bold truncate ${activeEpisode?.id === ep.id ? 'text-white' : 'text-zinc-300'}`}>
+                       <h4 className={`text-sm font-bold truncate ${
+                         activeEpisode?.id === ep.id 
+                           ? isDark ? 'text-white font-extrabold' : 'text-indigo-650 font-extrabold' 
+                           : isDark ? 'text-zinc-300' : 'text-zinc-700'
+                       }`}>
                          {ep.title}
                        </h4>
-                       <p className="text-xs text-zinc-500 mt-1 flex items-center">
-                         <Calendar className="w-3 h-3 mr-1" />
-                         {new Date(ep.createdAt).toLocaleDateString()}
+                       <p className="text-[10px] text-zinc-400 mt-1.5 flex items-center">
+                         <Calendar className="w-3.5 h-3.5 mr-1 text-indigo-500" />
+                         {new Date(ep.createdAt).toLocaleDateString('ro-RO')}
                        </p>
                     </div>
                   </button>

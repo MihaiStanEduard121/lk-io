@@ -47,6 +47,7 @@ const WorldCupManager = lazy(() => import('./pages/admin/WorldCupManager'));
 const AdRevenueManager = lazy(() => import('./pages/admin/AdRevenueManager'));
 const PopupManager = lazy(() => import('./pages/admin/PopupManager'));
 const ArticleGenerator = lazy(() => import('./pages/admin/ArticleGenerator'));
+const NotFound = lazy(() => import('./pages/public/NotFound'));
 
 export default function App() {
   return (
@@ -80,6 +81,7 @@ export default function App() {
               <Route path="/legal-contact" element={<LegalPage />} />
               <Route path="/delete-my-data" element={<LegalPage />} />
               <Route path="/accessibility" element={<LegalPage />} />
+              <Route path="*" element={<NotFound />} />
             </Route>
 
             {/* Admin Routes */}

@@ -9,7 +9,14 @@ function expressApiPlugin() {
     name: 'express-api-plugin',
     configureServer(server: any) {
       server.middlewares.use(async (req: any, res: any, next: any) => {
-        if (req.url && (req.url.startsWith('/api') || req.url.startsWith('/uploads'))) {
+        const isSeoOrApi = req.url && (
+          req.url.startsWith('/api') || 
+          req.url.startsWith('/uploads') || 
+          req.url.startsWith('/sitemap.xml') || 
+          req.url.startsWith('/robots.txt') || 
+          req.url.startsWith('/rss.xml')
+        );
+        if (isSeoOrApi) {
           console.log(`[Vite API Middleware] Intercepted request for: ${req.url}`);
           try {
             // Dynamically load expressApp.ts using Vite's SSR runtime

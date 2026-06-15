@@ -294,7 +294,7 @@ export default function WorldCupMatchDetailPage() {
 
   // Draw customized vector outline map of the host country (US, MX, CA) to display beautiful pinpoint locations (looks exact to Pic 7!)
   const renderMapIllustration = () => {
-    const isMX = match.country === 'Mexic';
+    const isMX = match.country === 'Mexico';
     const isCA = match.country === 'Canada';
     
     return (
@@ -745,7 +745,7 @@ export default function WorldCupMatchDetailPage() {
               /* Replay */
               <div className="bg-zinc-900/25 border border-zinc-850 rounded-2xl p-6 text-zinc-300">
                 {playerConfig?.replayEmbed ? (
-                  <video className="plyr-video w-full rounded-xl border border-zinc-800">
+                  <video className="plyr-video w-full rounded-xl border border-zinc-800" controls>
                     <source src={playerConfig.replayEmbed} type="video/mp4" />
                     Your browser does not support video playback.
                   </video>

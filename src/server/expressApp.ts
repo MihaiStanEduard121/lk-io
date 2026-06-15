@@ -20,6 +20,9 @@ export function getExpressApp() {
 
   const app = express();
   
+  // Trust proxy for rate limiter to correctly identify client IPs behind GCR/load balancers
+  app.set('trust proxy', 1);
+  
   // Security Headers Validation & Optimization
   app.use(helmet({
     contentSecurityPolicy: false, // Disabled for robust external TV players and streaming iframe integrations
@@ -43,7 +46,8 @@ export function getExpressApp() {
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 800, // limit each IP to 800 requests per windowMs
-    message: { success: false, error: 'Prea multe cereri, încercați din nou mai târziu.' }
+    message: { success: false, error: 'Prea multe cereri, încercați din nou mai târziu.' },
+    validate: { trustProxy: false, xForwardedForHeader: false, forwardedHeader: false }
   });
   app.use(limiter);
 
@@ -103,25 +107,35 @@ Sitemap: ${domain}/sitemap.xml`);
       xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
       // 1. Static Pages
-      const staticPages = ['', '/news', '/shows', '/schedule', '/search', '/world-cup'];
+      const staticPages = [
+        '', 
+        '/news', 
+        '/shows', 
+        '/schedule', 
+        '/search', 
+        '/world-cup',
+        '/donations',
+        '/profile'
+      ];
       for (const p of staticPages) {
         xml += `  <url>\n    <loc>${domain}${p}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
       }
 
-      // 1b. Legal Compliance Pages
+      // 1b. Clean Legal Compliance Pages
       const legalPages = [
-        '/legal?tab=termeni',
-        '/legal?tab=privacy',
-        '/legal?tab=cookie',
-        '/legal?tab=dmca',
-        '/legal?tab=disclaimer',
-        '/legal?tab=aup',
-        '/legal?tab=ads',
-        '/legal?tab=contact'
+        '/legal',
+        '/privacy-policy',
+        '/terms-of-service',
+        '/dmca',
+        '/copyright',
+        '/cookie-policy',
+        '/disclaimer',
+        '/legal-contact',
+        '/delete-my-data',
+        '/accessibility'
       ];
       for (const p of legalPages) {
-        const escapedUrl = `${domain}${p}`.replace(/&/g, '&amp;');
-        xml += `  <url>\n    <loc>${escapedUrl}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`;
+        xml += `  <url>\n    <loc>${domain}${p}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`;
       }
 
       // 1c. World Cup Dynamic Match Pages for instant Google-indexing

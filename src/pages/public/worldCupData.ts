@@ -189,12 +189,12 @@ export const WORLD_CUP_MATCHES: WCMatch[] = MATCH_TEMPLATES.map((tpl, i) => {
 
   const embedCodeMap: Record<string, string> = {
     'Mexico': `<video class="plyr-video" playsinline><source src="https://archive.org/download/world-cup-2026-match-1-mexico-vs-south-africa-full-match-11-jun-2026-1/FIFA%20World%20Cup%202026-06-11%20Opening%20Ceremony%20Mexico%20City%20%28Shakira%20%26%20Burna%20Boy%29.mkv">Your browser does not support video playback.</video>`,
-    'USA': `<iframe src="https://www.youtube.com/embed/3A8Ksc0ZzGg?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
-    'Canada': `<iframe src="https://www.youtube.com/embed/mAL6390Hj_8?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`,
+    'USA': `<iframe src="https://www.youtube.com/embed/3A8Ksc0ZzGg?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`,
+    'Canada': `<iframe src="https://www.youtube.com/embed/mAL6390Hj_8?autoplay=1&mute=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`,
     'South Korea': `<video class="plyr-video" playsinline><source src="https://archive.org/download/fifa-world-cup-2026-06-11-south-korea-vs-czechia-group-a-stv-itv/FIFA%20World%20Cup%202026-06-11%20South%20Korea%20vs%20Czechia%20%28Group%20A%29_STV-ITV.mkv" type="video/x-matroska"></video>`,
   };
 
-  const defaultEmbed = `<iframe src="https://player.vimeo.com/video/521799279?autoplay=1&muted=1&loop=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
+  const defaultEmbed = `<iframe src="https://player.vimeo.com/video/521799279?autoplay=1&muted=1&loop=1" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
 
   return {
     id: `wc-2026-m${i + 1}`,

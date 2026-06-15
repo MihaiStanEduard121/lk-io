@@ -38,18 +38,43 @@ async function startServer() {
         let metaImage = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Pro_TV_logo.svg/512px-Pro_TV_logo.svg.png"; // fallback ProTV logo as representative
         const canonicalUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
         let ldJsonSchema: any = null;
+        let is404 = false;
 
         const dbInstance = getDb();
+        
+        // Static routes that are perfectly valid
+        const knownStaticPaths = new Set([
+          '/',
+          '/news',
+          '/shows',
+          '/search',
+          '/schedule',
+          '/world-cup',
+          '/donations',
+          '/profile',
+          '/legal',
+          '/privacy-policy',
+          '/terms-of-service',
+          '/dmca',
+          '/copyright',
+          '/cookie-policy',
+          '/disclaimer',
+          '/legal-contact',
+          '/delete-my-data',
+          '/accessibility'
+        ]);
         
         if (dbInstance) {
           // 1. Live TV Player Page Metadata Injection
           if (urlPath.startsWith('/play/')) {
             const id = urlPath.split('/play/')[1];
+            let found = false;
             if (id) {
               try {
                 const docRef = doc(dbInstance, 'programs', id);
                 const d = await getDoc(docRef);
                 if (d.exists()) {
+                  found = true;
                   const data = d.data();
                   metaTitle = `${data.title} Live Online - programetv.online`;
                   if (data.description) {
@@ -82,15 +107,22 @@ async function startServer() {
                 console.error("Error fetching program metadata for crawler:", e);
               }
             }
+            if (!found) {
+              is404 = true;
+              metaTitle = "Canal TV Negăsit - 404 - programetv.online";
+              metaDesc = "Ne pare rău, dar canalul de televiziune live pe care îl căutați nu există sau a fost oprit permanent.";
+            }
           }
           // 2. News Article Page Metadata Injection
           else if (urlPath.startsWith('/news/')) {
             const slug = urlPath.split('/news/')[1];
+            let found = false;
             if (slug) {
               try {
                 const q = query(collection(dbInstance, 'articles'), where('slug', '==', slug));
                 const snapshot = await getDocs(q);
                 if (!snapshot.empty) {
+                  found = true;
                   const data = snapshot.docs[0].data();
                   metaTitle = `${data.title} - Știri programetv.online`;
                   if (data.content) {
@@ -121,15 +153,22 @@ async function startServer() {
                 console.error("Error fetching article metadata for crawler:", e);
               }
             }
+            if (!found) {
+              is404 = true;
+              metaTitle = "Articol de Știri Negăsit - 404 - programetv.online";
+              metaDesc = "Ne pare rău, dar articolul de presă pe care îl căutați nu există sau a fost retras de pe portal.";
+            }
           }
           // 3. TV Show Detail Page Metadata Injection
           else if (urlPath.startsWith('/shows/')) {
             const slug = urlPath.split('/shows/')[1];
+            let found = false;
             if (slug) {
               try {
                 const q = query(collection(dbInstance, 'shows'), where('slug', '==', slug));
                 const snapshot = await getDocs(q);
                 if (!snapshot.empty) {
+                  found = true;
                   const data = snapshot.docs[0].data();
                   metaTitle = `${data.title} (Serial / Emisiune) - programetv.online`;
                   if (data.description) {
@@ -153,6 +192,60 @@ async function startServer() {
               } catch (e) {
                 console.error("Error fetching show metadata for crawler:", e);
               }
+            }
+            if (!found) {
+              is404 = true;
+              metaTitle = "Serial sau Emisiune Negăsită - 404 - programetv.online";
+              metaDesc = "Ne pare rău, dar show-ul TV sau serialul românesc solicitat nu se află în baza noastră de date.";
+            }
+          }
+          // 3b. World Cup 2026 Match Metadata Injection (Fixing Soft 404 Duplicate Page Title issues)
+          else if (urlPath.startsWith('/world-cup/')) {
+            const matchId = urlPath.split('/world-cup/')[1];
+            let found = false;
+            if (matchId) {
+              try {
+                const { WORLD_CUP_MATCHES } = await import('./src/pages/public/worldCupData');
+                const matchObj = WORLD_CUP_MATCHES.find(m => m.id === matchId);
+                if (matchObj) {
+                  found = true;
+                  metaTitle = `Scor & Transmisiune LIVE ${matchObj.team1} vs ${matchObj.team2} - Cupa Mondială - programetv.online`;
+                  metaDesc = `Urmărește în direct meciul de fotbal dintre echipele reprezentative ${matchObj.team1} și ${matchObj.team2} la Campionatul Mondial de Fotbal 2026 din data de ${matchObj.date}. Live stream online gratuit, statistici și noutăți.`;
+                  
+                  // SportsEvent Schema
+                  ldJsonSchema = {
+                    "@context": "https://schema.org",
+                    "@type": "SportsEvent",
+                    "name": `Meci de Fotbal: ${matchObj.team1} vs ${matchObj.team2}`,
+                    "description": metaDesc,
+                    "startDate": matchObj.datetime,
+                    "homeTeam": {
+                      "@type": "SportsTeam",
+                      "name": matchObj.team1
+                    },
+                    "awayTeam": {
+                      "@type": "SportsTeam",
+                      "name": matchObj.team2
+                    },
+                    "location": {
+                      "@type": "Place",
+                      "name": matchObj.stadium,
+                      "address": {
+                        "@type": "PostalAddress",
+                        "addressLocality": matchObj.city,
+                        "addressCountry": matchObj.country
+                      }
+                    }
+                  };
+                }
+              } catch (e) {
+                console.error("Error loading match detail metadata in GSC handler:", e);
+              }
+            }
+            if (!found) {
+              is404 = true;
+              metaTitle = "Scor / Match de Fotbal Negăsit - 404 - programetv.online";
+              metaDesc = "Partida din cadrul Cupei Mondiale 2026 nu figurează ca programată sau a fost arhivată.";
             }
           }
           // 4. Legal Compliance Pages Metadata Injection
@@ -200,6 +293,12 @@ async function startServer() {
               }
             };
           }
+          // Catch invalid pages that are not recognized static pages and not admin subroutes
+          else if (!knownStaticPaths.has(urlPath) && !urlPath.startsWith('/adminadmin')) {
+            is404 = true;
+            metaTitle = "Pagina Nu A Fost Găsită - 404 - programetv.online";
+            metaDesc = "Ne pare rău, dar pagina solicitată nu există sau a fost mutată permanent la o altă adresă.";
+          }
         }
 
         // Standard WebSite / Brand Schema for other pages
@@ -225,6 +324,7 @@ async function startServer() {
     <title>${metaTitle}</title>
     <meta name="description" content="${metaDesc}" />
     <link rel="canonical" href="${canonicalUrl}" />
+    <link rel="alternate" type="application/rss+xml" title="RSS Flux Știri - programetv.online" href="${req.protocol}://${req.get('host')}/rss.xml" />
     <meta property="og:title" content="${metaTitle}" />
     <meta property="og:description" content="${metaDesc}" />
     <meta property="og:image" content="${metaImage}" />
@@ -245,6 +345,9 @@ async function startServer() {
         html = html.replace('<html lang="en">', '<html lang="ro">');
         html = html.replace('<title>programetv.online</title>', headTags);
 
+        if (is404) {
+          res.status(404);
+        }
         res.send(html);
       } catch (err) {
         console.error("Critical error in dynamic SEO index handler:", err);

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /adminadmin/
+Disallow: /api/
+
+Sitemap: https://www.programetv.online/sitemap.xml
