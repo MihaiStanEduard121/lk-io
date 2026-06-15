@@ -29,6 +29,12 @@ export interface ArticleCategory {
   slug: string;
 }
 
+export interface ProgramCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface Comment {
   id: string;
   articleId: string;

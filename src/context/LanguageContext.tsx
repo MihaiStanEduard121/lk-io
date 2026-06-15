@@ -14,6 +14,9 @@ export const SUPPORTED_LANGUAGES: Language[] = [
   { code: 'de', label: 'Deutsch', flag: 'de' },
   { code: 'fr', label: 'Français', flag: 'fr' },
   { code: 'it', label: 'Italiano', flag: 'it' },
+  { code: 'eu', label: 'Euskara', flag: 'eu' },
+  { code: 'bg', label: 'Български', flag: 'bg' },
+  { code: 'ru', label: 'Русский', flag: 'ru' },
 ];
 
 interface LanguageContextType {
@@ -137,39 +140,19 @@ const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
   },
 };
 
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentLang, setCurrentLang] = useState<string>('ro');
+export const LanguageProvider: React.FC<{ children: React.ReactNode, initialLang?: string }> = ({ children, initialLang }) => {
+  const [currentLang, setCurrentLang] = useState<string>(initialLang || 'ro');
 
   useEffect(() => {
     // 1. Detect browser language or stored language
     const storedLang = localStorage.getItem('user_lang');
-    let detectLang = 'ro';
+    let detectLang = initialLang || storedLang || 'ro';
 
-    if (storedLang) {
-      detectLang = storedLang;
-    } else {
+    if (!initialLang && !storedLang) {
       const browserLang = (navigator.language || '').toLowerCase();
-      // Check for user origin match (Romania, Ukraine, UK, Spain, Germany, France, Italy)
-      if (browserLang.startsWith('uk') || browserLang.startsWith('ua')) {
-        detectLang = 'uk';
-      } else if (browserLang.startsWith('en') || browserLang.startsWith('gb') || browserLang.startsWith('us')) {
-        detectLang = 'en';
-      } else if (browserLang.startsWith('es')) {
-        detectLang = 'es';
-      } else if (browserLang.startsWith('de')) {
-        detectLang = 'de';
-      } else if (browserLang.startsWith('fr')) {
-        detectLang = 'fr';
-      } else if (browserLang.startsWith('it')) {
-        detectLang = 'it';
-      } else if (browserLang.startsWith('ro') || browserLang.startsWith('md')) {
-        detectLang = 'ro';
-      } else {
-        // Fallback: check if browser is in any language we support
-        const supportedPrefixes = SUPPORTED_LANGUAGES.map(l => l.code);
-        const matched = supportedPrefixes.find(prefix => browserLang.startsWith(prefix));
-        detectLang = matched || 'en'; // default to English for general international
-      }
+      // Check for user origin match
+      const supportedMatch = SUPPORTED_LANGUAGES.find(l => browserLang.startsWith(l.code));
+      detectLang = supportedMatch ? supportedMatch.code : 'en';
       
       // Auto-save the first detected language
       localStorage.setItem('user_lang', detectLang);

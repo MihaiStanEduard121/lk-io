@@ -6,9 +6,14 @@ import { Plus, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
 
 export default function ProgramList() {
   const [programs, setPrograms] = useState<TVProgram[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const loadPrograms = () => {
-    api.getPrograms().then(setPrograms);
+    setLoading(true);
+    api.getPrograms().then(data => {
+      setPrograms(data);
+      setLoading(false);
+    });
   };
 
   useEffect(() => {
@@ -52,50 +57,87 @@ export default function ProgramList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/50">
-            {programs.map(p => (
-              <tr key={p.id} className="hover:bg-zinc-800/20 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-4">
-                    <img src={p.thumbnail} alt="" className="w-16 h-9 object-cover rounded bg-zinc-800" />
-                    <div>
-                      <div className="font-bold text-white mb-0.5">{p.title}</div>
-                      <div className="text-xs text-zinc-500">{(p.views || 0).toLocaleString()} viz.</div>
+            {loading ? (
+              [...Array(6)].map((_, idx) => (
+                <tr key={idx} className="animate-pulse">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-9 rounded bg-zinc-800" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-32 bg-zinc-800 rounded" />
+                        <div className="h-3 w-16 bg-zinc-800/60 rounded" />
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-zinc-400">{p.category}</td>
-                <td className="px-6 py-4">
-                  <button 
-                    onClick={() => toggleStatus(p)}
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                      p.status === 'online' 
-                        ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20' 
-                        : 'border-zinc-700 text-zinc-400 bg-zinc-800/50 hover:bg-zinc-800'
-                    }`}
-                  >
-                    {p.status === 'online' ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
-                    {p.status.toUpperCase()}
-                  </button>
-                </td>
-                <td className="px-6 py-4 text-zinc-400 font-medium">
-                  {p.quality}
-                </td>
-                <td className="px-6 py-4 text-right space-x-2">
-                  <Link 
-                    to={`/adminadmin/programs/${p.id}`} 
-                    className="inline-flex p-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md hover:bg-blue-500/20 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Link>
-                  <button 
-                    onClick={() => handleDelete(p.id)}
-                    className="inline-flex p-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-md hover:bg-rose-500/20 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-4 w-20 bg-zinc-800 rounded" />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-6 w-24 bg-zinc-800 rounded-full" />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-4 w-12 bg-zinc-800 rounded" />
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="inline-flex space-x-2">
+                      <div className="w-8 h-8 rounded bg-zinc-800" />
+                      <div className="w-8 h-8 rounded bg-zinc-800" />
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : programs.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-zinc-500 font-medium">
+                  Niciun program TV adăugat încă. Apăsați pe „Adaugă Program” pentru a crea primul canal.
                 </td>
               </tr>
-            ))}
+            ) : (
+              programs.map(p => (
+                <tr key={p.id} className="hover:bg-zinc-800/20 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-4">
+                      <img src={p.thumbnail} alt="" className="w-16 h-9 object-cover rounded bg-zinc-800" />
+                      <div>
+                        <div className="font-bold text-white mb-0.5">{p.title}</div>
+                        <div className="text-xs text-zinc-500">{(p.views || 0).toLocaleString()} viz.</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-zinc-400">{p.category}</td>
+                  <td className="px-6 py-4">
+                    <button 
+                      onClick={() => toggleStatus(p)}
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                        p.status === 'online' 
+                          ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20' 
+                          : 'border-zinc-700 text-zinc-400 bg-zinc-800/50 hover:bg-zinc-800'
+                      }`}
+                    >
+                      {p.status === 'online' ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
+                      {p.status.toUpperCase()}
+                    </button>
+                  </td>
+                  <td className="px-6 py-4 text-zinc-400 font-medium">
+                    {p.quality}
+                  </td>
+                  <td className="px-6 py-4 text-right space-x-2">
+                    <Link 
+                      to={`/adminadmin/programs/${p.id}`} 
+                      className="inline-flex p-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md hover:bg-blue-500/20 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Link>
+                    <button 
+                      onClick={() => handleDelete(p.id)}
+                      className="inline-flex p-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-md hover:bg-rose-500/20 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

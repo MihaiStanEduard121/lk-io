@@ -1,27 +1,63 @@
 import { useEffect, useState, useMemo } from 'react';
 import { api } from '../../lib/api';
-import { TVScheduleItem } from '../../types';
+import { TVScheduleItem, ArticleCategory } from '../../types';
 import { Calendar as CalendarIcon, Clock, Search, Filter } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function SchedulePage() {
   const [schedule, setSchedule] = useState<TVScheduleItem[]>([]);
+  const [categories, setCategories] = useState<ArticleCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedChannel, setSelectedChannel] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    api.getSchedule().then(data => {
-      const sorted = data.sort((a, b) => {
+    Promise.all([api.getSchedule(), api.getCategories()]).then(([scheduleData, catsData]) => {
+      const sorted = scheduleData.sort((a, b) => {
         if (a.date !== b.date) return a.date.localeCompare(b.date);
         return a.time.localeCompare(b.time);
       });
       setSchedule(sorted);
+      setCategories(catsData);
       setLoading(false);
     });
   }, []);
+
+  const normalize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const matchScheduleWithCategory = (item: TVScheduleItem, cat: { id: string, name: string, slug: string }) => {
+    const nameLower = cat.name.toLowerCase();
+    const slugLower = cat.slug.toLowerCase();
+    
+    const itemCat = (item as any).category;
+    const itemCatId = (item as any).categoryId;
+    
+    if (itemCat && (itemCat.toLowerCase() === nameLower || itemCat.toLowerCase() === slugLower)) {
+      return true;
+    }
+    if (itemCatId && itemCatId === cat.id) {
+      return true;
+    }
+    
+    const title = (item.title || '').toLowerCase();
+    const desc = (item.description || '').toLowerCase();
+    const channel = (item.channelId || '').toLowerCase();
+    const normName = normalize(nameLower);
+    
+    return normalize(title).includes(normName) || 
+           normalize(desc).includes(normName) || 
+           normalize(channel).includes(normName);
+  };
+
+  // Filter categories that have at least one matching schedule item
+  const activeCategories = useMemo(() => {
+    return categories.filter(cat => 
+      schedule.some(item => matchScheduleWithCategory(item, cat))
+    );
+  }, [schedule, categories]);
 
   const { filteredSchedule, channels, dates } = useMemo(() => {
     let filtered = schedule;
@@ -45,9 +81,16 @@ export default function SchedulePage() {
     if (selectedDate) {
       filtered = filtered.filter(s => s.date === selectedDate);
     }
+
+    if (selectedCategory !== 'All') {
+      const cat = categories.find(c => c.id === selectedCategory);
+      if (cat) {
+        filtered = filtered.filter(s => matchScheduleWithCategory(s, cat));
+      }
+    }
     
     return { filteredSchedule: filtered, channels: uniqChannels, dates: uniqDates };
-  }, [schedule, search, selectedChannel, selectedDate]);
+  }, [schedule, search, selectedChannel, selectedDate, selectedCategory, categories]);
 
   if (loading) return <div className="h-screen flex items-center justify-center text-zinc-500">Încărcare...</div>;
 
@@ -100,6 +143,37 @@ export default function SchedulePage() {
           </div>
         </div>
       </div>
+
+      {/* Category Filter Navigation Bar */}
+      {activeCategories.length > 0 && (
+        <div className="mb-10 flex gap-2 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-zinc-850 scrollbar-track-transparent" id="schedule-category-navbar">
+          <button
+            onClick={() => setSelectedCategory('All')}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+              selectedCategory === 'All'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 scale-102'
+                : 'bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800/50 hover:text-white border border-zinc-800'
+            }`}
+            id="btn-schedule-cat-all"
+          >
+            Toate Categoriile
+          </button>
+          {activeCategories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+                selectedCategory === cat.id
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 scale-102'
+                  : 'bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800/50 hover:text-white border border-zinc-800'
+              }`}
+              id={`btn-schedule-cat-${cat.id}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {Object.keys(grouped).length === 0 ? (
         <div className="text-zinc-500 text-center py-12">Nu s-a găsit niciun program pentru filtrele selectate.</div>

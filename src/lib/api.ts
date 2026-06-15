@@ -202,6 +202,23 @@ export const api = {
     return { success: true };
   },
 
+  // Program Categories
+  getProgramCategories: async () => {
+    const snapshot = await getDocs(collection(db, 'program_categories'));
+    return snapshot.docs.map(mapDoc);
+  },
+  createProgramCategory: async (data: any) => {
+    const ref = doc(collection(db, 'program_categories'));
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const insert = { ...data, slug };
+    await setDoc(ref, insert);
+    return { id: ref.id, ...insert };
+  },
+  deleteProgramCategory: async (id: string) => {
+    await deleteDoc(doc(db, 'program_categories', id));
+    return { success: true };
+  },
+
   // TV Schedule
   getSchedule: async () => {
     const snapshot = await getDocs(collection(db, 'schedule'));

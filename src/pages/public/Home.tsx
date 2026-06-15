@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { api } from '../../lib/api';
-import { TVProgram, Article, Show, HomepageConfig } from '../../types';
+import { TVProgram, Article, Show, HomepageConfig, ProgramCategory } from '../../types';
 import { Play, Star, Eye, AlertCircle, ChevronRight, MonitorPlay, Tv, Users, Search, Activity, Sparkles, Radio, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link, useOutletContext } from 'react-router-dom';
@@ -12,6 +12,7 @@ export default function Home() {
   const isDark = theme === 'dark';
 
   const [programs, setSchedules] = useState<TVProgram[]>([]);
+  const [dbProgramCategories, setDbProgramCategories] = useState<ProgramCategory[]>([]);
   const [config, setConfig] = useState<HomepageConfig | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [shows, setShows] = useState<Show[]>([]);
@@ -27,17 +28,42 @@ export default function Home() {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   const categoriesList = useMemo(() => {
+    // If we have categories stored in DB, let's map them
+    if (dbProgramCategories && dbProgramCategories.length > 0) {
+      // Map programs to matching DB categories. Since programs store category as a string name:
+      // We will only include categories that have at least one online program (hiding empty categories)
+      const matchesCategoryName = (p: TVProgram, catName: string) => {
+        return p.category && p.category.toLowerCase() === catName.toLowerCase();
+      };
+
+      const activeCats = dbProgramCategories.filter(cat => 
+        programs.some(p => matchesCategoryName(p, cat.name))
+      );
+
+      return [
+        { id: 'All', name: 'Toate', count: programs.length },
+        ...activeCats.map(cat => ({
+          id: cat.name,
+          name: cat.name,
+          count: programs.filter(p => matchesCategoryName(p, cat.name)).length
+        }))
+      ];
+    }
+
+    // Fallback: derive categories directly from the programs (if no db admin categories exist yet)
     const cats = new Set(programs.map(p => p.category).filter(Boolean));
     return ['All', ...Array.from(cats)].map(cat => ({
       id: cat,
       name: cat === 'All' ? 'Toate' : cat,
       count: cat === 'All' ? programs.length : programs.filter(p => p.category === cat).length
     }));
-  }, [programs]);
+  }, [programs, dbProgramCategories]);
 
   const filteredPrograms = useMemo(() => {
     return programs.filter(p => {
-      const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+      const pCat = p.category || '';
+      const matchesCategory = selectedCategory === 'All' || 
+                            pCat.toLowerCase() === selectedCategory.toLowerCase();
       const matchesSearch = p.title.toLowerCase().includes(channelSearchQuery.toLowerCase()) || 
                             p.description?.toLowerCase().includes(channelSearchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
@@ -49,6 +75,9 @@ export default function Home() {
       setSchedules(d_progs.filter((p: any) => p.status === 'online'));
       setLoadingSchedules(false);
     });
+    api.getProgramCategories().then((cats) => {
+      setDbProgramCategories(cats);
+    }).catch(e => console.warn('Could not load program categories:', e));
     api.getHomepageConfig().then((d_conf) => {
       setConfig(d_conf);
       setLoadingConfig(false);

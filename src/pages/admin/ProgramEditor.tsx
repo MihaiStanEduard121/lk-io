@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Save, AlertCircle, Image as ImageIcon, Video, Sparkles, Loader2, Check, AlertTriangle, FileText } from 'lucide-react';
+import { ProgramCategory } from '../../types';
 
 export default function ProgramEditor() {
   const { id } = useParams();
@@ -112,7 +113,10 @@ export default function ProgramEditor() {
     setCurrentChapterIndex(null);
   };
 
+  const [programCategories, setProgramCategories] = useState<ProgramCategory[]>([]);
+
   useEffect(() => {
+    api.getProgramCategories().then(setProgramCategories);
     if (isEdit) {
       api.getProgram(id).then(data => {
         setFormData(prev => ({
@@ -123,6 +127,12 @@ export default function ProgramEditor() {
       });
     }
   }, [id, isEdit]);
+
+  const defaultCategories = ['General', 'Sport', 'Filme', 'Documentare', 'Știri', 'Muzică'];
+  const allCategories = useMemo(() => {
+    const dbCatNames = programCategories.map(c => c.name);
+    return Array.from(new Set([...defaultCategories, ...dbCatNames]));
+  }, [programCategories]);
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
@@ -320,12 +330,9 @@ export default function ProgramEditor() {
             <div>
               <label className="block text-zinc-400 text-sm font-medium mb-2">Categorie</label>
               <select name="category" value={formData.category} onChange={handleChange} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500">
-                <option>General</option>
-                <option>Sport</option>
-                <option>Filme</option>
-                <option>Documentare</option>
-                <option>Știri</option>
-                <option>Muzică</option>
+                {allCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
               </select>
             </div>
 

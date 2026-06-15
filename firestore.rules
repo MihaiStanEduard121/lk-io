@@ -73,6 +73,19 @@ service cloud.firestore {
       allow delete: if isAdmin() && isValidId(categoryId);
     }
 
+    // --- Program Categories ---
+    match /program_categories/{categoryId} {
+      function isValidProgramCategory(data) {
+        return data.keys().hasAll(['name', 'slug']) &&
+               data.name is string && data.name.size() <= 100 &&
+               data.slug is string && data.slug.size() <= 100;
+      }
+      allow read, list: if true;
+      allow create: if isAdmin() && isValidProgramCategory(incoming());
+      allow update: if isAdmin() && isValidId(categoryId) && isValidProgramCategory(incoming());
+      allow delete: if isAdmin() && isValidId(categoryId);
+    }
+
     // --- Comments ---
     match /comments/{commentId} {
       function isValidComment(data) {
