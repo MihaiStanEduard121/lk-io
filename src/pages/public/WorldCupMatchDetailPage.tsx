@@ -10,6 +10,7 @@ import { enhanceEmbedCode } from './PlayerPage';
 import { db, handleFirestoreError } from '../../lib/firebase';
 import { api } from '../../lib/api';
 import { collection, addDoc, query, where, orderBy, limit, onSnapshot, doc, serverTimestamp } from 'firebase/firestore';
+import { getCalculatedLiveViewers, formatViewerCount } from '../../lib/viewerUtils';
 
 export default function WorldCupMatchDetailPage() {
   const { id } = useParams();
@@ -390,11 +391,11 @@ export default function WorldCupMatchDetailPage() {
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
             <span className="inline-flex items-center space-x-1.5 bg-red-500/10 border border-red-500/25 text-red-400 text-xs px-3.5 py-1.5 rounded-full font-extrabold uppercase tracking-widest animate-pulse shadow-sm">
               <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span>{liveViewers} vizualizări totale</span>
+              <span>{formatViewerCount(getCalculatedLiveViewers(match.id, `${match.team1} vs ${match.team2}`, 'meci', 9.5, liveViewers))} spectatori în direct</span>
             </span>
             <span className="inline-flex items-center space-x-1.5 bg-zinc-900/80 border border-zinc-800 text-zinc-400 text-xs px-3.5 py-1.5 rounded-full font-bold">
               <Users className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{liveState.status === 'live' ? 'Active Viewing' : 'Watched by readers'}</span>
+              <span>Transmisiune În Direct HD</span>
             </span>
           </div>
         </div>

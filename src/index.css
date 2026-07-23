@@ -2,12 +2,12 @@
 
 @layer base {
   body {
-    @apply bg-zinc-950 text-zinc-50 overflow-x-hidden;
+    @apply bg-slate-50 text-zinc-900 overflow-x-hidden;
     font-family: 'Inter', system-ui, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
-  .light body {
-    @apply bg-slate-50 text-zinc-900;
+  .dark body {
+    @apply bg-zinc-950 text-zinc-50;
   }
 }
 

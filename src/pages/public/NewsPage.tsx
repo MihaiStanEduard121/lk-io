@@ -3,7 +3,14 @@ import { api } from '../../lib/api';
 import { Article, ArticleCategory } from '../../types';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Calendar, User, Newspaper, Filter } from 'lucide-react';
+import { Calendar, User, Newspaper, Filter, Clock } from 'lucide-react';
+
+const calculateReadingTime = (content: string) => {
+  const cleanContent = content ? content.replace(/<[^>]*>?/gm, '').replace(/[#*`_\[\]()\-]/g, '') : '';
+  const words = cleanContent.trim().split(/\s+/).filter(Boolean);
+  const minutes = Math.max(1, Math.ceil(words.length / 200));
+  return `${minutes} min`;
+};
 
 export default function NewsPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -145,9 +152,10 @@ export default function NewsPage() {
                 </div>
                 <div className="p-6 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center space-x-4 text-xs text-zinc-500 mb-3">
-                      <span className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-1 text-indigo-400"/> {new Date(art.publishedAt).toLocaleDateString()}</span>
-                      <span className="flex items-center"><User className="w-3.5 h-3.5 mr-1 text-zinc-400"/> {art.author || 'Admin'}</span>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-500 mb-3">
+                      <span className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-1.5 text-indigo-400"/> {new Date(art.publishedAt).toLocaleDateString()}</span>
+                      <span className="flex items-center"><User className="w-3.5 h-3.5 mr-1.5 text-zinc-400"/> {art.author || 'Admin'}</span>
+                      <span className="flex items-center"><Clock className="w-3.5 h-3.5 mr-1.5 text-indigo-400"/> {calculateReadingTime(art.content)}</span>
                     </div>
                     <h2 className="text-xl font-bold text-white mb-3 group-hover:text-indigo-400 transition-colors line-clamp-2">
                       {art.title}

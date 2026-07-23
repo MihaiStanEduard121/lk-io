@@ -5,10 +5,11 @@ import { Play, Star, Eye, AlertCircle, ChevronRight, MonitorPlay, Tv, Users, Sea
 import { motion } from 'motion/react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { getMatchLiveStatus, getActiveTime, WCMatch } from './worldCupData';
+import { getCalculatedLiveViewers, formatViewerCount } from '../../lib/viewerUtils';
 
 export default function Home() {
   const context = useOutletContext<{ theme?: string }>() || {};
-  const theme = context.theme || 'dark';
+  const theme = context.theme || 'light';
   const isDark = theme === 'dark';
 
   const [programs, setSchedules] = useState<TVProgram[]>([]);
@@ -153,9 +154,9 @@ export default function Home() {
   return (
     <div className={`transition-colors duration-300 ${isDark ? 'bg-zinc-950 text-white' : 'bg-slate-50 text-zinc-900'}`}>
       {breakingNews.length > 0 && (
-         <div className="bg-rose-650 text-white py-2 overflow-hidden flex whitespace-nowrap border-b border-rose-750 font-medium">
+         <div className="bg-rose-600 text-white py-2 overflow-hidden flex whitespace-nowrap border-b border-rose-700 font-medium">
            <div className="flex animate-marquee items-center text-sm font-bold tracking-wider uppercase">
-             {breakingNews.map((n, i) => (
+             {breakingNews.map((n) => (
                 <Link key={n.id} to={`/news/${n.slug}`} className="flex items-center mx-8 hover:text-white/80 transition-colors">
                   <AlertCircle className="w-4 h-4 mr-2" /> BREAKING NEWS: {n.title}
                 </Link>
@@ -583,7 +584,9 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredPrograms.map((p) => {
-                const viewers = liveViewers[p.id] || 0;
+                const realCount = liveViewers[p.id] || 0;
+                const computedViewers = getCalculatedLiveViewers(p.id, p.title, p.category, p.rating, realCount);
+                const formattedCount = formatViewerCount(computedViewers);
                 const isItemFav = favorites.includes(p.id);
                 return (
                   <motion.div
@@ -597,19 +600,19 @@ export default function Home() {
                     <div 
                       className={`group relative block aspect-video rounded-2xl overflow-hidden transition-all shadow-md duration-300 border ${
                         isDark 
-                          ? 'bg-zinc-900/80 border-zinc-850 hover:border-zinc-700' 
-                          : 'bg-white border-zinc-200 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-0.5'
+                          ? 'bg-zinc-900/90 border-zinc-800 hover:border-indigo-500/50' 
+                          : 'bg-white border-zinc-200 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-0.5'
                       }`}
                     >
                       {/* Backlight glow effect on hover */}
-                      <div className="absolute inset-x-0 -bottom-1 h-1/2 bg-indigo-500/0 group-hover:bg-indigo-500/10 blur-xl transition-all duration-300 pointer-events-none" />
+                      <div className="absolute inset-x-0 -bottom-1 h-1/2 bg-indigo-500/0 group-hover:bg-indigo-500/15 blur-xl transition-all duration-300 pointer-events-none" />
 
                       <Link to={`/play/${p.id}`} className="absolute inset-0 w-full h-full z-0">
                         <img 
                           src={p.thumbnail} 
                           alt={`Logo / Poster TV - ${p.title}`} 
                           title={p.title} 
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05] opacity-80 group-hover:opacity-100" 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05] opacity-85 group-hover:opacity-100" 
                           loading="lazy" 
                           onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.title)}&background=111827&color=6366f1&size=500` }} 
                         />
@@ -618,54 +621,59 @@ export default function Home() {
                       {/* Bookmark button */}
                       <button
                         onClick={(e) => toggleFavorite(p.id, e)}
-                        className={`absolute top-3 right-3 p-2 rounded-xl transition-all duration-300 shadow-md cursor-pointer z-10 ${
+                        className={`absolute top-3 right-3 p-2 rounded-xl transition-all duration-300 shadow-md cursor-pointer z-20 ${
                           isItemFav 
                             ? 'bg-rose-500 text-white hover:bg-rose-600 scale-[1.05]' 
-                            : 'bg-black/60 text-zinc-300 hover:text-white hover:bg-black/85'
+                            : 'bg-black/70 backdrop-blur-md text-zinc-200 hover:text-white hover:bg-black/90'
                         }`}
                         title={isItemFav ? 'Șterge de la favorite' : 'Adaugă la favorite'}
                       >
                         <Heart fill={isItemFav ? 'currentColor' : 'none'} className="w-3.5 h-3.5" />
                       </button>
 
-                      {/* Top Overlay badging */}
-                      <div className="absolute top-3 left-4 flex items-center pointer-events-none">
-                        <span className="px-2.5 py-0.5 bg-zinc-950/80 backdrop-blur-md border border-zinc-850/65 rounded-lg text-[9px] font-extrabold text-indigo-400 uppercase tracking-widest">
+                      {/* Category badge */}
+                      <div className="absolute top-3 left-3 flex items-center pointer-events-none z-10">
+                        <span className="px-2.5 py-1 bg-zinc-950/85 backdrop-blur-md border border-zinc-800/80 rounded-lg text-[9px] font-black text-indigo-300 uppercase tracking-widest shadow-md">
                           {p.category}
                         </span>
                       </div>
 
-                      {/* Live Counter (Bottom Left hover) */}
-                      <div className="absolute top-3 left-28 pointer-events-none z-10 max-w-[100px]">
-                        {viewers > 1 ? (
-                          <span className="inline-flex items-center text-rose-500 font-extrabold bg-rose-500/15 border border-rose-500/25 px-2 py-0.5 rounded-lg text-[9px] uppercase tracking-wider animate-pulse">
-                            <span className="w-1 h-1 rounded-full bg-rose-500 mr-1 animate-ping" />
-                            {viewers} live
-                          </span>
-                        ) : null}
+                      {/* Live Viewers Badge */}
+                      <div className="absolute top-3 right-12 z-10 pointer-events-none">
+                        <span className="inline-flex items-center space-x-1.5 bg-zinc-950/90 backdrop-blur-md border border-rose-500/40 px-2.5 py-1 rounded-lg text-[9px] font-black text-rose-400 shadow-md uppercase tracking-wider">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                          <Users className="w-3 h-3 text-rose-400" />
+                          <span>{formattedCount} live</span>
+                        </span>
                       </div>
 
                       {/* Play Button hover reveal trigger */}
-                      <Link to={`/play/${p.id}`} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 z-0">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/45 shadow-2xl">
+                      <Link to={`/play/${p.id}`} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100 z-10">
+                        <div className="w-12 h-12 bg-white/25 backdrop-blur-lg rounded-full flex items-center justify-center border border-white/50 shadow-2xl">
                           <Play fill="white" className="w-5 h-5 text-white ml-0.5" />
                         </div>
                       </Link>
 
-                      {/* Info overlay inside dark gradient bottom */}
-                      <div className="absolute inset-x-0 bottom-0 p-4 pt-12 bg-gradient-to-t from-black via-black/85 to-transparent flex flex-col justify-end pointer-events-none z-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <h3 className="font-extrabold text-sm text-zinc-100 group-hover:text-indigo-400 transition-colors drop-shadow-sm truncate flex-1 pr-4">
+                      {/* High-contrast Info overlay */}
+                      <div className="absolute inset-x-0 bottom-0 p-3.5 pt-12 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col justify-end pointer-events-none z-10">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-black text-sm text-white group-hover:text-indigo-300 transition-colors drop-shadow-md truncate flex-1 pr-2">
                             {p.title}
                           </h3>
-                          <div className="flex items-center text-xs text-yellow-500 font-extrabold shrink-0">
+                          <div className="flex items-center text-[10px] text-amber-400 font-extrabold shrink-0 bg-black/60 px-2 py-0.5 rounded border border-amber-500/30">
                             <Star fill="currentColor" className="w-3 h-3 mr-1 text-amber-400" />
                             {p.rating || '8.5'}
                           </div>
                         </div>
-                        {p.quality && (
-                          <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">{p.quality} HD BROADCAST</span>
-                        )}
+                        <div className="flex items-center justify-between text-[9px] font-extrabold uppercase tracking-wider text-zinc-300">
+                          {p.quality && (
+                            <span className="px-1.5 py-0.5 bg-zinc-900/90 rounded text-indigo-300 border border-zinc-700/80">{p.quality} HD</span>
+                          )}
+                          <span className="flex items-center text-rose-400 ml-auto font-black">
+                            <span className="w-1.5 h-1.5 bg-rose-500 rounded-full mr-1 animate-ping" />
+                            {formattedCount} vizitatori
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </motion.div>

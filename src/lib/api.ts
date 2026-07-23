@@ -3,6 +3,160 @@ import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, 
 
 export const getAuthToken = () => localStorage.getItem('admin_token');
 
+export const DEFAULT_PROGRAMS = [
+  {
+    id: 'pro-tv',
+    title: 'Pro TV',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 9.2,
+    description: 'Pro TV live online - Știrile Pro TV, emisiuni de top și divertisment în calitate HD.',
+    thumbnail: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 1240
+  },
+  {
+    id: 'antena-1',
+    title: 'Antena 1',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.9,
+    description: 'Antena 1 transmisiune directă online, emisiuni TV, Observator și divertisment.',
+    thumbnail: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 980
+  },
+  {
+    id: 'digi-sport-1',
+    title: 'Digi Sport 1',
+    category: 'Sport',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 9.5,
+    description: 'Digi Sport 1 live online - Liga 1, UEFA Champions League, Formula 1 și tenis ATP/WTA.',
+    thumbnail: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 2150
+  },
+  {
+    id: 'kanal-d',
+    title: 'Kanal D',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.6,
+    description: 'Kanal D live - Știrile Kanal D, seriale de succes și emisiuni interactive.',
+    thumbnail: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 730
+  },
+  {
+    id: 'hbo',
+    title: 'HBO Romania',
+    category: 'Filme',
+    status: 'online',
+    quality: '4K Ultra HD',
+    rating: 9.4,
+    description: 'HBO în direct - Filme blockbuster, seriale premiate și premiere cinematografice.',
+    thumbnail: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 1890
+  },
+  {
+    id: 'digi-sport-2',
+    title: 'Digi Sport 2',
+    category: 'Sport',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.8,
+    description: 'Digi Sport 2 live stream - Competiții sportive internaționale, fotbal european și handbal.',
+    thumbnail: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 1120
+  },
+  {
+    id: 'prima-tv',
+    title: 'Prima TV',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.3,
+    description: 'Prima TV live stream online - Starea Nației, Cronica Cârcotașilor și știri în direct.',
+    thumbnail: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 650
+  },
+  {
+    id: 'digi24',
+    title: 'Digi24',
+    category: 'Știri',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 9.0,
+    description: 'Digi24 live - Știri de ultimă oră, analize economice și transmisiuni speciale din România.',
+    thumbnail: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 1540
+  },
+  {
+    id: 'tvr-1',
+    title: 'TVR 1',
+    category: 'Știri',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.1,
+    description: 'TVR 1 online direct - Telejurnal, documentare culturale și evenimente de interes național.',
+    thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 480
+  },
+  {
+    id: 'pro-arena',
+    title: 'Pro Arena',
+    category: 'Sport',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.5,
+    description: 'Pro Arena live stream - Sporturi de contact, emisiuni de analiză sportivă și transmisiuni live.',
+    thumbnail: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 820
+  },
+  {
+    id: 'national-geographic',
+    title: 'National Geographic',
+    category: 'Documentare',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 9.3,
+    description: 'National Geographic HD live - Documentare spectaculoase despre natură, știință și istorie.',
+    thumbnail: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=80',
+    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
+    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    views: 1100
+  }
+];
+
+export const DEFAULT_PROGRAM_CATEGORIES = [
+  { id: 'cat-generalist', name: 'Generalist', slug: 'generalist' },
+  { id: 'cat-sport', name: 'Sport', slug: 'sport' },
+  { id: 'cat-stiri', name: 'Știri', slug: 'stiri' },
+  { id: 'cat-filme', name: 'Filme', slug: 'filme' },
+  { id: 'cat-documentare', name: 'Documentare', slug: 'documentare' }
+];
+
 // Helper to convert Firestore docs to our format with `id`
 const mapDoc = (d: any) => ({ id: d.id, ...d.data() });
 
@@ -19,21 +173,45 @@ export const api = {
     
   // Live Programs
   getPrograms: async () => {
-    const q = collection(db, 'programs');
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(mapDoc);
+    try {
+      const q = collection(db, 'programs');
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        // Auto-seed default programs into Firestore so they persist
+        for (const prog of DEFAULT_PROGRAMS) {
+          try {
+            await setDoc(doc(db, 'programs', prog.id), { ...prog, createdAt: new Date().toISOString() });
+          } catch(e) {
+            console.warn('Seed program error:', e);
+          }
+        }
+        return DEFAULT_PROGRAMS;
+      }
+      return snapshot.docs.map(mapDoc);
+    } catch(err) {
+      console.warn('Failed to load programs from Firestore, using default list:', err);
+      return DEFAULT_PROGRAMS;
+    }
   },
   getProgram: async (id: string) => {
-    const programRef = doc(db, 'programs', id);
-    const d = await getDoc(programRef);
-    if (!d.exists()) throw new Error('Not found');
     try {
-      await updateDoc(programRef, { views: increment(1) });
-    } catch (err) {
-      console.warn('Could not increment program views:', err);
+      const programRef = doc(db, 'programs', id);
+      const d = await getDoc(programRef);
+      if (d.exists()) {
+        try {
+          await updateDoc(programRef, { views: increment(1) });
+        } catch (err) {
+          console.warn('Could not increment program views:', err);
+        }
+        const currentData = d.data();
+        return { id: d.id, ...currentData, views: (currentData.views || 0) + 1 } as any;
+      }
+    } catch (e) {
+      console.warn('Get program Firestore error:', e);
     }
-    const currentData = d.data();
-    return { id: d.id, ...currentData, views: (currentData.views || 0) + 1 } as any;
+    const found = DEFAULT_PROGRAMS.find(p => p.id === id);
+    if (found) return found;
+    throw new Error('Not found');
   },
   createProgram: async (data: any) => {
     const ref = doc(collection(db, 'programs'));
@@ -204,8 +382,20 @@ export const api = {
 
   // Program Categories
   getProgramCategories: async () => {
-    const snapshot = await getDocs(collection(db, 'program_categories'));
-    return snapshot.docs.map(mapDoc);
+    try {
+      const snapshot = await getDocs(collection(db, 'program_categories'));
+      if (snapshot.empty) {
+        for (const cat of DEFAULT_PROGRAM_CATEGORIES) {
+          try {
+            await setDoc(doc(db, 'program_categories', cat.id), cat);
+          } catch (e) {}
+        }
+        return DEFAULT_PROGRAM_CATEGORIES;
+      }
+      return snapshot.docs.map(mapDoc);
+    } catch(e) {
+      return DEFAULT_PROGRAM_CATEGORIES;
+    }
   },
   createProgramCategory: async (data: any) => {
     const ref = doc(collection(db, 'program_categories'));

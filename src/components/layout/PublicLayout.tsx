@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { useAppLanguage } from '../../context/LanguageContext';
 import LanguageSelector from '../LanguageSelector';
 import GlobalPopup from '../GlobalPopup';
+import DonateButton from '../DonateButton';
 
 export default function PublicLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const location = useLocation();
   const { translateUI } = useAppLanguage();
 
@@ -28,6 +29,7 @@ export default function PublicLayout() {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-zinc-950 text-zinc-50 border-border' : 'bg-slate-50 text-zinc-900'}`}>
       <GlobalPopup />
+      <DonateButton />
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 backdrop-blur-md border-b ${theme === 'dark' ? 'bg-zinc-950/80 border-zinc-800' : 'bg-white/80 border-zinc-200 shadow-sm'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">

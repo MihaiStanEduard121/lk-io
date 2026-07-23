@@ -3,8 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Article, Comment, ArticleCategory } from '../../types';
 import Markdown from 'react-markdown';
-import { Calendar, User, ArrowLeft, Eye, MessageSquare, AlertCircle } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Eye, MessageSquare, AlertCircle, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
+
+const calculateReadingTime = (content: string) => {
+  const cleanContent = content ? content.replace(/<[^>]*>?/gm, '').replace(/[#*`_\[\]()\-]/g, '') : '';
+  const words = cleanContent.trim().split(/\s+/).filter(Boolean);
+  const minutes = Math.max(1, Math.ceil(words.length / 200));
+  return `${minutes} min`;
+};
 
 export default function ArticlePage() {
   const { slug } = useParams();
@@ -17,6 +24,21 @@ export default function ArticlePage() {
   const [author, setAuthor] = useState('');
   const [content, setContent] = useState('');
   const [submitMsg, setSubmitMsg] = useState('');
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        const progress = (window.scrollY / totalHeight) * 100;
+        setScrollProgress(progress);
+      } else {
+        setScrollProgress(0);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -117,6 +139,14 @@ export default function ArticlePage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-12">
+      {/* Scroll Progress Bar */}
+      <div className="fixed top-0 left-0 w-full h-[3px] z-[9999] bg-zinc-900/40">
+        <div 
+          className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 transition-all duration-75"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
+
       <Link to="/news" className="inline-flex items-center text-zinc-400 hover:text-white mb-8 transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Înapoi la știri
@@ -136,9 +166,10 @@ export default function ArticlePage() {
               {category.name}
             </span>
           )}
-          <span className="flex items-center bg-zinc-900 px-3 py-1 rounded-full"><Calendar className="w-4 h-4 mr-2 text-indigo-400"/> {new Date(article.publishedAt).toLocaleDateString()}</span>
-          <span className="flex items-center bg-zinc-900 px-3 py-1 rounded-full"><User className="w-4 h-4 mr-2 text-indigo-400"/> {article.author}</span>
-          <span className="flex items-center bg-zinc-900 px-3 py-1 rounded-full"><Eye className="w-4 h-4 mr-2 text-indigo-400"/> {article.views || 0}</span>
+          <span className="flex items-center bg-zinc-900 px-3.5 py-1.5 rounded-full"><Calendar className="w-4 h-4 mr-2 text-indigo-400"/> {new Date(article.publishedAt).toLocaleDateString()}</span>
+          <span className="flex items-center bg-zinc-900 px-3.5 py-1.5 rounded-full"><User className="w-4 h-4 mr-2 text-indigo-400"/> {article.author}</span>
+          <span className="flex items-center bg-zinc-900 px-3.5 py-1.5 rounded-full"><Eye className="w-4 h-4 mr-2 text-indigo-400"/> {article.views || 0}</span>
+          <span className="flex items-center bg-zinc-900 px-3.5 py-1.5 rounded-full"><Clock className="w-4 h-4 mr-2 text-indigo-400"/> {calculateReadingTime(article.content)}</span>
         </div>
 
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-8 leading-tight">

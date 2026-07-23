@@ -5,6 +5,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import React, { Suspense, lazy } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { LanguageInitializer } from './components/LanguageInitializer';
 import PublicLayout from './components/layout/PublicLayout';
 import AdminLayout from './components/layout/AdminLayout';
@@ -53,6 +54,7 @@ const NotFound = lazy(() => import('./pages/public/NotFound'));
 export default function App() {
   return (
     <BrowserRouter>
+      <Analytics />
       <PresenceTracker />
       <CookieConsent />
       <Suspense fallback={<Loading />}>

@@ -8,6 +8,7 @@ const Player = ReactPlayer as any;
 import Markdown from 'react-markdown';
 import { Share2, Star, Eye, Tag, AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
+import { getCalculatedLiveViewers, formatViewerCount } from '../../lib/viewerUtils';
 
 export function enhanceEmbedCode(embedCode: string | undefined): string {
   if (!embedCode) return '';
@@ -269,7 +270,7 @@ export default function PlayerPage() {
               </span>
               <span className="flex items-center text-rose-500 font-bold bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-lg animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2 animate-ping" />
-                {liveViewers} {liveViewers === 1 ? 'vizitator live' : 'vizitatori live'}
+                {formatViewerCount(getCalculatedLiveViewers(program.id, program.title, program.category, program.rating, liveViewers))} vizitatori în direct
               </span>
             </div>
 
