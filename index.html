@@ -26,20 +26,20 @@
     <script src="https://auqot.com/pfe/current/tag.min.js?z=11835779" data-cfasync="false" async></script>
     <script src="https://ekhay.com/vignette.min.js?z=11835778" data-cfasync="false" async></script>
     <script src="https://b3mny.com/tag.min.js?z=11835777" data-cfasync="false" async></script>
-    <!-- Monetag Banner Zone 11835805 -->
-    <script>(function(s){s.dataset.zone='11835805',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js').catch(function() {});
-        });
-      }
-    </script>
   </head>
-
   <body>
     <div id="root"></div>
+
+    <!-- Monetag Banner / In-Page Zone 11835805 (Placed in body for DOM readiness) -->
+    <script src="https://nap5k.com/tag.min.js" data-zone="11835805" data-cfasync="false" async></script>
+    <script>
+      (function(s){
+        s.dataset.zone = '11835805';
+        s.src = 'https://nap5k.com/tag.min.js';
+        s.setAttribute('data-cfasync', 'false');
+      })(([document.body, document.documentElement].filter(Boolean)[0] || document.head).appendChild(document.createElement('script')));
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

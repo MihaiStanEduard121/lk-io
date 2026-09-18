@@ -5,7 +5,6 @@ import { useAppLanguage } from '../../context/LanguageContext';
 import LanguageSelector from '../LanguageSelector';
 import GlobalPopup from '../GlobalPopup';
 import DonateButton from '../DonateButton';
-import AdBanner from '../AdBanner';
 
 export default function PublicLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -82,10 +81,6 @@ export default function PublicLayout() {
       <main className="flex-grow pt-16">
         <Outlet context={{ theme }} />
       </main>
-
-      <div className="max-w-7xl mx-auto px-4 w-full">
-        <AdBanner zoneId="11835805" format="horizontal" className="my-4" />
-      </div>
 
       <footer className={`py-12 border-t text-center transition-colors duration-300 ${theme === 'dark' ? 'bg-zinc-950 border-zinc-900 text-zinc-500' : 'bg-white border-slate-200 text-slate-600'}`}>
         <p className={`font-extrabold text-lg mb-2 ${theme === 'dark' ? 'text-zinc-400' : 'text-slate-900'}`}>programetv.online</p>

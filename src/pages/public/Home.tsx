@@ -5,7 +5,6 @@ import { Play, Star, Users, Search, Radio, Heart, ChevronRight, MonitorPlay, Tv 
 import { motion } from 'motion/react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { getCalculatedLiveViewers, formatViewerCount } from '../../lib/viewerUtils';
-import AdBanner from '../../components/AdBanner';
 
 export default function Home() {
   const context = useOutletContext<{ theme?: string }>() || {};
@@ -286,9 +285,6 @@ export default function Home() {
             </div>
           </section>
         )}
-
-        {/* In-Page Ad Banner Zone */}
-        <AdBanner zoneId="11835805" format="leaderboard" className="my-8" />
 
         {/* Canale Live Grid */}
         <section id="canale" className="scroll-mt-24">
