@@ -111,11 +111,11 @@ Sitemap: ${domain}/sitemap.xml`);
       return res.sendFile(distSwPath);
     }
     res.send(`self.options = {
-    "domain": "5gvci.com",
-    "zoneId": 11835709
+    "domain": "3nbf4.com",
+    "zoneId": 11835779
 }
 self.lary = ""
-importScripts('https://5gvci.com/act/files/service-worker.min.js?r=sw')
+importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
 `);
   });
 
