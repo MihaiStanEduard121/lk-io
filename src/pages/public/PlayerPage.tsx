@@ -9,6 +9,7 @@ import Markdown from 'react-markdown';
 import { Share2, Star, Eye, Tag, AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getCalculatedLiveViewers, formatViewerCount } from '../../lib/viewerUtils';
+import AdBanner from '../../components/AdBanner';
 
 export function enhanceEmbedCode(embedCode: string | undefined): string {
   if (!embedCode) return '';
@@ -229,6 +230,9 @@ export default function PlayerPage() {
         )}
       </div>
 
+      {/* Primary Ad Banner Zone directly under player */}
+      <AdBanner zoneId="11835805" format="leaderboard" className="mt-6 mb-2" />
+
       {/* Program Details */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-12">
         <div className="lg:col-span-3">
@@ -352,6 +356,9 @@ export default function PlayerPage() {
               </div>
             )}
           </div>
+
+          {/* Sidebar Ad Banner */}
+          <AdBanner zoneId="11835805" format="box" className="mt-6" />
         </div>
       </div>
     </div>
