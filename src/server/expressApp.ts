@@ -98,6 +98,27 @@ Disallow: /api/
 Sitemap: ${domain}/sitemap.xml`);
   });
 
+  // Monetag & Web Push Service Worker Verification
+  app.get('/sw.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Service-Worker-Allowed', '/');
+    const swPath = path.join(process.cwd(), 'public', 'sw.js');
+    if (fs.existsSync(swPath)) {
+      return res.sendFile(swPath);
+    }
+    const distSwPath = path.join(process.cwd(), 'dist', 'sw.js');
+    if (fs.existsSync(distSwPath)) {
+      return res.sendFile(distSwPath);
+    }
+    res.send(`self.options = {
+    "domain": "5gvci.com",
+    "zoneId": 11835709
+}
+self.lary = ""
+importScripts('https://5gvci.com/act/files/service-worker.min.js?r=sw')
+`);
+  });
+
   app.get('/sitemap.xml', async (req, res) => {
     try {
       const domain = `${req.protocol}://${req.get('host')}`;

@@ -59,22 +59,11 @@ export default function AdminLayout() {
       ]
     },
     {
-      id: 'news',
-      title: 'Articole & Știri',
-      links: [
-        { to: '/adminadmin/news', icon: FileText, label: 'Știri / Articole' },
-        { to: '/adminadmin/categories', icon: Hash, label: 'Categorii Ştiri' },
-        { to: '/adminadmin/article-generator', icon: Sparkles, label: 'Generator Articole' },
-        { to: '/adminadmin/comments', icon: MessageSquare, label: 'Comentarii' },
-      ]
-    },
-    {
       id: 'marketing',
       title: 'Promovare & Monetizare',
       links: [
         { to: '/adminadmin/ad-revenue', icon: TrendingUp, label: 'Venituri Reclame' },
         { to: '/adminadmin/popups', icon: Bell, label: 'Pop-up Global' },
-        { to: '/adminadmin/world-cup', icon: Award, label: 'Meciuri Cupă' },
       ]
     },
     {
@@ -106,16 +95,16 @@ export default function AdminLayout() {
   }, [location.pathname]);
 
   const renderSidebarContent = () => (
-    <div className="flex flex-col h-full bg-zinc-900/90 md:bg-zinc-900/50">
+    <div className="flex flex-col h-full bg-white border-r border-slate-200">
       {/* Brand Header */}
-      <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
-        <Link to="/" className="text-xl font-black text-white tracking-widest flex items-center space-x-2">
-          <span className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-sm text-white font-black shadow-lg shadow-indigo-600/35">TV</span>
+      <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+        <Link to="/" className="text-xl font-black text-slate-900 tracking-wider flex items-center space-x-2.5">
+          <span className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-sm text-white font-black shadow-md shadow-indigo-600/30">TV</span>
           <span>ADMIN</span>
         </Link>
         <button 
           onClick={() => setIsMobileSidebarOpen(false)} 
-          className="md:hidden p-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-md transition-colors"
+          className="md:hidden p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 rounded-lg transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
@@ -124,18 +113,18 @@ export default function AdminLayout() {
       {/* Real-time search filter */}
       <div className="px-4 pt-4 pb-2 relative">
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder="Caută în administrări..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800/80 rounded-lg pl-9 pr-8 py-2 text-xs text-white placeholder-zinc-500 hover:border-zinc-700 focus:outline-none focus:border-indigo-600 transition-colors"
+            className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 hover:border-slate-300 focus:outline-none focus:border-indigo-600 focus:bg-white transition-colors"
           />
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery('')} 
-              className="absolute right-3 top-2.5 text-zinc-500 hover:text-zinc-300 py-0.5 px-1 bg-zinc-800/50 rounded text-[9px] font-bold"
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 py-0.5 px-1.5 bg-slate-200 rounded text-[9px] font-extrabold"
             >
               CLEAR
             </button>
@@ -144,13 +133,13 @@ export default function AdminLayout() {
       </div>
 
       {/* Navigation Sections */}
-      <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-6 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+      <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         {filteredGroups.map((group) => (
-          <div key={group.id} className="space-y-1" id={`group-${group.id}`}>
-            <h4 className="px-3 text-[10px] font-black uppercase tracking-wider text-zinc-500">
+          <div key={group.id} className="space-y-1.5" id={`group-${group.id}`}>
+            <h4 className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400">
               {group.title}
             </h4>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {group.links.map((link) => {
                 const active = link.exact 
                   ? location.pathname === link.to 
@@ -160,17 +149,17 @@ export default function AdminLayout() {
                     key={link.to} 
                     to={link.to}
                     id={`link-${link.to.split('/').pop() || 'dash'}`}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-all group ${
+                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all group ${
                       active 
-                        ? 'bg-indigo-600/10 text-white font-bold border-l-2 border-indigo-500 pl-4' 
-                        : 'text-zinc-400 hover:bg-zinc-802 hover:text-zinc-100'
+                        ? 'bg-indigo-50 text-indigo-700 font-extrabold border-l-4 border-indigo-600 pl-3' 
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <link.icon className={`h-4.5 w-4.5 transition-colors ${active ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                      <link.icon className={`h-4.5 w-4.5 transition-colors ${active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-700'}`} />
                       <span className="text-sm">{link.label}</span>
                     </div>
-                    {active && <ChevronRight className="h-3.5 w-3.5 text-indigo-400/80" />}
+                    {active && <ChevronRight className="h-4 w-4 text-indigo-600" />}
                   </Link>
                 );
               })}
@@ -179,22 +168,22 @@ export default function AdminLayout() {
         ))}
 
         {filteredGroups.length === 0 && (
-          <div className="text-center py-8 text-zinc-500 text-xs">
+          <div className="text-center py-8 text-slate-400 text-xs">
             Niciun link nu se potrivește cu „{searchQuery}”.
           </div>
         )}
       </nav>
 
       {/* Profile & Logout Section */}
-      <div className="p-4 border-t border-zinc-800 bg-zinc-950/20 space-y-3">
+      <div className="p-4 border-t border-slate-200 bg-slate-50/70 space-y-3">
         {currentUser && (
-          <div className="flex items-center space-x-3 px-3 py-2 bg-zinc-950/40 border border-zinc-800/50 rounded-xl">
-            <div className="w-9 h-9 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-black uppercase text-sm border border-indigo-500/20">
+          <div className="flex items-center space-x-3 px-3 py-2.5 bg-white border border-slate-200 rounded-xl shadow-xs">
+            <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black uppercase text-sm border border-indigo-200">
               {currentUser.email ? currentUser.email[0] : 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white truncate">{currentUser.email || 'Admin'}</p>
-              <span className="inline-flex px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded mt-0.5">
+              <p className="text-xs font-bold text-slate-900 truncate">{currentUser.email || 'Admin'}</p>
+              <span className="inline-flex px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-200/80 rounded mt-0.5">
                 ADMIN SECURE
               </span>
             </div>
@@ -204,7 +193,7 @@ export default function AdminLayout() {
         <button 
           onClick={handleLogout}
           id="btn-admin-logout"
-          className="flex w-full items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-rose-400 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 transition-colors pointer-cursor text-sm font-bold"
+          className="flex w-full items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-colors cursor-pointer text-sm font-bold"
         >
           <LogOut className="h-4 w-4" />
           <span>Deconectare</span>
@@ -214,21 +203,21 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-zinc-950 text-zinc-300">
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 text-slate-800">
       {/* Desktop Sidebar (Medium Screens and Up) */}
-      <aside className="hidden md:flex md:w-64 border-r border-zinc-800 flex-col shrink-0 h-screen sticky top-0 bg-zinc-900/40">
+      <aside className="hidden md:flex md:w-64 flex-col shrink-0 h-screen sticky top-0">
         {renderSidebarContent()}
       </aside>
 
       {/* Mobile Header (Hidden on Desktop) */}
-      <header className="md:hidden flex items-center justify-between px-6 py-4 bg-zinc-900/90 border-b border-zinc-800 sticky top-0 z-30 backdrop-blur-md">
-        <Link to="/" className="text-lg font-black text-white tracking-widest flex items-center space-x-2">
-          <span className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center text-xs text-white font-black">TV</span>
+      <header className="md:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <Link to="/" className="text-lg font-black text-slate-900 tracking-wider flex items-center space-x-2">
+          <span className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-xs text-white font-black">TV</span>
           <span>ADMIN</span>
         </Link>
         <button 
           onClick={() => setIsMobileSidebarOpen(true)} 
-          className="p-2 text-zinc-400 hover:text-white bg-zinc-800/80 rounded-lg hover:bg-zinc-700 transition-colors"
+          className="p-2 text-slate-600 hover:text-slate-900 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -239,19 +228,19 @@ export default function AdminLayout() {
         <div className="fixed inset-0 z-50 md:hidden flex">
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
           
           {/* Drawer Panel */}
-          <div className="relative w-80 max-w-[85vw] h-full flex flex-col bg-zinc-900 shadow-2xl animate-in slide-in-from-left duration-250 z-10">
+          <div className="relative w-80 max-w-[85vw] h-full flex flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-250 z-10">
             {renderSidebarContent()}
           </div>
         </div>
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-x-hidden min-h-screen flex flex-col">
+      <main className="flex-1 overflow-x-hidden min-h-screen flex flex-col bg-slate-50 text-slate-900">
         <Outlet />
       </main>
     </div>

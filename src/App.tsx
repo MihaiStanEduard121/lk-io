@@ -5,7 +5,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import React, { Suspense, lazy } from 'react';
-import { Analytics } from '@vercel/analytics/react';
+import { inject } from '@vercel/analytics';
 import { LanguageInitializer } from './components/LanguageInitializer';
 import PublicLayout from './components/layout/PublicLayout';
 import AdminLayout from './components/layout/AdminLayout';
@@ -51,10 +51,21 @@ const PopupManager = lazy(() => import('./pages/admin/PopupManager'));
 const ArticleGenerator = lazy(() => import('./pages/admin/ArticleGenerator'));
 const NotFound = lazy(() => import('./pages/public/NotFound'));
 
+function AnalyticsTracker() {
+  React.useEffect(() => {
+    try {
+      inject();
+    } catch (e) {
+      console.warn('Analytics injection warning:', e);
+    }
+  }, []);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <Analytics />
+      <AnalyticsTracker />
       <PresenceTracker />
       <CookieConsent />
       <Suspense fallback={<Loading />}>
