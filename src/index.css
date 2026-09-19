@@ -2,29 +2,29 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-zinc-900 overflow-x-hidden;
-    font-family: 'Inter', system-ui, sans-serif;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    @apply bg-slate-50 text-zinc-900 overflow-x-hidden antialiased;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
-  .dark body {
+  .dark body, html.dark body {
     @apply bg-zinc-950 text-zinc-50;
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: theme('colors.zinc.950');
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: theme('colors.zinc.800');
-  border-radius: 4px;
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: theme('colors.zinc.700');
+  background: rgba(150, 150, 150, 0.5);
 }
 
 @layer utilities {

@@ -6,6 +6,7 @@ export interface TVProgram {
   streamUrl: string;
   embedCode: string;
   thumbnail: string;
+  logo?: string;
   banner: string;
   status: 'online' | 'offline';
   quality: 'SD' | 'HD' | '4K';
@@ -15,6 +16,8 @@ export interface TVProgram {
   createdAt: string;
   isFeatured?: boolean;
 }
+
+export type Channel = TVProgram;
 
 export interface AdminStats {
   totalPrograms: number;
@@ -51,6 +54,8 @@ export interface TVScheduleItem {
   description: string;
   date: string;
   channelId?: string;
+  endTime?: string;
+  category?: string;
 }
 
 export interface HomepageConfig {
@@ -85,6 +90,7 @@ export interface Show {
   banner: string;
   createdAt: string;
   isFeatured?: boolean;
+  category?: string;
 }
 
 export interface Episode {

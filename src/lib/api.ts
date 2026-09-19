@@ -13,8 +13,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 9.2,
     description: 'Pro TV live online - Știrile Pro TV, emisiuni de top și divertisment în calitate HD.',
     thumbnail: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'http://eb4b8dcf.kablakaka.ru/iptv/3KZ2W9GEEY49ZV/6997/index.m3u8',
     views: 1240
   },
   {
@@ -26,8 +26,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 8.9,
     description: 'Antena 1 transmisiune directă online, emisiuni TV, Observator și divertisment.',
     thumbnail: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'https://live4dai.antenaplay.ro/live2_sdi14/live2_sdi14_600k.m3u8',
     views: 980
   },
   {
@@ -39,8 +39,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 9.5,
     description: 'Digi Sport 1 live online - Liga 1, UEFA Champions League, Formula 1 și tenis ATP/WTA.',
     thumbnail: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'http://forever.megogo.xyz/iptv/QGB4M3H62GC7E3/2520/index.m3u8',
     views: 2150
   },
   {
@@ -52,8 +52,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 8.6,
     description: 'Kanal D live - Știrile Kanal D, seriale de succes și emisiuni interactive.',
     thumbnail: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'https://stream1.kanald.ro/iphone/knd-live.m3u8',
     views: 730
   },
   {
@@ -65,8 +65,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 9.4,
     description: 'HBO în direct - Filme blockbuster, seriale premiate și premiere cinematografice.',
     thumbnail: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'https://nosignal1.antenaplay.ro/hls/fb-comedy-hd/index.m3u8',
     views: 1890
   },
   {
@@ -78,8 +78,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 8.8,
     description: 'Digi Sport 2 live stream - Competiții sportive internaționale, fotbal european și handbal.',
     thumbnail: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'http://forever.megogo.xyz/iptv/QGB4M3H62GC7E3/2522/index.m3u8',
     views: 1120
   },
   {
@@ -91,8 +91,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 8.3,
     description: 'Prima TV live stream online - Starea Nației, Cronica Cârcotașilor și știri în direct.',
     thumbnail: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'http://eb4b8dcf.kablakaka.ru/iptv/AE8BY6FHF5ZGAG/6995/index.m3u8',
     views: 650
   },
   {
@@ -104,8 +104,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 9.0,
     description: 'Digi24 live - Știri de ultimă oră, analize economice și transmisiuni speciale din România.',
     thumbnail: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'https://edge-ar.rcs-rds.ro/digi24ar/index.m3u8',
     views: 1540
   },
   {
@@ -117,8 +117,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 8.1,
     description: 'TVR 1 online direct - Telejurnal, documentare culturale și evenimente de interes național.',
     thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'https://tvr-1.lg.mncdn.com/tvr1/smil:tvr1.smil/playlist.m3u8',
     views: 480
   },
   {
@@ -130,8 +130,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 8.5,
     description: 'Pro Arena live stream - Sporturi de contact, emisiuni de analiză sportivă și transmisiuni live.',
     thumbnail: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'http://eb4b8dcf.kablakaka.ru/iptv/AE8BY6FHF5ZGAG/6990/index.m3u8',
     views: 820
   },
   {
@@ -143,8 +143,8 @@ export const DEFAULT_PROGRAMS = [
     rating: 9.3,
     description: 'National Geographic HD live - Documentare spectaculoase despre natură, știință și istorie.',
     thumbnail: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=80',
-    embedCode: '<iframe src="https://test-streams.mux.dev/x36xhg/main.m3u8" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>',
-    streamUrl: 'https://test-streams.mux.dev/x36xhg/main.m3u8',
+    embedCode: '',
+    streamUrl: 'https://streamw.m.ro/Aleph/ngrp:Alephbiz.stream_all/playlist.m3u8',
     views: 1100
   }
 ];
@@ -411,8 +411,41 @@ export const api = {
 
   // TV Schedule
   getSchedule: async () => {
-    const snapshot = await getDocs(collection(db, 'schedule'));
-    return snapshot.docs.map(mapDoc);
+    try {
+      const snapshot = await getDocs(collection(db, 'schedule'));
+      if (!snapshot.empty) {
+        return snapshot.docs.map(mapDoc);
+      }
+    } catch(err) {
+      console.warn("Could not read schedule from Firestore, using auto-generated schedule:", err);
+    }
+    
+    // Fallback: provide rich TV guide items for today, yesterday, and upcoming days
+    const { getChannelFullDaySchedule } = await import('./tvScheduleUtils');
+    const channelIds = ['pro-tv', 'antena-1', 'digi-sport-1', 'kanal-d', 'hbo', 'digi-sport-2', 'prima-tv', 'digi24', 'tvr-1', 'pro-arena', 'national-geographic'];
+    const daysOffset = [-1, 0, 1, 2, 3];
+    const generated: any[] = [];
+    
+    for (const offset of daysOffset) {
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      const dateStr = d.toISOString().split('T')[0];
+      for (const chId of channelIds) {
+        const dayItems = getChannelFullDaySchedule(chId, dateStr);
+        dayItems.forEach(item => {
+          generated.push({
+            id: item.id,
+            time: item.time,
+            title: item.title,
+            description: item.description,
+            date: item.date,
+            channelId: chId,
+            category: item.category
+          });
+        });
+      }
+    }
+    return generated;
   },
   createScheduleItem: async (data: any) => {
     const ref = doc(collection(db, 'schedule'));
