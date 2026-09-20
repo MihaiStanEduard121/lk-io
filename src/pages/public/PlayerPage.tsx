@@ -21,6 +21,7 @@ import {
 import { motion } from 'motion/react';
 import { getCalculatedLiveViewers, formatViewerCount } from '../../lib/viewerUtils';
 import { getChannelLiveSchedule, ChannelLiveInfo } from '../../lib/tvScheduleUtils';
+import { normalizeChannelId, createDynamicChannelFallback } from '../../lib/channelsData';
 
 export function enhanceEmbedCode(embedCode: string | undefined): string {
   if (!embedCode) return '';
@@ -140,19 +141,28 @@ export default function PlayerPage() {
   const [isCopied, setIsCopied] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
 
+  const canonicalId = useMemo(() => normalizeChannelId(id || 'pro-tv'), [id]);
+
   // Load channel, recommendations, schedule
   useEffect(() => {
     window.scrollTo(0, 0);
     setLoading(true);
     setError(false);
 
+    const safeFetchChannel = api.getProgram(id || 'pro-tv').catch(() => createDynamicChannelFallback(id || 'pro-tv'));
+    const safeFetchAll = api.getPrograms().catch(() => []);
+    const safeFetchEpg = api.getChannelEPG(canonicalId).catch(() => []);
+    const safeFetchFallbackSched = api.getSchedule().catch(() => []);
+
     Promise.all([
-      api.getProgram(id || ''),
-      api.getPrograms(),
-      api.getChannelEPG(id || ''),
-      api.getSchedule()
+      safeFetchChannel,
+      safeFetchAll,
+      safeFetchEpg,
+      safeFetchFallbackSched
     ]).then(([channelData, allPrograms, epgSched, fallbackSched]) => {
-      setProgram(channelData);
+      const finalChannel = channelData || createDynamicChannelFallback(id || 'pro-tv');
+      setProgram(finalChannel);
+
       if (Array.isArray(epgSched) && epgSched.length > 0) {
         const mapped = epgSched.map(item => ({
           id: item.id,
@@ -160,7 +170,7 @@ export default function PlayerPage() {
           endTime: item.endTime || item.endFormatted,
           title: item.title,
           description: item.description,
-          channelId: item.channelId || id,
+          channelId: item.channelId || canonicalId,
           category: item.category,
           date: item.date,
           image: item.image
@@ -171,10 +181,10 @@ export default function PlayerPage() {
       }
 
       const filtered = (allPrograms || [])
-        .filter((p: any) => p.id !== id && p.status === 'online')
+        .filter((p: any) => p.id !== id && p.id !== canonicalId && p.status === 'online')
         .sort((a: any, b: any) => {
-          if (a.category === channelData.category && b.category !== channelData.category) return -1;
-          if (a.category !== channelData.category && b.category === channelData.category) return 1;
+          if (a.category === finalChannel.category && b.category !== finalChannel.category) return -1;
+          if (a.category !== finalChannel.category && b.category === finalChannel.category) return 1;
           return (b.views || 0) - (a.views || 0);
         })
         .slice(0, 6);
@@ -182,7 +192,9 @@ export default function PlayerPage() {
       setLoading(false);
     }).catch(err => {
       console.warn('Error loading channel player:', err);
-      setError(true);
+      // Even if an unexpected error occurs, generate fallback channel
+      const fallback = createDynamicChannelFallback(id || 'pro-tv');
+      setProgram(fallback);
       setLoading(false);
     });
 
@@ -192,7 +204,7 @@ export default function PlayerPage() {
     } catch (e) {
       console.warn('Error loading favorites:', e);
     }
-  }, [id]);
+  }, [id, canonicalId]);
 
   // Live presence polling
   useEffect(() => {
@@ -201,7 +213,7 @@ export default function PlayerPage() {
         const res = await fetch('/api/presence/stats');
         if (res.ok) {
           const stats = await res.json();
-          const count = stats.pageStats?.[`/play/${id}`] || 1;
+          const count = stats.pageStats?.[`/play/${id}`] || stats.pageStats?.[`/play/${canonicalId}`] || 1;
           setLiveViewers(count);
         }
       } catch (err) {
@@ -212,22 +224,24 @@ export default function PlayerPage() {
     fetchLiveCount();
     const interval = setInterval(fetchLiveCount, 8000);
     return () => clearInterval(interval);
-  }, [id]);
+  }, [id, canonicalId]);
 
   // Live channel broadcast info
   const liveInfo: ChannelLiveInfo = useMemo(() => {
-    if (!id) return { currentProgram: null, nextProgram: null };
-    return getChannelLiveSchedule(id, schedule);
-  }, [id, schedule]);
+    const targetId = canonicalId || id || 'pro-tv';
+    return getChannelLiveSchedule(targetId, schedule);
+  }, [canonicalId, id, schedule]);
 
   // Channel's schedule for today
   const todayIso = new Date().toISOString().split('T')[0];
   const channelScheduleToday = useMemo(() => {
-    if (!id) return [];
-    return schedule.filter(s => 
-      s.channelId?.toLowerCase() === id.toLowerCase() && s.date === todayIso
-    );
-  }, [id, schedule, todayIso]);
+    const targetId = (canonicalId || id || '').toLowerCase();
+    const rawTarget = (id || '').toLowerCase();
+    return schedule.filter(s => {
+      const sCh = (s.channelId || '').toLowerCase();
+      return (sCh === targetId || sCh === rawTarget) && s.date === todayIso;
+    });
+  }, [canonicalId, id, schedule, todayIso]);
 
   const isFavorite = id ? favorites.includes(id) : false;
   const toggleFavorite = () => {

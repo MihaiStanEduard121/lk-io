@@ -2,161 +2,20 @@ import { db, auth, loginWithGoogle, logout, handleFirestoreError } from './fireb
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, where, increment } from 'firebase/firestore';
 import { clientCache } from './cache';
 import { getChannelFullDaySchedule } from './tvScheduleUtils';
+import { MASTER_CHANNELS_LIST, normalizeChannelId, createDynamicChannelFallback } from './channelsData';
 
 export const getAuthToken = () => localStorage.getItem('admin_token');
 
-export const DEFAULT_PROGRAMS = [
-  {
-    id: 'pro-tv',
-    title: 'Pro TV',
-    category: 'Generalist',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 9.2,
-    description: 'Pro TV live online - Știrile Pro TV, emisiuni de top și divertisment în calitate HD.',
-    thumbnail: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'http://eb4b8dcf.kablakaka.ru/iptv/3KZ2W9GEEY49ZV/6997/index.m3u8',
-    views: 1240
-  },
-  {
-    id: 'antena-1',
-    title: 'Antena 1',
-    category: 'Generalist',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 8.9,
-    description: 'Antena 1 transmisiune directă online, emisiuni TV, Observator și divertisment.',
-    thumbnail: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'https://live4dai.antenaplay.ro/live2_sdi14/live2_sdi14_600k.m3u8',
-    views: 980
-  },
-  {
-    id: 'digi-sport-1',
-    title: 'Digi Sport 1',
-    category: 'Sport',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 9.5,
-    description: 'Digi Sport 1 live online - Liga 1, UEFA Champions League, Formula 1 și tenis ATP/WTA.',
-    thumbnail: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'http://forever.megogo.xyz/iptv/QGB4M3H62GC7E3/2520/index.m3u8',
-    views: 2150
-  },
-  {
-    id: 'kanal-d',
-    title: 'Kanal D',
-    category: 'Generalist',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 8.6,
-    description: 'Kanal D live - Știrile Kanal D, seriale de succes și emisiuni interactive.',
-    thumbnail: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'https://stream1.kanald.ro/iphone/knd-live.m3u8',
-    views: 730
-  },
-  {
-    id: 'hbo',
-    title: 'HBO Romania',
-    category: 'Filme',
-    status: 'online',
-    quality: '4K Ultra HD',
-    rating: 9.4,
-    description: 'HBO în direct - Filme blockbuster, seriale premiate și premiere cinematografice.',
-    thumbnail: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'https://nosignal1.antenaplay.ro/hls/fb-comedy-hd/index.m3u8',
-    views: 1890
-  },
-  {
-    id: 'digi-sport-2',
-    title: 'Digi Sport 2',
-    category: 'Sport',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 8.8,
-    description: 'Digi Sport 2 live stream - Competiții sportive internaționale, fotbal european și handbal.',
-    thumbnail: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'http://forever.megogo.xyz/iptv/QGB4M3H62GC7E3/2522/index.m3u8',
-    views: 1120
-  },
-  {
-    id: 'prima-tv',
-    title: 'Prima TV',
-    category: 'Generalist',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 8.3,
-    description: 'Prima TV live stream online - Starea Nației, Cronica Cârcotașilor și știri în direct.',
-    thumbnail: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'http://eb4b8dcf.kablakaka.ru/iptv/AE8BY6FHF5ZGAG/6995/index.m3u8',
-    views: 650
-  },
-  {
-    id: 'digi24',
-    title: 'Digi24',
-    category: 'Știri',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 9.0,
-    description: 'Digi24 live - Știri de ultimă oră, analize economice și transmisiuni speciale din România.',
-    thumbnail: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'https://edge-ar.rcs-rds.ro/digi24ar/index.m3u8',
-    views: 1540
-  },
-  {
-    id: 'tvr-1',
-    title: 'TVR 1',
-    category: 'Știri',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 8.1,
-    description: 'TVR 1 online direct - Telejurnal, documentare culturale și evenimente de interes național.',
-    thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'https://tvr-1.lg.mncdn.com/tvr1/smil:tvr1.smil/playlist.m3u8',
-    views: 480
-  },
-  {
-    id: 'pro-arena',
-    title: 'Pro Arena',
-    category: 'Sport',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 8.5,
-    description: 'Pro Arena live stream - Sporturi de contact, emisiuni de analiză sportivă și transmisiuni live.',
-    thumbnail: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'http://eb4b8dcf.kablakaka.ru/iptv/AE8BY6FHF5ZGAG/6990/index.m3u8',
-    views: 820
-  },
-  {
-    id: 'national-geographic',
-    title: 'National Geographic',
-    category: 'Documentare',
-    status: 'online',
-    quality: '1080p HD',
-    rating: 9.3,
-    description: 'National Geographic HD live - Documentare spectaculoase despre natură, știință și istorie.',
-    thumbnail: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=80',
-    embedCode: '',
-    streamUrl: 'https://streamw.m.ro/Aleph/ngrp:Alephbiz.stream_all/playlist.m3u8',
-    views: 1100
-  }
-];
+export const DEFAULT_PROGRAMS = MASTER_CHANNELS_LIST;
 
 export const DEFAULT_PROGRAM_CATEGORIES = [
   { id: 'cat-generalist', name: 'Generalist', slug: 'generalist' },
   { id: 'cat-sport', name: 'Sport', slug: 'sport' },
   { id: 'cat-stiri', name: 'Știri', slug: 'stiri' },
   { id: 'cat-filme', name: 'Filme', slug: 'filme' },
-  { id: 'cat-documentare', name: 'Documentare', slug: 'documentare' }
+  { id: 'cat-documentare', name: 'Documentare', slug: 'documentare' },
+  { id: 'cat-copii', name: 'Copii', slug: 'copii' },
+  { id: 'cat-muzica', name: 'Muzică', slug: 'muzica' }
 ];
 
 // Helper to convert Firestore docs to our format with `id`
@@ -180,46 +39,68 @@ export const api = {
         const q = collection(db, 'programs');
         const snapshot = await getDocs(q);
         if (snapshot.empty) {
-          // Auto-seed default programs into Firestore so they persist
-          for (const prog of DEFAULT_PROGRAMS) {
-            try {
-              await setDoc(doc(db, 'programs', prog.id), { ...prog, createdAt: new Date().toISOString() });
-            } catch(e) {
-              console.warn('Seed program error:', e);
-            }
-          }
-          return DEFAULT_PROGRAMS;
+          return MASTER_CHANNELS_LIST;
         }
-        return snapshot.docs.map(mapDoc);
+        
+        // Merge Firestore programs with MASTER_CHANNELS_LIST so no channel is missing
+        const dbPrograms = snapshot.docs.map(mapDoc);
+        const dbIds = new Set(dbPrograms.map((p: any) => p.id));
+        const missingFromDb = MASTER_CHANNELS_LIST.filter(p => !dbIds.has(p.id));
+        
+        return [...dbPrograms, ...missingFromDb];
       } catch(err) {
-        console.warn('Failed to load programs from Firestore, using default list:', err);
-        return DEFAULT_PROGRAMS;
+        console.warn('Failed to load programs from Firestore, using master list:', err);
+        return MASTER_CHANNELS_LIST;
       }
     }, 5 * 60 * 1000);
   },
-  getProgram: async (id: string) => {
+  getProgram: async (rawId: string) => {
+    if (!rawId) rawId = 'pro-tv';
+    const canonicalId = normalizeChannelId(rawId);
+
     // Check cached programs first for immediate resolution
     const cachedPrograms = clientCache.get<any[]>('programs');
-    const fromList = cachedPrograms?.find(p => p.id === id);
+    const fromList = cachedPrograms?.find(p => p.id === canonicalId || p.id === rawId);
+    if (fromList) return fromList;
 
     // Fetch or verify from server
-    return clientCache.fetchWithCache(`program_${id}`, async () => {
+    return clientCache.fetchWithCache(`program_${canonicalId}`, async () => {
+      // 1. Try Firestore with canonical ID
       try {
-        const programRef = doc(db, 'programs', id);
+        const programRef = doc(db, 'programs', canonicalId);
         const d = await getDoc(programRef);
         if (d.exists()) {
-          // Non-blocking view increment
           updateDoc(programRef, { views: increment(1) }).catch(() => {});
           const currentData = d.data();
           return { id: d.id, ...currentData, views: (currentData.views || 0) + 1 } as any;
         }
       } catch (e) {
-        console.warn('Get program Firestore error:', e);
+        // Firestore fetch error (offline or rules)
       }
-      if (fromList) return fromList;
-      const found = DEFAULT_PROGRAMS.find(p => p.id === id);
-      if (found) return found;
-      throw new Error('Not found');
+
+      // 2. Try Firestore with raw ID if different
+      if (rawId !== canonicalId) {
+        try {
+          const rawRef = doc(db, 'programs', rawId);
+          const d2 = await getDoc(rawRef);
+          if (d2.exists()) {
+            updateDoc(rawRef, { views: increment(1) }).catch(() => {});
+            const currentData = d2.data();
+            return { id: d2.id, ...currentData, views: (currentData.views || 0) + 1 } as any;
+          }
+        } catch (e) {}
+      }
+
+      // 3. Search in MASTER_CHANNELS_LIST
+      const foundMaster = MASTER_CHANNELS_LIST.find(p => 
+        p.id === canonicalId || 
+        p.id === rawId || 
+        p.id.toLowerCase() === rawId.toLowerCase()
+      );
+      if (foundMaster) return foundMaster;
+
+      // 4. Dynamic safe fallback: ALWAYS return a valid channel object instead of crashing with 404
+      return createDynamicChannelFallback(rawId);
     }, 5 * 60 * 1000);
   },
   createProgram: async (data: any) => {

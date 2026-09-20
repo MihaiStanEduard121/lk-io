@@ -7,13 +7,13 @@ export interface TVProgram {
   embedCode: string;
   thumbnail: string;
   logo?: string;
-  banner: string;
+  banner?: string;
   status: 'online' | 'offline';
-  quality: 'SD' | 'HD' | '4K';
-  tags: string[];
+  quality: 'SD' | 'HD' | '4K' | '1080p HD' | '4K Ultra HD' | string;
+  tags?: string[];
   views: number;
   rating: number;
-  createdAt: string;
+  createdAt?: string;
   isFeatured?: boolean;
 }
 
