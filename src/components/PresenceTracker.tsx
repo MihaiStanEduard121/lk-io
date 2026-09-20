@@ -21,6 +21,9 @@ export default function PresenceTracker() {
     }
 
     const sendPing = async () => {
+      // Don't waste mobile battery or bandwidth when page is hidden in background
+      if (typeof document !== 'undefined' && document.hidden) return;
+
       try {
         const response = await fetch('/api/presence/ping', {
           method: 'POST',
@@ -44,10 +47,20 @@ export default function PresenceTracker() {
     // Ping immediately on navigation
     sendPing();
 
-    // Setup interval to ping every 8 seconds (slightly faster to react quickly to limit updates)
-    const interval = setInterval(sendPing, 8000);
+    // Setup interval to ping every 15 seconds
+    const interval = setInterval(sendPing, 15000);
 
-    return () => clearInterval(interval);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        sendPing();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [location.pathname]);
 
   if (ejected) {

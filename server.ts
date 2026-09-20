@@ -20,8 +20,28 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      maxAge: '1y',
+      immutable: true,
+      index: false,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+        }
+      }
+    }));
     
+    let cachedIndexHtml: string | null = null;
+    const ssrMetadataCache = new Map<string, {
+      metaTitle: string;
+      metaDesc: string;
+      metaImage: string;
+      ldJsonSchema: any;
+      is404: boolean;
+      timestamp: number;
+    }>();
+    const SSR_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
     app.get('*', async (req, res) => {
       const indexPath = path.join(distPath, 'index.html');
       if (!fs.existsSync(indexPath)) {
@@ -29,7 +49,10 @@ async function startServer() {
       }
 
       try {
-        let html = fs.readFileSync(indexPath, 'utf8');
+        if (!cachedIndexHtml) {
+          cachedIndexHtml = fs.readFileSync(indexPath, 'utf8');
+        }
+        let html = cachedIndexHtml;
         const urlPath = req.path;
         
         // Default metadata values
@@ -40,7 +63,16 @@ async function startServer() {
         let ldJsonSchema: any = null;
         let is404 = false;
 
-        const dbInstance = getDb();
+        // Check SSR Metadata Cache first
+        const cachedMeta = ssrMetadataCache.get(urlPath);
+        if (cachedMeta && (Date.now() - cachedMeta.timestamp < SSR_CACHE_TTL)) {
+          metaTitle = cachedMeta.metaTitle;
+          metaDesc = cachedMeta.metaDesc;
+          metaImage = cachedMeta.metaImage;
+          ldJsonSchema = cachedMeta.ldJsonSchema;
+          is404 = cachedMeta.is404;
+        } else {
+          const dbInstance = getDb();
         
         // Static routes that are perfectly valid
         const knownStaticPaths = new Set([
@@ -301,6 +333,16 @@ async function startServer() {
           }
         }
 
+        ssrMetadataCache.set(urlPath, {
+          metaTitle,
+          metaDesc,
+          metaImage,
+          ldJsonSchema,
+          is404,
+          timestamp: Date.now()
+        });
+      }
+
         // Standard WebSite / Brand Schema for other pages
         if (!ldJsonSchema) {
           ldJsonSchema = {
@@ -347,6 +389,9 @@ async function startServer() {
 
         if (is404) {
           res.status(404);
+          res.setHeader('Cache-Control', 'no-cache');
+        } else {
+          res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
         }
         res.send(html);
       } catch (err) {

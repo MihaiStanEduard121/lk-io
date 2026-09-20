@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { runArticleScraper } from './scraperService.js';
+import { epgService } from './epgService.js';
 import axios from 'axios';
 
 let cronTask: any = null;
@@ -8,8 +9,7 @@ let isEnabled = false; // Need to load from DB
 
 export function startCronJobs() {
   console.log('Cron jobs service started. Waiting for config...');
-  // We can fetch config periodically or on demand.
-  // We'll just define the job here.
+  
   cronTask = cron.schedule(scrapingInterval, async () => {
     if (isEnabled) {
       console.log('Running scheduled scraper...');
@@ -21,10 +21,19 @@ export function startCronJobs() {
   cron.schedule('*/2 * * * *', async () => {
     try {
       console.log('Running automatic World Cup live scores sync from ESPN...');
-      // We call our internal API route
       await fetch(`http://localhost:3000/api/live-scores/sync`);
     } catch (e) {
       console.error('Error triggering live scores sync via cron', e);
+    }
+  });
+
+  // Automatically refresh EPG data every 4 hours
+  cron.schedule('0 */4 * * *', async () => {
+    try {
+      console.log('[Cron] Running scheduled EPG feed refresh...');
+      await epgService.syncEPG(false);
+    } catch (e) {
+      console.error('[Cron] Error refreshing EPG via cron', e);
     }
   });
 }

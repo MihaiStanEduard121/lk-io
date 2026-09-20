@@ -16,16 +16,26 @@ import {
   List,
   ShieldCheck,
   Zap,
-  CalendarDays
+  CalendarDays,
+  Clock,
+  History,
+  Share2,
+  Check
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { getCalculatedLiveViewers, formatViewerCount } from '../../lib/viewerUtils';
 import NowOnTvSection from '../../components/NowOnTvSection';
+import UpcomingTvSection from '../../components/UpcomingTvSection';
+import { useFavorites } from '../../lib/useFavorites';
+import { useWatchHistory } from '../../lib/useWatchHistory';
 
 export default function Home() {
   const context = useOutletContext<{ theme?: string; isDark?: boolean }>() || {};
   const isDark = context.isDark ?? (context.theme === 'dark');
+
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { history, clearHistory } = useWatchHistory();
 
   const [programs, setPrograms] = useState<TVProgram[]>([]);
   const [dbProgramCategories, setDbProgramCategories] = useState<ProgramCategory[]>([]);
@@ -37,7 +47,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [channelSearchQuery, setChannelSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -58,20 +68,13 @@ export default function Home() {
       console.warn('Error loading home data:', err);
       setLoadingSchedules(false);
     });
-
-    try {
-      const saved = localStorage.getItem('savedFavorites');
-      if (saved) {
-        setFavorites(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.warn('Error reading favorites:', e);
-    }
   }, []);
 
-  // Poll live presence
+  // Poll live presence efficiently without unnecessary re-renders
   useEffect(() => {
+    let prevStatsStr = '';
     const fetchLiveViewers = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       try {
         const res = await fetch('/api/presence/stats');
         if (res.ok) {
@@ -85,18 +88,39 @@ export default function Home() {
               }
             });
           }
-          setLiveViewers(viewerMap);
+          const newStr = JSON.stringify(viewerMap);
+          if (newStr !== prevStatsStr) {
+            prevStatsStr = newStr;
+            setLiveViewers(viewerMap);
+          }
         }
       } catch (e) {
-        console.warn('Failed to fetch live presence on home:', e);
+        // Silently catch error
       }
     };
+
     fetchLiveViewers();
-    const interval = setInterval(fetchLiveViewers, 10000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchLiveViewers, 15000);
+    const handleVis = () => {
+      if (!document.hidden) fetchLiveViewers();
+    };
+    document.addEventListener('visibilitychange', handleVis);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVis);
+    };
   }, []);
 
   const categoriesList = useMemo(() => {
+    const baseList: Array<{ id: string; name: string; count: number }> = [
+      { id: 'All', name: 'Toate', count: programs.length }
+    ];
+
+    if (favorites.length > 0) {
+      baseList.push({ id: 'Favorites', name: '❤️ Favorite', count: favorites.length });
+    }
+
     if (dbProgramCategories && dbProgramCategories.length > 0) {
       const matchesCategoryName = (p: TVProgram, catName: string) => {
         return p.category && p.category.toLowerCase() === catName.toLowerCase();
@@ -107,7 +131,7 @@ export default function Home() {
       );
 
       return [
-        { id: 'All', name: 'Toate', count: programs.length },
+        ...baseList,
         ...activeCats.map(cat => ({
           id: cat.name,
           name: cat.name,
@@ -117,23 +141,32 @@ export default function Home() {
     }
 
     const cats = new Set(programs.map(p => p.category).filter(Boolean));
-    return ['All', ...Array.from(cats)].map(cat => ({
-      id: cat,
-      name: cat === 'All' ? 'Toate' : cat,
-      count: cat === 'All' ? programs.length : programs.filter(p => p.category === cat).length
-    }));
-  }, [programs, dbProgramCategories]);
+    return [
+      ...baseList,
+      ...Array.from(cats).map(cat => ({
+        id: cat,
+        name: cat,
+        count: programs.filter(p => p.category === cat).length
+      }))
+    ];
+  }, [programs, dbProgramCategories, favorites]);
 
   const filteredPrograms = useMemo(() => {
     return programs.filter(p => {
       const pCat = p.category || '';
-      const matchesCategory = selectedCategory === 'All' || 
-                            pCat.toLowerCase() === selectedCategory.toLowerCase();
-      const matchesSearch = p.title.toLowerCase().includes(channelSearchQuery.toLowerCase()) || 
-                            p.description?.toLowerCase().includes(channelSearchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'All'
+        ? true
+        : selectedCategory === 'Favorites'
+          ? favorites.includes(p.id)
+          : pCat.toLowerCase() === selectedCategory.toLowerCase();
+
+      const matchesSearch = !channelSearchQuery ||
+        p.title.toLowerCase().includes(channelSearchQuery.toLowerCase()) || 
+        p.description?.toLowerCase().includes(channelSearchQuery.toLowerCase());
+
       return matchesCategory && matchesSearch;
     });
-  }, [programs, selectedCategory, channelSearchQuery]);
+  }, [programs, selectedCategory, channelSearchQuery, favorites]);
 
   const favoritePrograms = useMemo(() => 
     programs.filter(p => favorites.includes(p.id)), 
@@ -142,17 +175,16 @@ export default function Home() {
 
   const recentShows = shows.slice(0, 6);
 
-  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+  const handleCopyLink = (channelId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    let next: string[];
-    if (favorites.includes(id)) {
-      next = favorites.filter(fid => fid !== id);
-    } else {
-      next = [...favorites, id];
+    const fullUrl = `${window.location.origin}/ro/play/${channelId}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        setCopiedId(channelId);
+        setTimeout(() => setCopiedId(null), 2500);
+      }).catch(() => {});
     }
-    setFavorites(next);
-    localStorage.setItem('savedFavorites', JSON.stringify(next));
   };
 
   return (
@@ -229,13 +261,33 @@ export default function Home() {
                 >
                   ⚡ Acum la TV
                 </a>
+                <a
+                  href="#urmeaza-la-tv"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('urmeaza-la-tv')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                    isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-900'
+                  }`}
+                >
+                  ⏰ Urmează la TV
+                </a>
                 <Link
-                  to="/schedule"
+                  to="/ro/schedule"
                   className={`px-3 py-1 rounded-xl text-xs font-bold border transition-colors ${
                     isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-900'
                   }`}
                 >
-                  📅 Program Complet
+                  📅 Programul de Azi
+                </Link>
+                <Link
+                  to="/ro/favorite"
+                  className={`px-3 py-1 rounded-xl text-xs font-bold border transition-colors ${
+                    isDark ? 'bg-zinc-900 border-zinc-800 text-rose-400 hover:text-rose-300' : 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100'
+                  }`}
+                >
+                  ❤️ Favorite ({favorites.length})
                 </Link>
                 <button
                   onClick={() => setSelectedCategory('Sport')}
@@ -317,8 +369,73 @@ export default function Home() {
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
 
+        {/* 0. Canale Vizitate Recent (Watch History Bar) */}
+        {history.length > 0 && (
+          <section className={`p-5 rounded-3xl border transition-colors shadow-xs ${
+            isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white border-slate-200'
+          }`}>
+            <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-inherit">
+              <div className="flex items-center gap-2.5">
+                <History className="w-4 h-4 text-indigo-500" />
+                <h3 className={`text-sm font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Văzute Recent
+                </h3>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500">
+                  ({history.length})
+                </span>
+              </div>
+              <button
+                onClick={clearHistory}
+                className="text-[11px] font-bold text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+              >
+                Șterge istoric
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
+              {history.map((item) => (
+                <Link
+                  key={`hist-${item.channelId}`}
+                  to={`/ro/play/${item.channelId}`}
+                  className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border shrink-0 transition-all ${
+                    isDark 
+                      ? 'bg-zinc-950 border-zinc-800 hover:border-indigo-500/50 hover:bg-zinc-900' 
+                      : 'bg-slate-50 border-slate-200 hover:border-indigo-400 hover:bg-white shadow-xs'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-900 p-1 flex items-center justify-center border border-inherit shrink-0">
+                    {item.logo ? (
+                      <img src={item.logo} alt={item.channelTitle} className="max-w-full max-h-full object-contain" />
+                    ) : (
+                      <Tv className="w-4 h-4 text-indigo-500" />
+                    )}
+                  </div>
+                  <div className="min-w-0 pr-1">
+                    <span className={`font-bold text-xs block truncate ${
+                      isDark ? 'text-zinc-200 group-hover:text-indigo-400' : 'text-slate-800 group-hover:text-indigo-600'
+                    }`}>
+                      {item.channelTitle}
+                    </span>
+                    <span className="text-[10px] text-slate-400 block truncate">
+                      {item.category || 'Live TV'}
+                    </span>
+                  </div>
+                  <Play className="w-3 h-3 text-indigo-500 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* 1. Dedicated "Acum la TV" (Now on TV) Section */}
         <NowOnTvSection 
+          channels={programs} 
+          customSchedule={scheduleItems} 
+          isDark={isDark} 
+        />
+
+        {/* 1.5. Dedicated "Urmează la TV" (Upcoming TV Section) */}
+        <UpcomingTvSection 
           channels={programs} 
           customSchedule={scheduleItems} 
           isDark={isDark} 
@@ -523,7 +640,7 @@ export default function Home() {
           ) : viewMode === 'grid' ? (
             /* Grid View */
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {filteredPrograms.map(p => {
+              {filteredPrograms.map((p, idx) => {
                 const realCount = liveViewers[p.id] || 0;
                 const computedViewers = getCalculatedLiveViewers(p.id, p.title, p.category, p.rating, realCount);
                 const formattedCount = formatViewerCount(computedViewers);
@@ -539,22 +656,39 @@ export default function Home() {
                     }`}
                   >
                     <div>
-                      {/* Top Bar: Category & Favorite */}
+                      {/* Top Bar: Category, Share & Favorite */}
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
                           {p.category || 'Generalist'}
                         </span>
-                        <button
-                          onClick={(e) => toggleFavorite(p.id, e)}
-                          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                            isFav 
-                              ? 'text-rose-500 bg-rose-500/10' 
-                              : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
-                          }`}
-                          title={isFav ? 'Șterge de la favorite' : 'Adaugă la favorite'}
-                        >
-                          <Heart fill={isFav ? 'currentColor' : 'none'} className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => handleCopyLink(p.id, e)}
+                            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                              copiedId === p.id
+                                ? 'text-emerald-500 bg-emerald-500/10'
+                                : 'text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                            }`}
+                            title={copiedId === p.id ? 'Link copiat!' : 'Distribuie canalul'}
+                          >
+                            {copiedId === p.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFavorite(p.id);
+                            }}
+                            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                              isFavorite(p.id) 
+                                ? 'text-rose-500 bg-rose-500/10' 
+                                : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                            }`}
+                            title={isFavorite(p.id) ? 'Șterge de la favorite' : 'Adaugă la favorite'}
+                          >
+                            <Heart fill={isFavorite(p.id) ? 'currentColor' : 'none'} className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Logo and Info */}
@@ -564,8 +698,11 @@ export default function Home() {
                             <img 
                               src={p.logo} 
                               alt={p.title} 
+                              width="120"
+                              height="70"
+                              decoding="async"
                               className="max-h-full max-w-full object-contain group-hover/link:scale-105 transition-transform duration-200" 
-                              loading="lazy"
+                              loading={idx < 4 ? "eager" : "lazy"}
                             />
                           ) : (
                             <Tv className="w-10 h-10 text-indigo-500" />
@@ -610,7 +747,7 @@ export default function Home() {
           ) : (
             /* List View */
             <div className="space-y-3">
-              {filteredPrograms.map(p => {
+              {filteredPrograms.map((p, idx) => {
                 const realCount = liveViewers[p.id] || 0;
                 const computedViewers = getCalculatedLiveViewers(p.id, p.title, p.category, p.rating, realCount);
                 const formattedCount = formatViewerCount(computedViewers);
@@ -628,7 +765,15 @@ export default function Home() {
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="w-14 h-14 rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 p-2 flex items-center justify-center shrink-0">
                         {p.logo ? (
-                          <img src={p.logo} alt={p.title} className="max-w-full max-h-full object-contain" />
+                          <img 
+                            src={p.logo} 
+                            alt={p.title} 
+                            width="56" 
+                            height="56" 
+                            decoding="async"
+                            loading={idx < 6 ? "eager" : "lazy"}
+                            className="max-w-full max-h-full object-contain" 
+                          />
                         ) : (
                           <Tv className="w-6 h-6 text-indigo-500" />
                         )}
@@ -651,16 +796,31 @@ export default function Home() {
 
                     <div className="flex items-center gap-2 shrink-0">
                       <button
-                        onClick={(e) => toggleFavorite(p.id, e)}
+                        onClick={(e) => handleCopyLink(p.id, e)}
                         className={`p-2 rounded-xl transition-all cursor-pointer ${
-                          isFav ? 'text-rose-500 bg-rose-500/10' : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                          copiedId === p.id
+                            ? 'text-emerald-500 bg-emerald-500/10'
+                            : 'text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
                         }`}
-                        title={isFav ? 'Șterge de la favorite' : 'Adaugă la favorite'}
+                        title={copiedId === p.id ? 'Link copiat!' : 'Distribuie canalul'}
                       >
-                        <Heart fill={isFav ? 'currentColor' : 'none'} className="w-4 h-4" />
+                        {copiedId === p.id ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleFavorite(p.id);
+                        }}
+                        className={`p-2 rounded-xl transition-all cursor-pointer ${
+                          isFavorite(p.id) ? 'text-rose-500 bg-rose-500/10' : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                        }`}
+                        title={isFavorite(p.id) ? 'Șterge de la favorite' : 'Adaugă la favorite'}
+                      >
+                        <Heart fill={isFavorite(p.id) ? 'currentColor' : 'none'} className="w-4 h-4" />
                       </button>
                       <Link
-                        to={`/schedule?channel=${p.id}`}
+                        to={`/ro/schedule?channel=${p.id}`}
                         className={`hidden sm:inline-flex px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
                           isDark ? 'border-zinc-800 text-zinc-300 hover:bg-zinc-800' : 'border-slate-200 text-slate-700 hover:bg-slate-100'
                         }`}
@@ -668,7 +828,7 @@ export default function Home() {
                         Program TV
                       </Link>
                       <Link
-                        to={`/play/${p.id}`}
+                        to={`/ro/play/${p.id}`}
                         className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />

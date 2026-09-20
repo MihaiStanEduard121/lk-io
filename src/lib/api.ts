@@ -1,5 +1,7 @@
 import { db, auth, loginWithGoogle, logout, handleFirestoreError } from './firebase';
 import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, where, increment } from 'firebase/firestore';
+import { clientCache } from './cache';
+import { getChannelFullDaySchedule } from './tvScheduleUtils';
 
 export const getAuthToken = () => localStorage.getItem('admin_token');
 
@@ -173,147 +175,173 @@ export const api = {
     
   // Live Programs
   getPrograms: async () => {
-    try {
-      const q = collection(db, 'programs');
-      const snapshot = await getDocs(q);
-      if (snapshot.empty) {
-        // Auto-seed default programs into Firestore so they persist
-        for (const prog of DEFAULT_PROGRAMS) {
-          try {
-            await setDoc(doc(db, 'programs', prog.id), { ...prog, createdAt: new Date().toISOString() });
-          } catch(e) {
-            console.warn('Seed program error:', e);
+    return clientCache.fetchWithCache('programs', async () => {
+      try {
+        const q = collection(db, 'programs');
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+          // Auto-seed default programs into Firestore so they persist
+          for (const prog of DEFAULT_PROGRAMS) {
+            try {
+              await setDoc(doc(db, 'programs', prog.id), { ...prog, createdAt: new Date().toISOString() });
+            } catch(e) {
+              console.warn('Seed program error:', e);
+            }
           }
+          return DEFAULT_PROGRAMS;
         }
+        return snapshot.docs.map(mapDoc);
+      } catch(err) {
+        console.warn('Failed to load programs from Firestore, using default list:', err);
         return DEFAULT_PROGRAMS;
       }
-      return snapshot.docs.map(mapDoc);
-    } catch(err) {
-      console.warn('Failed to load programs from Firestore, using default list:', err);
-      return DEFAULT_PROGRAMS;
-    }
+    }, 5 * 60 * 1000);
   },
   getProgram: async (id: string) => {
-    try {
-      const programRef = doc(db, 'programs', id);
-      const d = await getDoc(programRef);
-      if (d.exists()) {
-        try {
-          await updateDoc(programRef, { views: increment(1) });
-        } catch (err) {
-          console.warn('Could not increment program views:', err);
+    // Check cached programs first for immediate resolution
+    const cachedPrograms = clientCache.get<any[]>('programs');
+    const fromList = cachedPrograms?.find(p => p.id === id);
+
+    // Fetch or verify from server
+    return clientCache.fetchWithCache(`program_${id}`, async () => {
+      try {
+        const programRef = doc(db, 'programs', id);
+        const d = await getDoc(programRef);
+        if (d.exists()) {
+          // Non-blocking view increment
+          updateDoc(programRef, { views: increment(1) }).catch(() => {});
+          const currentData = d.data();
+          return { id: d.id, ...currentData, views: (currentData.views || 0) + 1 } as any;
         }
-        const currentData = d.data();
-        return { id: d.id, ...currentData, views: (currentData.views || 0) + 1 } as any;
+      } catch (e) {
+        console.warn('Get program Firestore error:', e);
       }
-    } catch (e) {
-      console.warn('Get program Firestore error:', e);
-    }
-    const found = DEFAULT_PROGRAMS.find(p => p.id === id);
-    if (found) return found;
-    throw new Error('Not found');
+      if (fromList) return fromList;
+      const found = DEFAULT_PROGRAMS.find(p => p.id === id);
+      if (found) return found;
+      throw new Error('Not found');
+    }, 5 * 60 * 1000);
   },
   createProgram: async (data: any) => {
     const ref = doc(collection(db, 'programs'));
     const insert = { ...data, createdAt: new Date().toISOString() };
     await setDoc(ref, insert);
+    clientCache.invalidate('programs');
+    clientCache.invalidate(`program_${ref.id}`);
     return { id: ref.id, ...insert };
   },
   updateProgram: async (id: string, data: any) => {
     await updateDoc(doc(db, 'programs', id), data);
+    clientCache.invalidate('programs');
+    clientCache.invalidate(`program_${id}`);
     return { id, ...data };
   },
   deleteProgram: async (id: string) => {
     await deleteDoc(doc(db, 'programs', id));
+    clientCache.invalidate('programs');
+    clientCache.invalidate(`program_${id}`);
     return { success: true };
   },
   
   // Articles
   getArticles: async () => {
-    const q = collection(db, 'articles');
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(mapDoc);
+    return clientCache.fetchWithCache('articles', async () => {
+      const q = collection(db, 'articles');
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(mapDoc);
+    }, 5 * 60 * 1000);
   },
   getArticle: async (identifier: string) => {
     // Try to decode identifier just in case it came url-encoded
     try { identifier = decodeURIComponent(identifier); } catch(e) {}
     
-    // Try by ID first
-    try {
-      let d = await getDoc(doc(db, 'articles', identifier));
-      if (d.exists()) {
-        try {
-          await updateDoc(doc(db, 'articles', identifier), { views: increment(1) });
-        } catch(e) {}
-        return { ...mapDoc(d), views: (d.data().views || 0) + 1 };
-      }
-    } catch(e) {
-      // Ignore permission/format errors for getDoc by ID and fallback to query by slug
-    }
-    
-    // Try by slug
-    const q = query(collection(db, 'articles'), where('slug', '==', identifier));
-    const snapshot = await getDocs(q);
-    if (!snapshot.empty) {
-      const docR = snapshot.docs[0];
+    // Check cached articles list
+    const cachedArticles = clientCache.get<any[]>('articles');
+    const fromList = cachedArticles?.find(a => a.id === identifier || a.slug === identifier);
+
+    return clientCache.fetchWithCache(`article_${identifier}`, async () => {
+      // Try by ID first
       try {
-        await updateDoc(doc(db, 'articles', docR.id), { views: increment(1) });
+        let d = await getDoc(doc(db, 'articles', identifier));
+        if (d.exists()) {
+          updateDoc(doc(db, 'articles', identifier), { views: increment(1) }).catch(() => {});
+          return { ...mapDoc(d), views: (d.data().views || 0) + 1 };
+        }
       } catch(e) {
-        // Ignore permission errors for guests
+        // Fallback to slug
       }
-      return { ...mapDoc(docR), views: (docR.data().views || 0) + 1 };
-    }
-    throw new Error('Not found');
+      
+      // Try by slug
+      const q = query(collection(db, 'articles'), where('slug', '==', identifier));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const docR = snapshot.docs[0];
+        updateDoc(doc(db, 'articles', docR.id), { views: increment(1) }).catch(() => {});
+        return { ...mapDoc(docR), views: (docR.data().views || 0) + 1 };
+      }
+      if (fromList) return fromList;
+      throw new Error('Not found');
+    }, 5 * 60 * 1000);
   },
   createArticle: async (data: any) => {
     const ref = doc(collection(db, 'articles'));
     const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     const insert = { ...data, slug, createdAt: new Date().toISOString() };
     await setDoc(ref, insert);
+    clientCache.invalidate('articles');
     return { id: ref.id, ...insert };
   },
   updateArticle: async (id: string, data: any) => {
     const slug = data.title ? data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : undefined;
     const update = slug ? { ...data, slug } : data;
     await updateDoc(doc(db, 'articles', id), update);
+    clientCache.invalidate('articles');
     return { id, ...update };
   },
   deleteArticle: async (id: string) => {
     await deleteDoc(doc(db, 'articles', id));
+    clientCache.invalidate('articles');
     return { success: true };
   },
 
   // Shows
   getShows: async () => {
-    const snapshot = await getDocs(collection(db, 'shows'));
-    return snapshot.docs.map(mapDoc);
+    return clientCache.fetchWithCache('shows', async () => {
+      const snapshot = await getDocs(collection(db, 'shows'));
+      return snapshot.docs.map(mapDoc);
+    }, 5 * 60 * 1000);
   },
   getShow: async (identifier: string) => {
     try { identifier = decodeURIComponent(identifier); } catch(e) {}
-    try {
-      let d = await getDoc(doc(db, 'shows', identifier));
-      if (d.exists()) return mapDoc(d);
-    } catch(e) {}
-    const q = query(collection(db, 'shows'), where('slug', '==', identifier));
-    const snap = await getDocs(q);
-    if (!snap.empty) return mapDoc(snap.docs[0]);
-    throw new Error('Not found');
+    return clientCache.fetchWithCache(`show_${identifier}`, async () => {
+      try {
+        let d = await getDoc(doc(db, 'shows', identifier));
+        if (d.exists()) return mapDoc(d);
+      } catch(e) {}
+      const q = query(collection(db, 'shows'), where('slug', '==', identifier));
+      const snap = await getDocs(q);
+      if (!snap.empty) return mapDoc(snap.docs[0]);
+      throw new Error('Not found');
+    }, 5 * 60 * 1000);
   },
   createShow: async (data: any) => {
     const ref = doc(collection(db, 'shows'));
     const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     const insert = { ...data, slug, createdAt: new Date().toISOString() };
     await setDoc(ref, insert);
+    clientCache.invalidate('shows');
     return { id: ref.id, ...insert };
   },
   updateShow: async (id: string, data: any) => {
     const slug = data.title ? data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : undefined;
     const update = slug ? { ...data, slug } : data;
     await updateDoc(doc(db, 'shows', id), update);
+    clientCache.invalidate('shows');
     return { id, ...update };
   },
   deleteShow: async (id: string) => {
     await deleteDoc(doc(db, 'shows', id));
+    clientCache.invalidate('shows');
     return { success: true };
   },
 
@@ -365,95 +393,106 @@ export const api = {
 
   // Categories
   getCategories: async () => {
-    const snapshot = await getDocs(collection(db, 'categories'));
-    return snapshot.docs.map(mapDoc);
+    return clientCache.fetchWithCache('categories', async () => {
+      const snapshot = await getDocs(collection(db, 'categories'));
+      return snapshot.docs.map(mapDoc);
+    }, 10 * 60 * 1000);
   },
   createCategory: async (data: any) => {
     const ref = doc(collection(db, 'categories'));
     const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     const insert = { ...data, slug };
     await setDoc(ref, insert);
+    clientCache.invalidate('categories');
     return { id: ref.id, ...insert };
   },
   deleteCategory: async (id: string) => {
     await deleteDoc(doc(db, 'categories', id));
+    clientCache.invalidate('categories');
     return { success: true };
   },
 
   // Program Categories
   getProgramCategories: async () => {
-    try {
-      const snapshot = await getDocs(collection(db, 'program_categories'));
-      if (snapshot.empty) {
-        for (const cat of DEFAULT_PROGRAM_CATEGORIES) {
-          try {
-            await setDoc(doc(db, 'program_categories', cat.id), cat);
-          } catch (e) {}
+    return clientCache.fetchWithCache('program_categories', async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'program_categories'));
+        if (snapshot.empty) {
+          for (const cat of DEFAULT_PROGRAM_CATEGORIES) {
+            try {
+              await setDoc(doc(db, 'program_categories', cat.id), cat);
+            } catch (e) {}
+          }
+          return DEFAULT_PROGRAM_CATEGORIES;
         }
+        return snapshot.docs.map(mapDoc);
+      } catch(e) {
         return DEFAULT_PROGRAM_CATEGORIES;
       }
-      return snapshot.docs.map(mapDoc);
-    } catch(e) {
-      return DEFAULT_PROGRAM_CATEGORIES;
-    }
+    }, 10 * 60 * 1000);
   },
   createProgramCategory: async (data: any) => {
     const ref = doc(collection(db, 'program_categories'));
     const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     const insert = { ...data, slug };
     await setDoc(ref, insert);
+    clientCache.invalidate('program_categories');
     return { id: ref.id, ...insert };
   },
   deleteProgramCategory: async (id: string) => {
     await deleteDoc(doc(db, 'program_categories', id));
+    clientCache.invalidate('program_categories');
     return { success: true };
   },
 
   // TV Schedule
   getSchedule: async () => {
-    try {
-      const snapshot = await getDocs(collection(db, 'schedule'));
-      if (!snapshot.empty) {
-        return snapshot.docs.map(mapDoc);
+    return clientCache.fetchWithCache('schedule', async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'schedule'));
+        if (!snapshot.empty) {
+          return snapshot.docs.map(mapDoc);
+        }
+      } catch(err) {
+        console.warn("Could not read schedule from Firestore, using auto-generated schedule:", err);
       }
-    } catch(err) {
-      console.warn("Could not read schedule from Firestore, using auto-generated schedule:", err);
-    }
-    
-    // Fallback: provide rich TV guide items for today, yesterday, and upcoming days
-    const { getChannelFullDaySchedule } = await import('./tvScheduleUtils');
-    const channelIds = ['pro-tv', 'antena-1', 'digi-sport-1', 'kanal-d', 'hbo', 'digi-sport-2', 'prima-tv', 'digi24', 'tvr-1', 'pro-arena', 'national-geographic'];
-    const daysOffset = [-1, 0, 1, 2, 3];
-    const generated: any[] = [];
-    
-    for (const offset of daysOffset) {
-      const d = new Date();
-      d.setDate(d.getDate() + offset);
-      const dateStr = d.toISOString().split('T')[0];
-      for (const chId of channelIds) {
-        const dayItems = getChannelFullDaySchedule(chId, dateStr);
-        dayItems.forEach(item => {
-          generated.push({
-            id: item.id,
-            time: item.time,
-            title: item.title,
-            description: item.description,
-            date: item.date,
-            channelId: chId,
-            category: item.category
+      
+      // Fallback: provide rich TV guide items for today, yesterday, and upcoming days
+      const channelIds = ['pro-tv', 'antena-1', 'digi-sport-1', 'kanal-d', 'hbo', 'digi-sport-2', 'prima-tv', 'digi24', 'tvr-1', 'pro-arena', 'national-geographic'];
+      const daysOffset = [-1, 0, 1, 2, 3];
+      const generated: any[] = [];
+      
+      for (const offset of daysOffset) {
+        const d = new Date();
+        d.setDate(d.getDate() + offset);
+        const dateStr = d.toISOString().split('T')[0];
+        for (const chId of channelIds) {
+          const dayItems = getChannelFullDaySchedule(chId, dateStr);
+          dayItems.forEach(item => {
+            generated.push({
+              id: item.id,
+              time: item.time,
+              title: item.title,
+              description: item.description,
+              date: item.date,
+              channelId: chId,
+              category: item.category
+            });
           });
-        });
+        }
       }
-    }
-    return generated;
+      return generated;
+    }, 5 * 60 * 1000);
   },
   createScheduleItem: async (data: any) => {
     const ref = doc(collection(db, 'schedule'));
     await setDoc(ref, data);
+    clientCache.invalidate('schedule');
     return { id: ref.id, ...data };
   },
   deleteScheduleItem: async (id: string) => {
     await deleteDoc(doc(db, 'schedule', id));
+    clientCache.invalidate('schedule');
     return { success: true };
   },
 
@@ -553,43 +592,49 @@ export const api = {
 
   // Homepage Config
   getHomepageConfig: async () => {
-    const d = await getDoc(doc(db, 'settings', 'homepage'));
-    if (!d.exists()) {
-      return {
-        heroTitle: "Bine ai venit pe programetv.online",
-        heroSubtitle: "Urmărește cele mai bune emisiuni și transmisiuni live.",
-        heroBackgroundImage: "",
-        heroLink: ""
-      };
-    }
-    return mapDoc(d);
+    return clientCache.fetchWithCache('homepage_config', async () => {
+      const d = await getDoc(doc(db, 'settings', 'homepage'));
+      if (!d.exists()) {
+        return {
+          heroTitle: "Bine ai venit pe programetv.online",
+          heroSubtitle: "Urmărește cele mai bune emisiuni și transmisiuni live.",
+          heroBackgroundImage: "",
+          heroLink: ""
+        };
+      }
+      return mapDoc(d);
+    }, 5 * 60 * 1000);
   },
   updateHomepageConfig: async (data: any) => {
     await setDoc(doc(db, 'settings', 'homepage'), data);
+    clientCache.invalidate('homepage_config');
     return data;
   },
 
   // Popup Config
   getPopupConfig: async () => {
-    const d = await getDoc(doc(db, 'settings', 'popups'));
-    if (!d.exists()) {
-      return {
-        active: false,
-        type: 'info',
-        title: 'Anunț Important',
-        content: 'Bine ai venit pe platforma noastră! Dacă apreciezi munca noastră, ne poți susține printr-o mică donație.',
-        imageUrl: '',
-        linkUrl: '/donations',
-        linkText: 'Donează acum',
-        triggerType: 'once',
-        delaySeconds: 5,
-        cookieExpiryDays: 1,
-      };
-    }
-    return mapDoc(d);
+    return clientCache.fetchWithCache('popup_config', async () => {
+      const d = await getDoc(doc(db, 'settings', 'popups'));
+      if (!d.exists()) {
+        return {
+          active: false,
+          type: 'info',
+          title: 'Anunț Important',
+          content: 'Bine ai venit pe platforma noastră! Dacă apreciezi munca noastră, ne poți susține printr-o mică donație.',
+          imageUrl: '',
+          linkUrl: '/donations',
+          linkText: 'Donează acum',
+          triggerType: 'once',
+          delaySeconds: 5,
+          cookieExpiryDays: 1,
+        };
+      }
+      return mapDoc(d);
+    }, 5 * 60 * 1000);
   },
   updatePopupConfig: async (data: any) => {
     await setDoc(doc(db, 'settings', 'popups'), data);
+    clientCache.invalidate('popup_config');
     return data;
   },
 
@@ -620,6 +665,130 @@ export const api = {
         return acc;
       }, {})
     };
+  },
+
+  // EPG Real Program Guide API
+  getLiveEPG: async (channels?: string[]) => {
+    try {
+      const url = channels && channels.length > 0 
+        ? `/api/epg/live?channels=${encodeURIComponent(channels.join(','))}` 
+        : '/api/epg/live';
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        return json.data;
+      }
+      return [];
+    } catch (e) {
+      console.warn('Could not fetch live EPG:', e);
+      return [];
+    }
+  },
+
+  getChannelEPG: async (channelId: string, date?: string) => {
+    try {
+      const url = date 
+        ? `/api/epg/channel/${encodeURIComponent(channelId)}?date=${encodeURIComponent(date)}`
+        : `/api/epg/channel/${encodeURIComponent(channelId)}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      return json.success ? json.schedule : [];
+    } catch (e) {
+      console.warn(`Could not fetch schedule for channel ${channelId}:`, e);
+      return [];
+    }
+  },
+
+  getEPGSchedule: async (params: { date?: string; channel?: string; category?: string; search?: string; limit?: number }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.date) queryParams.set('date', params.date);
+      if (params.channel) queryParams.set('channel', params.channel);
+      if (params.category) queryParams.set('category', params.category);
+      if (params.search) queryParams.set('search', params.search);
+      if (params.limit) queryParams.set('limit', params.limit.toString());
+
+      const res = await fetch(`/api/epg/schedule?${queryParams.toString()}`);
+      const json = await res.json();
+      return json.success ? json.items : [];
+    } catch (e) {
+      console.warn('Could not query EPG schedule:', e);
+      return [];
+    }
+  },
+
+  getUpcomingEPG: async (limit = 12) => {
+    try {
+      const res = await fetch(`/api/epg/upcoming?limit=${limit}`);
+      const json = await res.json();
+      return json.success ? json.upcoming : [];
+    } catch (e) {
+      console.warn('Could not fetch upcoming EPG:', e);
+      return [];
+    }
+  },
+
+  searchEPG: async (q: string) => {
+    try {
+      const res = await fetch(`/api/epg/search?q=${encodeURIComponent(q)}`);
+      const json = await res.json();
+      return json.success ? json.results : [];
+    } catch (e) {
+      console.warn('Could not search EPG:', e);
+      return [];
+    }
+  },
+
+  getEPGAdminStatus: async () => {
+    try {
+      const res = await fetch('/api/epg/admin/status');
+      return await res.json();
+    } catch (e) {
+      console.warn('Could not fetch EPG admin status:', e);
+      return { success: false, error: (e as any).message };
+    }
+  },
+
+  triggerEPGSync: async (force = true) => {
+    try {
+      const res = await fetch('/api/epg/admin/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force })
+      });
+      return await res.json();
+    } catch (e) {
+      console.warn('Could not trigger EPG sync:', e);
+      return { success: false, message: (e as any).message };
+    }
+  },
+
+  saveEPGMappings: async (mappings: Record<string, string[]>) => {
+    try {
+      const res = await fetch('/api/epg/admin/mapping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mappings })
+      });
+      return await res.json();
+    } catch (e) {
+      console.warn('Could not save EPG mappings:', e);
+      return { success: false, error: (e as any).message };
+    }
+  },
+
+  setEPGArtworkOverride: async (title: string, imageUrl: string) => {
+    try {
+      const res = await fetch('/api/epg/admin/artwork-override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, imageUrl })
+      });
+      return await res.json();
+    } catch (e) {
+      console.warn('Could not save artwork override:', e);
+      return { success: false, error: (e as any).message };
+    }
   },
   
   uploadFile: async (file: File): Promise<any> => {

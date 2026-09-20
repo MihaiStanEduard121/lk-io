@@ -13,7 +13,8 @@ import {
   X, 
   ChevronRight,
   ShieldCheck,
-  Radio
+  Radio,
+  Heart
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAppLanguage } from '../../context/LanguageContext';
@@ -21,13 +22,20 @@ import LanguageSelector from '../LanguageSelector';
 import GlobalPopup from '../GlobalPopup';
 import DonateButton from '../DonateButton';
 import SearchModal from '../SearchModal';
+import { useFavorites } from '../../lib/useFavorites';
+import { useReminders } from '../../lib/useReminders';
+import ReminderNotificationModal from '../ReminderNotificationModal';
+import BackToTopButton from '../BackToTopButton';
+import PwaInstallButton from '../PwaInstallButton';
 
 export default function PublicLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const location = useLocation();
-  const { translateUI } = useAppLanguage();
+  const { currentLang, translateUI } = useAppLanguage();
+  const { favorites } = useFavorites();
+  const { activeAlert, clearAlert } = useReminders();
 
   const isDark = theme === 'dark';
 
@@ -64,17 +72,28 @@ export default function PublicLayout() {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  const langPrefix = currentLang ? `/${currentLang}` : '/ro';
+
   const navLinks = [
-    { to: '/', label: translateUI('nav.home'), icon: Tv, exact: true },
-    { to: '/schedule', label: translateUI('nav.schedule'), icon: CalendarDays },
-    { to: '/shows', label: translateUI('nav.shows'), icon: Film },
-    { to: '/news', label: translateUI('nav.news'), icon: Newspaper },
-    { to: '/world-cup', label: translateUI('nav.worldcup'), icon: Trophy, badge: '2026' }
+    { to: langPrefix, label: translateUI('nav.home') || 'Acasă', icon: Tv, exact: true },
+    { to: `${langPrefix}/schedule`, label: translateUI('nav.schedule') || 'Ghid TV', icon: CalendarDays },
+    { to: `${langPrefix}/shows`, label: translateUI('nav.shows') || 'Emisiuni', icon: Film },
+    { to: `${langPrefix}/news`, label: translateUI('nav.news') || 'Știri TV', icon: Newspaper },
+    { 
+      to: `${langPrefix}/favorite`, 
+      label: 'Favorite', 
+      icon: Heart, 
+      badge: favorites.length > 0 ? String(favorites.length) : undefined,
+      badgeColor: 'rose'
+    },
+    { to: `${langPrefix}/world-cup`, label: translateUI('nav.worldcup') || 'Cupa Mondială', icon: Trophy, badge: '2026' }
   ];
 
   const isActive = (to: string, exact = false) => {
-    if (exact) return location.pathname === to;
-    return location.pathname.startsWith(to);
+    const current = location.pathname.replace(/\/+$/, '') || '/';
+    const target = to.replace(/\/+$/, '') || '/';
+    if (exact) return current === target || current === `${target}/ro` || (target === '/ro' && current === '/');
+    return current.startsWith(target);
   };
 
   return (
@@ -84,6 +103,8 @@ export default function PublicLayout() {
       <GlobalPopup />
       <DonateButton />
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} isDark={isDark} />
+      <ReminderNotificationModal alert={activeAlert} onClose={clearAlert} isDark={isDark} />
+      <BackToTopButton />
 
       {/* Modern 2026 Navigation Header */}
       <header 
@@ -97,7 +118,7 @@ export default function PublicLayout() {
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Brand Logo */}
             <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2.5 group" id="main-brand-logo">
+              <Link to={langPrefix} className="flex items-center gap-2.5 group" id="main-brand-logo">
                 <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform">
                   <Tv className="w-5 h-5" />
                   <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
@@ -135,10 +156,14 @@ export default function PublicLayout() {
                             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 ${active ? 'text-indigo-600 dark:text-indigo-400' : 'opacity-70'}`} />
+                      <Icon className={`w-4 h-4 ${active ? (link.badgeColor === 'rose' ? 'text-rose-500' : 'text-indigo-600 dark:text-indigo-400') : 'opacity-70'}`} />
                       <span>{link.label}</span>
                       {link.badge && (
-                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                          link.badgeColor === 'rose'
+                            ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                        }`}>
                           {link.badge}
                         </span>
                       )}
@@ -150,6 +175,9 @@ export default function PublicLayout() {
 
             {/* Right Actions & Utilities */}
             <div className="flex items-center gap-2">
+              {/* PWA Install Button */}
+              <PwaInstallButton className="hidden md:inline-flex" />
+
               {/* Instant Search Bar Trigger */}
               <button
                 onClick={() => setSearchOpen(true)}
@@ -243,11 +271,13 @@ export default function PublicLayout() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4 text-indigo-500" />
+                      <Icon className={`w-4 h-4 ${link.badgeColor === 'rose' ? 'text-rose-500' : 'text-indigo-500'}`} />
                       <span>{link.label}</span>
                     </div>
                     {link.badge ? (
-                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-500">
+                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                        link.badgeColor === 'rose' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'
+                      }`}>
                         {link.badge}
                       </span>
                     ) : (
@@ -258,13 +288,17 @@ export default function PublicLayout() {
               })}
             </div>
 
+            <div className="pt-2 border-t border-slate-100 dark:border-zinc-800">
+              <PwaInstallButton className="w-full justify-center py-2.5" />
+            </div>
+
             {/* Mobile Quick Channels Jump */}
             <div className="pt-3 border-t border-inherit">
               <div className="flex items-center justify-between mb-2 px-1">
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-zinc-400">
                   Canale Recomandate
                 </span>
-                <Link to="/" onClick={() => setMobileMenuOpen(false)} className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+                <Link to={langPrefix} onClick={() => setMobileMenuOpen(false)} className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
                   Toate canalele
                 </Link>
               </div>
@@ -279,7 +313,7 @@ export default function PublicLayout() {
                 ].map(c => (
                   <Link
                     key={c.id}
-                    to={`/play/${c.id}`}
+                    to={`${langPrefix}/play/${c.id}`}
                     onClick={() => setMobileMenuOpen(false)}
                     className={`text-center py-2 px-1.5 rounded-lg border text-xs font-bold truncate transition-all ${
                       isDark

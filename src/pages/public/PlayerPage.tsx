@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { TVProgram, TVScheduleItem } from '../../types';
-import ReactPlayer from 'react-player';
 import Markdown from 'react-markdown';
 import TvLivePlayer from '../../components/TvLivePlayer';
 import { 
@@ -22,8 +21,6 @@ import {
 import { motion } from 'motion/react';
 import { getCalculatedLiveViewers, formatViewerCount } from '../../lib/viewerUtils';
 import { getChannelLiveSchedule, ChannelLiveInfo } from '../../lib/tvScheduleUtils';
-
-const Player = ReactPlayer as any;
 
 export function enhanceEmbedCode(embedCode: string | undefined): string {
   if (!embedCode) return '';
@@ -152,10 +149,26 @@ export default function PlayerPage() {
     Promise.all([
       api.getProgram(id || ''),
       api.getPrograms(),
+      api.getChannelEPG(id || ''),
       api.getSchedule()
-    ]).then(([channelData, allPrograms, schedData]) => {
+    ]).then(([channelData, allPrograms, epgSched, fallbackSched]) => {
       setProgram(channelData);
-      setSchedule(schedData || []);
+      if (Array.isArray(epgSched) && epgSched.length > 0) {
+        const mapped = epgSched.map(item => ({
+          id: item.id,
+          time: item.time || item.startFormatted,
+          endTime: item.endTime || item.endFormatted,
+          title: item.title,
+          description: item.description,
+          channelId: item.channelId || id,
+          category: item.category,
+          date: item.date,
+          image: item.image
+        }));
+        setSchedule(mapped);
+      } else {
+        setSchedule(fallbackSched || []);
+      }
 
       const filtered = (allPrograms || [])
         .filter((p: any) => p.id !== id && p.status === 'online')

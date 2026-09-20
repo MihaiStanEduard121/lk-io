@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Show, Episode } from '../../types';
-import ReactPlayer from 'react-player';
 import { enhanceEmbedCode } from './PlayerPage';
 
-const Player = ReactPlayer as any;
+const LazyPlayer = lazy(() => import('react-player')) as React.ComponentType<any>;
 import { ArrowLeft, PlayCircle, MonitorPlay, Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -71,13 +70,15 @@ export default function ShowDetailPage() {
                       dangerouslySetInnerHTML={{ __html: enhanceEmbedCode(activeEpisode.embedCode) }}
                     />
                   ) : activeEpisode.videoUrl ? (
-                    <Player 
-                      url={activeEpisode.videoUrl} 
-                      controls 
-                      width="100%" 
-                      height="100%" 
-                      playing={false} 
-                    />
+                    <Suspense fallback={<div className="flex h-full items-center justify-center text-zinc-400 font-medium text-sm">Se inițializează playerul...</div>}>
+                      <LazyPlayer 
+                        url={activeEpisode.videoUrl} 
+                        controls 
+                        width="100%" 
+                        height="100%" 
+                        playing={false} 
+                      />
+                    </Suspense>
                   ) : (
                     <div className="flex flex-col h-full items-center justify-center text-zinc-500 p-4">
                        <MonitorPlay className="w-16 h-16 mb-4 opacity-50 text-indigo-500" />

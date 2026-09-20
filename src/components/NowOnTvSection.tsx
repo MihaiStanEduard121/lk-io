@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Clock, ChevronRight, Radio, Calendar, Sparkles } from 'lucide-react';
 import { TVProgram, TVScheduleItem } from '../types';
 import { getChannelLiveSchedule, ChannelLiveInfo } from '../lib/tvScheduleUtils';
+import { api } from '../lib/api';
 
 interface NowOnTvSectionProps {
   channels: TVProgram[];
@@ -12,10 +13,37 @@ interface NowOnTvSectionProps {
 
 export default function NowOnTvSection({ channels, customSchedule = [], isDark }: NowOnTvSectionProps) {
   const [liveData, setLiveData] = useState<Record<string, ChannelLiveInfo>>({});
+  const [epgData, setEpgData] = useState<Record<string, any>>({});
   const [currentClock, setCurrentClock] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<string>('All');
 
-  // Update clock and live schedules
+  // Fetch real EPG live now/next
+  useEffect(() => {
+    let mounted = true;
+    const fetchEpg = async () => {
+      try {
+        const liveList = await api.getLiveEPG();
+        if (mounted && Array.isArray(liveList) && liveList.length > 0) {
+          const map: Record<string, any> = {};
+          liveList.forEach(item => {
+            map[item.channelId] = item;
+          });
+          setEpgData(map);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch live EPG in NowOnTvSection:', e);
+      }
+    };
+
+    fetchEpg();
+    const interval = setInterval(fetchEpg, 30000); // refresh EPG live every 30s
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Update clock and calculate fallback schedules
   useEffect(() => {
     const updateTimeAndSchedule = () => {
       const now = new Date();
@@ -31,7 +59,7 @@ export default function NowOnTvSection({ channels, customSchedule = [], isDark }
     };
 
     updateTimeAndSchedule();
-    const timer = setInterval(updateTimeAndSchedule, 15000); // refresh every 15s
+    const timer = setInterval(updateTimeAndSchedule, 15000);
     return () => clearInterval(timer);
   }, [channels, customSchedule]);
 
@@ -115,10 +143,14 @@ export default function NowOnTvSection({ channels, customSchedule = [], isDark }
       {/* Grid of "Acum la TV" Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {displayChannels.map(ch => {
-          const info = liveData[ch.id];
-          const cur = info?.currentProgram;
-          const nxt = info?.nextProgram;
-          const progress = cur ? cur.progressPercent : 50;
+          const epgItem = epgData[ch.id];
+          const fallbackInfo = liveData[ch.id];
+          
+          // Use real EPG program first if present, otherwise fallback template
+          const cur = epgItem?.currentProgram || fallbackInfo?.currentProgram;
+          const nxt = epgItem?.nextProgram || fallbackInfo?.nextProgram;
+          const progress = cur?.progressPercent || 50;
+          const posterImg = cur?.image;
 
           return (
             <div
@@ -163,24 +195,30 @@ export default function NowOnTvSection({ channels, customSchedule = [], isDark }
                 </div>
 
                 {/* Current Program Block ("ACUM") */}
-                <div className={`p-3 rounded-xl border mb-3 ${
+                <div className={`p-3 rounded-xl border mb-3 relative overflow-hidden ${
                   isDark ? 'bg-zinc-950/60 border-zinc-800/80' : 'bg-slate-50 border-slate-200/80'
                 }`}>
-                  <div className="flex items-center justify-between text-[10px] font-bold mb-1.5">
+                  {posterImg && (
+                    <div className="absolute right-0 top-0 bottom-0 w-24 opacity-15 pointer-events-none overflow-hidden">
+                      <img src={posterImg} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[10px] font-bold mb-1.5 relative z-10">
                     <span className="text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1 font-black">
                       <Sparkles className="w-3 h-3" /> ACUM
                     </span>
                     <span className="text-slate-500 dark:text-zinc-400 font-mono">
-                      {cur ? `${cur.startTime} - ${cur.endTime}` : 'În emisie directă'}
+                      {cur ? `${cur.startTime || cur.startFormatted} - ${cur.endTime || cur.endFormatted}` : 'În emisie directă'}
                     </span>
                   </div>
 
-                  <p className={`text-xs font-black line-clamp-1 mb-2 ${isDark ? 'text-zinc-100' : 'text-slate-900'}`}>
+                  <p className={`text-xs font-black line-clamp-1 mb-2 relative z-10 ${isDark ? 'text-zinc-100' : 'text-slate-900'}`}>
                     {cur?.title || 'Transmisiune TV Live HD'}
                   </p>
 
                   {/* Visual Progress Bar */}
-                  <div className="space-y-1">
+                  <div className="space-y-1 relative z-10">
                     <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-zinc-800 overflow-hidden">
                       <div 
                         className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full transition-all duration-500"
@@ -199,7 +237,7 @@ export default function NowOnTvSection({ channels, customSchedule = [], isDark }
                   <div className="px-1 mb-4 flex items-center justify-between text-xs">
                     <div className="min-w-0 pr-2">
                       <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">
-                        Urmează la {nxt.startTime}
+                        Urmează la {nxt.startTime || nxt.startFormatted}
                       </span>
                       <p className={`text-xs font-bold truncate ${isDark ? 'text-zinc-300' : 'text-slate-700'}`}>
                         {nxt.title}

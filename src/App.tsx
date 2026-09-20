@@ -26,6 +26,7 @@ const WorldCupMatchDetailPage = lazy(() => import('./pages/public/WorldCupMatchD
 const DonationsPage = lazy(() => import('./pages/public/DonationsPage'));
 const ProfilePage = lazy(() => import('./pages/public/ProfilePage'));
 const SchedulePage = lazy(() => import('./pages/public/SchedulePage'));
+const FavoritesPage = lazy(() => import('./pages/public/FavoritesPage'));
 
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const ProgramList = lazy(() => import('./pages/admin/ProgramList'));
@@ -71,6 +72,14 @@ export default function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<Navigate to="/ro" replace />} />
+          <Route path="/adminadmin" element={<Navigate to="/ro/adminadmin" replace />} />
+          <Route path="/adminadmin/*" element={<Navigate to="/ro/adminadmin" replace />} />
+          <Route path="/favorite" element={<Navigate to="/ro/favorite" replace />} />
+          <Route path="/schedule" element={<Navigate to="/ro/schedule" replace />} />
+          <Route path="/shows" element={<Navigate to="/ro/shows" replace />} />
+          <Route path="/news" element={<Navigate to="/ro/news" replace />} />
+          <Route path="/play/:id" element={<Navigate to="/ro/play/:id" replace />} />
+
           <Route path="/:lang/*" element={
             <LanguageInitializer>
               <Routes>
@@ -82,8 +91,15 @@ export default function App() {
                   <Route path="news/:slug" element={<ArticlePage />} />
                   <Route path="shows" element={<ShowsPage />} />
                   <Route path="shows/:slug" element={<ShowDetailPage />} />
+                  <Route path="emisiuni" element={<ShowsPage />} />
+                  <Route path="emisiuni/:slug" element={<ShowDetailPage />} />
+                  <Route path="emisiune/:slug" element={<ShowDetailPage />} />
                   <Route path="search" element={<SearchPage />} />
                   <Route path="schedule" element={<SchedulePage />} />
+                  <Route path="program-tv" element={<SchedulePage />} />
+                  <Route path="ghid-tv" element={<SchedulePage />} />
+                  <Route path="favorite" element={<FavoritesPage />} />
+                  <Route path="favorites" element={<Navigate to="favorite" replace />} />
                   <Route path="world-cup" element={<WorldCupPage />} />
                   <Route path="world-cup/:id" element={<WorldCupMatchDetailPage />} />
                   <Route path="donations" element={<DonationsPage />} />

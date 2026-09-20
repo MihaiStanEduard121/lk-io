@@ -10,9 +10,10 @@ import {
   Play, 
   Sparkles, 
   ChevronRight,
-  Radio
+  Radio,
+  Image as ImageIcon
 } from 'lucide-react';
-import { timeToMinutes, getCurrentTimeMinutes } from '../../lib/tvScheduleUtils';
+import { timeToMinutes, getCurrentTimeMinutes, getTodayBucharestString } from '../../lib/tvScheduleUtils';
 
 export default function SchedulePage() {
   const context = useOutletContext<{ theme?: string; isDark?: boolean }>() || {};
@@ -21,7 +22,7 @@ export default function SchedulePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialChannel = searchParams.get('channel') || '';
 
-  const [schedule, setSchedule] = useState<TVScheduleItem[]>([]);
+  const [schedule, setSchedule] = useState<any[]>([]);
   const [channels, setChannels] = useState<TVProgram[]>([]);
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,25 +30,79 @@ export default function SchedulePage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChannel, setSelectedChannel] = useState(initialChannel);
-  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(() => getTodayBucharestString());
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   useEffect(() => {
     window.scrollTo(0, 0);
     Promise.all([
-      api.getSchedule(),
       api.getPrograms(),
       api.getCategories()
-    ]).then(([schedData, progData, catsData]) => {
-      setSchedule(schedData || []);
+    ]).then(([progData, catsData]) => {
       setChannels(progData || []);
       setCategories(catsData || []);
-      setLoading(false);
     }).catch(err => {
-      console.warn('Error loading schedule page:', err);
-      setLoading(false);
+      console.warn('Error loading schedule metadata:', err);
     });
   }, []);
+
+  // Fetch schedule when date, channel, category or search changes
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+
+    const fetchScheduleData = async () => {
+      try {
+        const epgItems = await api.getEPGSchedule({
+          date: selectedDate,
+          channel: selectedChannel || undefined,
+          category: selectedCategory !== 'All' ? selectedCategory : undefined,
+          search: searchQuery || undefined,
+          limit: 250
+        });
+
+        if (mounted && Array.isArray(epgItems) && epgItems.length > 0) {
+          const mapped = epgItems.map(item => ({
+            id: item.id,
+            time: item.time || item.startFormatted,
+            endTime: item.endTime || item.endFormatted,
+            title: item.title,
+            description: item.description,
+            channelId: item.channelId,
+            category: item.category,
+            date: item.date,
+            image: item.image,
+            rating: item.rating,
+            isNow: item.isNow,
+            isPast: item.isPast,
+            progressPercent: item.progressPercent
+          }));
+          setSchedule(mapped);
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.warn('EPG schedule query error, checking fallback schedule:', e);
+      }
+
+      // Fallback to custom/firestore schedule
+      try {
+        const custom = await api.getSchedule();
+        if (mounted) {
+          setSchedule(custom || []);
+        }
+      } catch (err) {
+        console.warn('Error fetching fallback schedule:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchScheduleData();
+    return () => {
+      mounted = false;
+    };
+  }, [selectedDate, selectedChannel, selectedCategory, searchQuery]);
 
   // Update selectedChannel if query param changes
   useEffect(() => {
@@ -90,12 +145,12 @@ export default function SchedulePage() {
 
   // Filtered items
   const currentMinutes = getCurrentTimeMinutes();
-  const todayIso = new Date().toISOString().split('T')[0];
+  const todayIso = getTodayBucharestString();
 
   const filteredSchedule = useMemo(() => {
     return schedule.filter(item => {
       // Date filter
-      if (selectedDate && item.date !== selectedDate) return false;
+      if (selectedDate && item.date && item.date !== selectedDate) return false;
 
       // Channel filter
       if (selectedChannel && (item.channelId || '').toLowerCase() !== selectedChannel.toLowerCase()) {
@@ -115,7 +170,7 @@ export default function SchedulePage() {
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const t = item.title.toLowerCase();
+        const t = (item.title || '').toLowerCase();
         const d = (item.description || '').toLowerCase();
         const c = (item.channelId || '').toLowerCase();
         if (!t.includes(q) && !d.includes(q) && !c.includes(q)) {
@@ -126,12 +181,6 @@ export default function SchedulePage() {
       return true;
     }).sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
   }, [schedule, selectedDate, selectedChannel, selectedCategory, searchQuery, channelMap]);
-
-  // Distinct channel IDs present in schedule
-  const availableChannelIds = useMemo(() => {
-    const ids = new Set(schedule.map(s => s.channelId).filter(Boolean));
-    return Array.from(ids) as string[];
-  }, [schedule]);
 
   return (
     <div className={`min-h-screen transition-colors duration-200 py-10 ${
@@ -144,15 +193,15 @@ export default function SchedulePage() {
           <div>
             <div className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-wider mb-1">
               <CalendarIcon className="w-4 h-4" />
-              <span>Ghid TV România</span>
+              <span>Ghid TV România EPG Oficial</span>
             </div>
             <h1 className={`text-3xl sm:text-4xl font-black tracking-tight ${
               isDark ? 'text-white' : 'text-slate-900'
             }`}>
-              Program TV
+              Program TV Real & Actualizat
             </h1>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-              Consultă grila de emisiuni pentru posturile tale preferate actualizată în timp real.
+              Grilă completă de emisiuni, ore reale, postere oficiale și detalii transmise în direct.
             </p>
           </div>
 
@@ -217,20 +266,18 @@ export default function SchedulePage() {
                   : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 shadow-xs'
             }`}
           >
-            Toate Canalele ({availableChannelIds.length})
+            Toate Canalele ({channels.length})
           </button>
 
-          {availableChannelIds.map(chId => {
-            const ch = channelMap[chId.toLowerCase()];
-            const title = ch ? ch.title : chId;
-            const isSelected = selectedChannel.toLowerCase() === chId.toLowerCase();
+          {channels.map(ch => {
+            const isSelected = selectedChannel.toLowerCase() === ch.id.toLowerCase();
 
             return (
               <button
-                key={chId}
+                key={ch.id}
                 onClick={() => {
-                  setSelectedChannel(chId);
-                  setSearchParams({ channel: chId });
+                  setSelectedChannel(ch.id);
+                  setSearchParams({ channel: ch.id });
                 }}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition-all cursor-pointer ${
                   isSelected
@@ -240,13 +287,32 @@ export default function SchedulePage() {
                       : 'bg-white border-slate-200 text-slate-700 hover:text-slate-900 shadow-xs'
                 }`}
               >
-                {ch?.logo && (
-                  <img src={ch.logo} alt={title} className="w-4 h-4 object-contain rounded-xs" />
+                {(ch.logo || ch.thumbnail) && (
+                  <img src={ch.logo || ch.thumbnail} alt={ch.title} className="w-4 h-4 object-contain rounded-xs" />
                 )}
-                <span>{title}</span>
+                <span>{ch.title}</span>
               </button>
             );
           })}
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none">
+          {['All', 'Generalist', 'Sport', 'Știri', 'Filme', 'Documentare', 'Copii', 'Muzică'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap border transition-all cursor-pointer ${
+                selectedCategory === cat
+                  ? 'bg-zinc-800 text-white border-zinc-700'
+                  : isDark
+                    ? 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                    : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {cat === 'All' ? 'Toate Categoriile' : cat}
+            </button>
+          ))}
         </div>
 
         {/* Schedule List */}
@@ -255,7 +321,7 @@ export default function SchedulePage() {
             {[...Array(6)].map((_, i) => (
               <div 
                 key={i} 
-                className={`h-20 rounded-2xl border animate-pulse p-4 ${
+                className={`h-24 rounded-2xl border animate-pulse p-4 ${
                   isDark ? 'bg-zinc-900/50 border-zinc-800' : 'bg-slate-100 border-slate-200'
                 }`} 
               />
@@ -270,7 +336,7 @@ export default function SchedulePage() {
               Niciun program găsit
             </h3>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mb-6">
-              Nu există emisiuni conform filtrelor selectate pentru această zi.
+              Nu există emisiuni conform filtrelor selectate pentru această zi ({selectedDate}).
             </p>
             <button
               onClick={() => {
@@ -289,13 +355,13 @@ export default function SchedulePage() {
             {filteredSchedule.map((item, idx) => {
               const startM = timeToMinutes(item.time);
               const nextItem = filteredSchedule[idx + 1];
-              const endM = (item as any).endTime 
-                ? timeToMinutes((item as any).endTime)
+              const endM = item.endTime 
+                ? timeToMinutes(item.endTime)
                 : nextItem ? timeToMinutes(nextItem.time) : startM + 60;
 
               const isToday = selectedDate === todayIso;
-              const isNow = isToday && currentMinutes >= startM && currentMinutes < endM;
-              const isPast = isToday && currentMinutes >= endM;
+              const isNow = item.isNow !== undefined ? item.isNow : (isToday && currentMinutes >= startM && currentMinutes < endM);
+              const isPast = item.isPast !== undefined ? item.isPast : (isToday && currentMinutes >= endM);
 
               const ch = channelMap[(item.channelId || '').toLowerCase()];
               const channelTitle = ch ? ch.title : item.channelId || 'Canal TV';
@@ -303,7 +369,7 @@ export default function SchedulePage() {
               return (
                 <div
                   key={item.id || idx}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden ${
                     isNow
                       ? isDark
                         ? 'bg-indigo-950/30 border-indigo-500/50 shadow-md shadow-indigo-950/50 ring-1 ring-indigo-500/30'
@@ -317,8 +383,15 @@ export default function SchedulePage() {
                           : 'bg-white border-slate-200 hover:border-indigo-200 shadow-xs'
                   }`}
                 >
+                  {/* Background Artwork watermark if available */}
+                  {item.image && (
+                    <div className="absolute right-0 top-0 bottom-0 w-36 opacity-10 pointer-events-none overflow-hidden hidden md:block">
+                      <img src={item.image} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+
                   {/* Left: Time and Program Info */}
-                  <div className="flex items-start gap-4 min-w-0">
+                  <div className="flex items-start gap-4 min-w-0 flex-1 relative z-10">
                     {/* Time Slot Block */}
                     <div className="flex flex-col items-center justify-center w-16 sm:w-20 shrink-0 text-center pt-0.5">
                       <span className={`font-mono text-base sm:text-lg font-black tracking-tight ${
@@ -328,12 +401,19 @@ export default function SchedulePage() {
                       }`}>
                         {item.time}
                       </span>
-                      {(item as any).endTime && (
+                      {item.endTime && (
                         <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
-                          până la {(item as any).endTime}
+                          până la {item.endTime}
                         </span>
                       )}
                     </div>
+
+                    {/* Poster thumbnail if available */}
+                    {item.image && (
+                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 shrink-0 hidden sm:block">
+                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
 
                     {/* Content Details */}
                     <div className="min-w-0 flex-1">
@@ -354,9 +434,16 @@ export default function SchedulePage() {
                         )}
 
                         {/* Category */}
-                        {(item as any).category && (
+                        {item.category && (
                           <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500">
-                            • {(item as any).category}
+                            • {item.category}
+                          </span>
+                        )}
+
+                        {/* Rating */}
+                        {item.rating && (
+                          <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                            {item.rating}
                           </span>
                         )}
                       </div>
@@ -379,7 +466,7 @@ export default function SchedulePage() {
 
                   {/* Right: Watch Channel Live button */}
                   {item.channelId && (
-                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center relative z-10">
                       <Link
                         to={`/play/${item.channelId}`}
                         className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
@@ -391,7 +478,7 @@ export default function SchedulePage() {
                         }`}
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Vezi Canal Live</span>
+                        <span>Vezi Live</span>
                       </Link>
                     </div>
                   )}

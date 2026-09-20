@@ -1,0 +1,33 @@
+{
+  "id": "/ro",
+  "name": "programetv.online - Ghid TV & Live HD",
+  "short_name": "Programe TV",
+  "description": "Urmărește canale TV din România live HD și consultă ghidul TV complet la minut.",
+  "start_url": "/ro",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#4f46e5",
+  "background_color": "#09090b",
+  "categories": ["entertainment", "tv", "news", "sports"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

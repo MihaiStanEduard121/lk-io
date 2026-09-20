@@ -9,6 +9,8 @@ import presenceRoutes from './api/presenceRoutes.js';
 import aiRoutes from './api/aiRoutes.js';
 import mediaRoutes from './api/mediaRoutes.js';
 import liveScoresRoutes from './api/liveScoresRoutes.js';
+import epgRoutes from './api/epgRoutes.js';
+import { epgService } from './epgService.js';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
@@ -51,26 +53,42 @@ export function getExpressApp() {
   });
   app.use(limiter);
 
-  // Dynamic Redirect Middleware
+  // Dynamic Redirect Middleware with in-memory caching (TTL 5 mins)
+  let cachedRedirectsMap: Map<string, string> = new Map();
+  let lastRedirectsFetch = 0;
+  const REDIRECTS_CACHE_TTL = 5 * 60 * 1000;
+
   app.use(async (req, res, next) => {
     // Only intercept page requests, ignore assets, static, and api
     if (req.method !== 'GET') return next();
     if (req.url.startsWith('/api') || req.url.startsWith('/assets') || req.url.includes('.')) return next();
     
-    // Check redirects dynamically
-    const dbInstance = getDb();
-    if (dbInstance) {
-       try {
-         const q = query(collection(dbInstance, 'redirects'), where('sourcePath', '==', req.path), where('active', '==', true));
-         const snapshot = await getDocs(q);
-         if (!snapshot.empty) {
-            const redirectConfig = snapshot.docs[0].data();
-            console.log(`[Redirect] 301 ${req.path} -> ${redirectConfig.destinationPath}`);
-            return res.redirect(301, redirectConfig.destinationPath);
-         }
-       } catch (e) {
-         console.warn("Failed checking redirects: ", e);
-       }
+    const now = Date.now();
+    if (now - lastRedirectsFetch > REDIRECTS_CACHE_TTL) {
+      const dbInstance = getDb();
+      if (dbInstance) {
+        try {
+          const q = query(collection(dbInstance, 'redirects'), where('active', '==', true));
+          const snapshot = await getDocs(q);
+          const newMap = new Map<string, string>();
+          for (const d of snapshot.docs) {
+            const data = d.data();
+            if (data.sourcePath && data.destinationPath) {
+              newMap.set(data.sourcePath, data.destinationPath);
+            }
+          }
+          cachedRedirectsMap = newMap;
+          lastRedirectsFetch = now;
+        } catch (e) {
+          console.warn("Failed checking redirects: ", e);
+        }
+      }
+    }
+
+    const destination = cachedRedirectsMap.get(req.path);
+    if (destination) {
+      console.log(`[Redirect] 301 ${req.path} -> ${destination}`);
+      return res.redirect(301, destination);
     }
     next();
   });
@@ -119,8 +137,19 @@ importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
 `);
   });
 
+  let cachedSitemapXml: string | null = null;
+  let lastSitemapTime = 0;
+  const SITEMAP_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
   app.get('/sitemap.xml', async (req, res) => {
     try {
+      const now = Date.now();
+      if (cachedSitemapXml && now - lastSitemapTime < SITEMAP_CACHE_TTL) {
+        res.header('Content-Type', 'application/xml');
+        res.header('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+        return res.send(cachedSitemapXml);
+      }
+
       const domain = `${req.protocol}://${req.get('host')}`;
       const dbInstance = getDb();
       
@@ -202,7 +231,10 @@ importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
       }
 
       xml += `</urlset>`;
+      cachedSitemapXml = xml;
+      lastSitemapTime = Date.now();
       res.header('Content-Type', 'application/xml');
+      res.header('Cache-Control', 'public, max-age=3600, s-maxage=3600');
       res.send(xml);
     } catch (err: any) {
       console.error("Sitemap generation failed:", err);
@@ -210,9 +242,20 @@ importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
     }
   });
 
-  // Dynamic public RSS Feed for rapid Google/Bing indexing
+  // Dynamic public RSS Feed for rapid Google/Bing indexing with 1-hour cache
+  let cachedRssXml: string | null = null;
+  let lastRssTime = 0;
+  const RSS_CACHE_TTL = 60 * 60 * 1000;
+
   app.get('/rss.xml', async (req, res) => {
     try {
+      const now = Date.now();
+      if (cachedRssXml && now - lastRssTime < RSS_CACHE_TTL) {
+        res.header('Content-Type', 'application/xml');
+        res.header('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+        return res.send(cachedRssXml);
+      }
+
       const domain = `${req.protocol}://${req.get('host')}`;
       const dbInstance = getDb();
       let articles: any[] = [];
@@ -257,7 +300,10 @@ importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
       rss += `</channel>\n`;
       rss += `</rss>`;
 
+      cachedRssXml = rss;
+      lastRssTime = Date.now();
       res.header('Content-Type', 'application/xml');
+      res.header('Cache-Control', 'public, max-age=3600, s-maxage=3600');
       res.send(rss);
     } catch (err: any) {
       console.error("RSS generation failed:", err);
@@ -279,6 +325,15 @@ importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
   app.use('/api/ai', aiRoutes);
   app.use('/api/media', mediaRoutes);
   app.use('/api/live-scores', liveScoresRoutes);
+  app.use('/api/epg', epgRoutes);
+
+  // Trigger initial EPG sync asynchronously in background if needed
+  setTimeout(() => {
+    if (epgService.getStatus().totalProgrammes === 0) {
+      console.log('[EPG Bootstrap] Cache is empty. Initiating background initial EPG sync...');
+      epgService.syncEPG(false).catch(e => console.warn('[EPG Bootstrap] Initial sync failed:', e));
+    }
+  }, 1000);
 
   // Serve uploads
   const uploadsPath = path.join(process.cwd(), 'uploads');

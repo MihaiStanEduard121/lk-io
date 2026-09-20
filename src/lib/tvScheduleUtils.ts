@@ -161,9 +161,69 @@ export function minutesToTime(mins: number): string {
   return `${h}:${m}`;
 }
 
+export function getBucharestTimeParts(targetDate: Date = new Date()): {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+  dateString: string;
+  timeString: string;
+} {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Bucharest',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    const parts = formatter.formatToParts(targetDate);
+    const map: Record<string, string> = {};
+    for (const p of parts) {
+      map[p.type] = p.value;
+    }
+    const year = parseInt(map.year || '2026', 10);
+    const month = parseInt(map.month || '1', 10);
+    const day = parseInt(map.day || '1', 10);
+    const hour = parseInt(map.hour || '0', 10);
+    const minute = parseInt(map.minute || '0', 10);
+    const second = parseInt(map.second || '0', 10);
+    const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    return { year, month, day, hour, minute, second, dateString, timeString };
+  } catch (e) {
+    const now = targetDate;
+    const dateString = now.toISOString().split('T')[0];
+    const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    return {
+      year: now.getFullYear(),
+      month: now.getMonth() + 1,
+      day: now.getDate(),
+      hour: now.getHours(),
+      minute: now.getMinutes(),
+      second: now.getSeconds(),
+      dateString,
+      timeString
+    };
+  }
+}
+
 export function getCurrentTimeMinutes(): number {
-  const now = new Date();
-  return now.getHours() * 60 + now.getMinutes();
+  const parts = getBucharestTimeParts();
+  return parts.hour * 60 + parts.minute;
+}
+
+export function getTodayBucharestString(): string {
+  return getBucharestTimeParts().dateString;
+}
+
+export function getBucharestDateString(date: Date = new Date()): string {
+  return getBucharestTimeParts(date).dateString;
 }
 
 /**
@@ -348,3 +408,55 @@ export function getChannelFullDaySchedule(channelId: string, dateStr?: string): 
     };
   });
 }
+
+export interface UpcomingShowItem {
+  channelId: string;
+  channelTitle: string;
+  channelLogo?: string;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  minutesUntilStart: number;
+  category?: string;
+}
+
+/**
+ * Calculates shows starting in the near future across channels (e.g. within 1-180 mins)
+ */
+export function getUpcomingShows(
+  channels: Array<{ id: string; title: string; logo?: string; thumbnail?: string; category?: string }>,
+  customSchedule: TVScheduleItem[] = [],
+  limit = 8
+): UpcomingShowItem[] {
+  const currentMinutes = getCurrentTimeMinutes();
+  const upcoming: UpcomingShowItem[] = [];
+
+  channels.forEach(ch => {
+    const liveInfo = getChannelLiveSchedule(ch.id, customSchedule);
+    if (liveInfo.nextProgram) {
+      const next = liveInfo.nextProgram;
+      const startM = timeToMinutes(next.startTime);
+      let diff = startM - currentMinutes;
+      if (diff < 0 && startM < 300) {
+        diff += 1440; // after midnight
+      }
+      if (diff > 0 && diff <= 300) {
+        upcoming.push({
+          channelId: ch.id,
+          channelTitle: ch.title,
+          channelLogo: ch.logo || ch.thumbnail,
+          title: next.title,
+          description: next.description,
+          startTime: next.startTime,
+          endTime: next.endTime,
+          minutesUntilStart: diff,
+          category: next.category || ch.category
+        });
+      }
+    }
+  });
+
+  return upcoming.sort((a, b) => a.minutesUntilStart - b.minutesUntilStart).slice(0, limit);
+}
+

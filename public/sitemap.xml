@@ -676,6 +676,11 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/play/antena-1</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/play/bPmHlCNVrUHMcqIGZNet</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -701,6 +706,21 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/play/digi-sport-1</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/play/digi-sport-2</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/play/digi24</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/play/dudGMvLgHu0Jq1JDD2v7</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -717,6 +737,11 @@
   </url>
   <url>
     <loc>https://www.programetv.online/play/eITk0s9YWiLc2aHpZwoI</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/play/hbo</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -746,6 +771,11 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/play/kanal-d</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/play/lbeDO2F3BpIpDbFOH7MW</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -766,6 +796,11 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/play/national-geographic</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/play/oARsqqXekJgmJX8gqmff</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -777,6 +812,21 @@
   </url>
   <url>
     <loc>https://www.programetv.online/play/pqIDo1S0srgUyRloY0qr</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/play/prima-tv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/play/pro-arena</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/play/pro-tv</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -797,6 +847,11 @@
   </url>
   <url>
     <loc>https://www.programetv.online/play/shkmDtSQfvJuNxUQ6SH7</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/play/tvr-1</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -866,17 +921,62 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/news/gooal-central-cordoba-santiago-del-estero-vs-defensa-y-justicia-the-score-reaches-0-1-in-minute-455-448</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-trabzonspor-vs-galatasaray-the-score-reaches-4-0-in-minute-85-506</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/news/avanpremier-cupa-mondial-2026-suedia-tunisia-duel-incendiar-n-grupa-f</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.programetv.online/news/măcel-total-la-cupa-mondială-germania-7-1-curacao</loc>
+    <loc>https://www.programetv.online/news/gooal-istanbul-basaksehir-vs-genclerbirligi-the-score-reaches-4-0-in-minute-901-70</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/m-cel-total-la-cupa-mondial-germania-7-1-curacao</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-maryland-terrapins-vs-penn-state-nittany-lions-the-score-reaches-0-2-in-minute-62-479</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.programetv.online/news/victorie-istorică-pentru-socceroos-australia-2-0-turcia</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-uconn-huskies-vs-seton-hall-pirates-the-score-reaches-0-1-in-minute-15-21</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-jackson-state-tigers-vs-austin-peay-govs-the-score-reaches-1-1-in-minute-45-151</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-ajax-amsterdam-vs-excelsior-the-score-reaches-1-1-in-minute-452-404</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-maryland-terrapins-vs-penn-state-nittany-lions-the-score-reaches-0-1-in-minute-45-680</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-central-cordoba-santiago-del-estero-vs-defensa-y-justicia-the-score-reaches-0-2-in-minute-55-911</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -921,7 +1021,27 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/news/gooal-real-madrid-vs-valencia-the-score-reaches-1-0-in-minute-28-245</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-le-mans-vs-lorient-the-score-reaches-1-0-in-minute-4-176</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/news/avanpremier-cupa-mondial-2026-coasta-de-filde-ecuador-duel-incendiar-n-grupa-e</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-depaul-blue-demons-vs-xavier-muskateers-the-score-reaches-1-1-in-minute-90-911</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-dynamo-kyiv-vs-paok-the-score-reaches-2-3-in-minute-85-481</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -931,12 +1051,42 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/news/gooal-lyon-vs-stade-rennais-the-score-reaches-1-0-in-minute-9-812</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-platense-vs-upnfm-the-score-reaches-0-2-in-minute-47-763</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/news/avanpremier-cupa-mondial-2026-canada-bosnia-i-her-egovina-duel-incendiar-n-grupa-b</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/news/gooal-besiktas-vs-fc-midtjylland-the-score-reaches-1-0-in-minute-63-832</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/news/unde-vedem-live-canada-bosnia-i-her-egovina-la-cupa-mondial-2026-avanpremier-echipe-probabile-i-ponturi-bune</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-alverca-vs-rio-ave-the-score-reaches-1-0-in-minute-86-460</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/where-to-watch-live-usa-paraguay-at-the-2026-world-cup-preview-probable-lineups-and-good-tips</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-southern-miss-golden-eagles-vs-james-madison-dukes-the-score-reaches-0-2-in-minute-45-801</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -971,12 +1121,37 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.programetv.online/news/gooal-aguilas-doradas-vs-deportivo-pereira-the-score-reaches-1-0-in-minute-456-851</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-nacional-asuncion-vs-2-de-mayo-the-score-reaches-2-0-in-minute-33-725</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.programetv.online/news/fluier-final-selecao-ținută-în-șah-brazilia-1-1-maroc</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.programetv.online/news/surpriză-totală-qatar-obține-un-1-1-de-la-elveția</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-belgium-vs-egypt-the-score-reaches-1-1-in-minute-69-267</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-real-madrid-vs-valencia-the-score-reaches-2-0-in-minute-36-561</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.programetv.online/news/gooal-belgium-vs-egypt-the-score-reaches-0-1-in-minute-21-78</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
