@@ -53,7 +53,7 @@ export default function SearchPage() {
             {results.live.map(p => (
               <Link 
                 key={p.id} 
-                to={`/play/${p.id}`} 
+                to={`/ro/play/${p.id}`} 
                 className={`group block relative aspect-video rounded-2xl overflow-hidden border transition-all duration-300 shadow-md ${
                   isDark ? 'bg-zinc-900 border-zinc-855 hover:border-zinc-700' : 'bg-white border-zinc-200 hover:border-indigo-300 hover:shadow-lg'
                 }`}
@@ -84,7 +84,7 @@ export default function SearchPage() {
             {results.shows.map(show => (
               <Link 
                 key={show.id} 
-                to={`/shows/${show.slug}`} 
+                to={`/ro/shows/${show.slug}`} 
                 className={`group block relative aspect-[2/3] rounded-2xl overflow-hidden border transition-all duration-300 shadow-md ${
                   isDark ? 'bg-zinc-900 border-zinc-855 hover:border-zinc-700' : 'bg-white border-zinc-200 hover:border-indigo-250 hover:shadow-lg'
                 }`}
@@ -112,7 +112,7 @@ export default function SearchPage() {
             {results.articles.map(art => (
               <Link 
                 key={art.id} 
-                to={`/news/${art.slug}`} 
+                to={`/ro/news/${art.slug}`} 
                 className={`group block border p-5 rounded-2xl transition-all duration-300 ${
                   isDark 
                     ? 'bg-zinc-900/50 hover:bg-zinc-900 border-zinc-850 hover:border-zinc-750' 
@@ -135,7 +135,7 @@ export default function SearchPage() {
           <Film className="w-12 h-12 text-zinc-500 mx-auto mb-4" />
           <h3 className={`text-lg font-bold mb-1 ${isDark ? 'text-zinc-300' : 'text-zinc-800'}`}>Niciun rezultat găsit</h3>
           <p className={`text-sm ${isDark ? 'text-zinc-550' : 'text-zinc-650'}`}>Nu am găsit nimic care să se potrivească cu termenul căutat. Încearcă alte cuvinte cheie.</p>
-          <Link to="/" className="mt-6 inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all uppercase tracking-wider">Mergi pe Acasă</Link>
+          <Link to="/ro" className="mt-6 inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all uppercase tracking-wider">Mergi pe Acasă</Link>
         </div>
       )}
     </div>

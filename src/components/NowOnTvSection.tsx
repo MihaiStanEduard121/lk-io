@@ -244,7 +244,7 @@ export default function NowOnTvSection({ channels, customSchedule = [], isDark }
                       </p>
                     </div>
                     <Link
-                      to={`/schedule?channel=${ch.id}`}
+                      to={`/ro/schedule?channel=${ch.id}`}
                       className="text-slate-400 hover:text-indigo-500 shrink-0 p-1"
                       title="Ghid TV canal"
                     >
@@ -257,14 +257,14 @@ export default function NowOnTvSection({ channels, customSchedule = [], isDark }
               {/* Action Buttons */}
               <div className="pt-2 border-t border-inherit flex items-center gap-2">
                 <Link
-                  to={`/play/${ch.id}`}
+                  to={`/ro/play/${ch.id}`}
                   className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition-all"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Urmărește Live</span>
                 </Link>
                 <Link
-                  to={`/schedule?channel=${ch.id}`}
+                  to={`/ro/schedule?channel=${ch.id}`}
                   className={`p-2 rounded-xl border text-xs font-bold transition-colors ${
                     isDark 
                       ? 'border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800' 

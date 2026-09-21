@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useParams, Link, useOutletContext } from 'react-router-dom';
+import { useParams, Link, useOutletContext, useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { TVProgram, TVScheduleItem } from '../../types';
 import Markdown from 'react-markdown';
@@ -129,6 +129,7 @@ export function enhanceEmbedCode(embedCode: string | undefined): string {
 
 export default function PlayerPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const context = useOutletContext<{ theme?: string; isDark?: boolean }>() || {};
   const isDark = context.isDark ?? (context.theme === 'dark');
 
@@ -143,15 +144,23 @@ export default function PlayerPage() {
 
   const canonicalId = useMemo(() => normalizeChannelId(id || 'pro-tv'), [id]);
 
+  // If user hits literally ':id' or 'id' or empty in URL, redirect to canonical /ro/play/pro-tv
+  useEffect(() => {
+    if (!id || id === ':id' || id === 'id') {
+      navigate('/ro/play/pro-tv', { replace: true });
+    }
+  }, [id, navigate]);
+
   // Load channel, recommendations, schedule
   useEffect(() => {
     window.scrollTo(0, 0);
     setLoading(true);
     setError(false);
 
-    const safeFetchChannel = api.getProgram(id || 'pro-tv').catch(() => createDynamicChannelFallback(id || 'pro-tv'));
+    const targetId = canonicalId || 'pro-tv';
+    const safeFetchChannel = api.getProgram(targetId).catch(() => createDynamicChannelFallback(targetId));
     const safeFetchAll = api.getPrograms().catch(() => []);
-    const safeFetchEpg = api.getChannelEPG(canonicalId).catch(() => []);
+    const safeFetchEpg = api.getChannelEPG(targetId).catch(() => []);
     const safeFetchFallbackSched = api.getSchedule().catch(() => []);
 
     Promise.all([
@@ -160,7 +169,7 @@ export default function PlayerPage() {
       safeFetchEpg,
       safeFetchFallbackSched
     ]).then(([channelData, allPrograms, epgSched, fallbackSched]) => {
-      const finalChannel = channelData || createDynamicChannelFallback(id || 'pro-tv');
+      const finalChannel = channelData || createDynamicChannelFallback(targetId);
       setProgram(finalChannel);
 
       if (Array.isArray(epgSched) && epgSched.length > 0) {
@@ -170,7 +179,7 @@ export default function PlayerPage() {
           endTime: item.endTime || item.endFormatted,
           title: item.title,
           description: item.description,
-          channelId: item.channelId || canonicalId,
+          channelId: item.channelId || targetId,
           category: item.category,
           date: item.date,
           image: item.image
@@ -181,7 +190,7 @@ export default function PlayerPage() {
       }
 
       const filtered = (allPrograms || [])
-        .filter((p: any) => p.id !== id && p.id !== canonicalId && p.status === 'online')
+        .filter((p: any) => p.id !== targetId && p.id !== id && p.status === 'online')
         .sort((a: any, b: any) => {
           if (a.category === finalChannel.category && b.category !== finalChannel.category) return -1;
           if (a.category !== finalChannel.category && b.category === finalChannel.category) return 1;
@@ -193,7 +202,7 @@ export default function PlayerPage() {
     }).catch(err => {
       console.warn('Error loading channel player:', err);
       // Even if an unexpected error occurs, generate fallback channel
-      const fallback = createDynamicChannelFallback(id || 'pro-tv');
+      const fallback = createDynamicChannelFallback(targetId);
       setProgram(fallback);
       setLoading(false);
     });
@@ -314,11 +323,11 @@ export default function PlayerPage() {
         {/* Top Breadcrumb & Actions Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2 text-xs font-semibold">
-            <Link to="/" className="text-slate-400 dark:text-zinc-500 hover:text-indigo-600">
+            <Link to="/ro" className="text-slate-400 dark:text-zinc-500 hover:text-indigo-600">
               Acasă
             </Link>
             <span className="text-slate-300 dark:text-zinc-700">/</span>
-            <Link to="/#canale" className="text-slate-400 dark:text-zinc-500 hover:text-indigo-600">
+            <Link to="/ro#canale" className="text-slate-400 dark:text-zinc-500 hover:text-indigo-600">
               Canale TV
             </Link>
             <span className="text-slate-300 dark:text-zinc-700">/</span>
@@ -372,6 +381,7 @@ export default function PlayerPage() {
         {/* Cinema Video Player Container */}
         <TvLivePlayer
           streamUrl={program.streamUrl}
+          backupStreamUrl={program.backupStreamUrl}
           embedCode={program.embedCode}
           title={program.title}
           thumbnail={program.thumbnail}
@@ -571,7 +581,7 @@ export default function PlayerPage() {
                 }`}>
                   Alte Canale TV
                 </h3>
-                <Link to="/#canale" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                <Link to="/ro#canale" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
                   Toate
                 </Link>
               </div>
@@ -580,7 +590,7 @@ export default function PlayerPage() {
                 {recommendations.map(rec => (
                   <Link
                     key={rec.id}
-                    to={`/play/${rec.id}`}
+                    to={`/ro/play/${rec.id}`}
                     className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200 group ${
                       isDark 
                         ? 'bg-zinc-950/60 border-zinc-800/80 hover:border-zinc-700' 

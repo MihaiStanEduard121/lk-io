@@ -273,11 +273,17 @@ export const CHANNEL_ALIASES: Record<string, string> = {
  * Normalizes any channel ID input (including url slugs, uppercase, dots, underscores, aliases)
  */
 export function normalizeChannelId(rawId: string): string {
-  if (!rawId) return 'pro-tv';
+  if (!rawId || rawId === ':id' || rawId === 'id' || rawId === 'undefined' || rawId === 'null') {
+    return 'pro-tv';
+  }
   const clean = rawId.toLowerCase().trim()
     .replace(/^https?:\/\/[^/]+\/(?:ro\/)?(?:play\/)?/, '')
     .replace(/[^a-z0-9.-]+/g, '-')
     .replace(/(^-|-$)+/g, '');
+
+  if (!clean || clean === 'id') {
+    return 'pro-tv';
+  }
 
   if (CHANNEL_ALIASES[clean]) {
     return CHANNEL_ALIASES[clean];
@@ -403,9 +409,11 @@ export const MASTER_CHANNELS_LIST: TVProgram[] = [
     banner: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=1200&auto=format&fit=crop&q=80',
     embedCode: '',
     streamUrl: 'https://tvr-1.lg.mncdn.com/tvr1/smil:tvr1.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-1.lg.mncdn.com/tvr1/smil:tvr1.smil/playlist.m3u8',
     tags: ['tvr1', 'telejurnal', 'romania', 'cultura'],
-    views: 6200,
-    createdAt: '2026-01-01T00:00:00.000Z'
+    views: 16200,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    isFeatured: true
   },
   {
     id: 'tvr-2',
@@ -420,25 +428,189 @@ export const MASTER_CHANNELS_LIST: TVProgram[] = [
     banner: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&auto=format&fit=crop&q=80',
     embedCode: '',
     streamUrl: 'https://tvr-2.lg.mncdn.com/tvr2/smil:tvr2.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-2.lg.mncdn.com/tvr2/smil:tvr2.smil/playlist.m3u8',
     tags: ['tvr2', 'cultura', 'teatru', 'generalist'],
-    views: 4100,
+    views: 8100,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-3',
+    title: 'TVR 3',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.2,
+    description: 'TVR 3 live - Postul televiziunii publice dedicat comunităților locale, tradițiilor și studiourilor teritoriale.',
+    thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-3.jpg',
+    banner: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-3.lg.mncdn.com/tvr3/smil:tvr3.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-3.lg.mncdn.com/tvr3/smil:tvr3.smil/playlist.m3u8',
+    tags: ['tvr3', 'regional', 'comunitate'],
+    views: 4500,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-info',
+    title: 'TVR Info HD',
+    category: 'Știri',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.8,
+    description: 'TVR Info HD - Canalul oficial de știri și dezbateri al Societății Române de Televiziune 24/7.',
+    thumbnail: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-info-hd.jpg',
+    banner: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-info.lg.mncdn.com/tvrinfo/smil:tvrinfo.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-info.lg.mncdn.com/tvrinfo/smil:tvrinfo.smil/playlist.m3u8',
+    tags: ['tvrinfo', 'stiri', 'actualitate'],
+    views: 9200,
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'tvr-cultural',
-    title: 'TVR Cultural',
+    title: 'TVR Cultural HD',
     category: 'Generalist',
     status: 'online',
     quality: '1080p HD',
-    rating: 8.4,
+    rating: 8.6,
     description: 'TVR Cultural - Postul dedicat artelor, muzicii clasice, literaturii și patrimoniului național.',
     thumbnail: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
     logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-cultural.jpg',
     banner: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1200&auto=format&fit=crop&q=80',
     embedCode: '',
     streamUrl: 'https://tvr-cultural.lg.mncdn.com/tvrcultural/smil:tvrcultural.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-cultural.lg.mncdn.com/tvrcultural/smil:tvrcultural.smil/playlist.m3u8',
     tags: ['tvrcultural', 'arta', 'literatura', 'muzica'],
+    views: 4100,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-folclor',
+    title: 'TVR Folclor',
+    category: 'Muzică',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.7,
+    description: 'TVR Folclor - Tezaurul folcloric românesc, cântece tradiționale și dansuri populare autentice.',
+    thumbnail: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-folclor.jpg',
+    banner: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-folclor.lg.mncdn.com/tvrfolclor/smil:tvrfolclor.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-folclor.lg.mncdn.com/tvrfolclor/smil:tvrfolclor.smil/playlist.m3u8',
+    tags: ['tvrfolclor', 'folclor', 'muzicapopulara'],
+    views: 6700,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-international',
+    title: 'TVR Internațional HD',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.5,
+    description: 'TVR Internațional - Conexiunea românilor din diaspora cu țara, emisiuni culturale și informative.',
+    thumbnail: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-international.jpg',
+    banner: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-international.lg.mncdn.com/tvrinternational/smil:tvrinternational.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-international.lg.mncdn.com/tvrinternational/smil:tvrinternational.smil/playlist.m3u8',
+    tags: ['tvrinternational', 'diaspora', 'romania'],
+    views: 7300,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-moldova',
+    title: 'TVR Moldova HD',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.4,
+    description: 'TVR Moldova - Știri, cultură și dezbateri pentru spațiul românesc de peste Prut.',
+    thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-moldova.jpg',
+    banner: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-moldova.lg.mncdn.com/tvrmoldova/smil:tvrmoldova.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-moldova.lg.mncdn.com/tvrmoldova/smil:tvrmoldova.smil/playlist.m3u8',
+    tags: ['tvrmoldova', 'moldova', 'stiri'],
+    views: 4800,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-cluj',
+    title: 'TVR Cluj',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.2,
+    description: 'TVR Cluj - Știri și evenimente din inima Transilvaniei.',
+    thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-cluj.jpg',
+    banner: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-cluj.lg.mncdn.com/tvrcluj/smil:tvrcluj.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-cluj.lg.mncdn.com/tvrcluj/smil:tvrcluj.smil/playlist.m3u8',
+    tags: ['tvrcluj', 'cluj', 'transilvania'],
+    views: 3200,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-craiova',
+    title: 'TVR Craiova',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.1,
+    description: 'TVR Craiova - Actualitate și tradiții din Oltenia.',
+    thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-craiova.jpg',
+    banner: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-craiova.lg.mncdn.com/tvrcraiova/smil:tvrcraiova.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-craiova.lg.mncdn.com/tvrcraiova/smil:tvrcraiova.smil/playlist.m3u8',
+    tags: ['tvrcraiova', 'oltenia'],
+    views: 2900,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-iasi',
+    title: 'TVR Iași',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.1,
+    description: 'TVR Iași - Informații și cultură din Moldova.',
+    thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-iasi.jpg',
+    banner: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-iasi.lg.mncdn.com/tvriasi/smil:tvriasi.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-iasi.lg.mncdn.com/tvriasi/smil:tvriasi.smil/playlist.m3u8',
+    tags: ['tvriasi', 'iasi', 'moldova'],
     views: 3100,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tvr-timisoara',
+    title: 'TVR Timișoara',
+    category: 'Generalist',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 8.2,
+    description: 'TVR Timișoara - Știri și evenimente din Banat.',
+    thumbnail: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tvr-timisoara.jpg',
+    banner: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tvr-timisoara.lg.mncdn.com/tvrtimisoara/smil:tvrtimisoara.smil/playlist.m3u8',
+    backupStreamUrl: 'https://tvr-timisoara.lg.mncdn.com/tvrtimisoara/smil:tvrtimisoara.smil/playlist.m3u8',
+    tags: ['tvrtimisoara', 'timisoara', 'banat'],
+    views: 3000,
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
@@ -1123,23 +1295,80 @@ export const MASTER_CHANNELS_LIST: TVProgram[] = [
     views: 7300,
     createdAt: '2026-01-01T00:00:00.000Z'
   },
+  {
+    id: 'tralala-tv',
+    title: 'TraLaLa TV HD',
+    category: 'Copii',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 9.3,
+    description: 'TraLaLa TV - Cântece și animații 3D educative pentru bebeluși, copii și întreaga familie.',
+    thumbnail: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/tralala-tv.jpg',
+    banner: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://hls01ns.antenaplay.ro/hls/tralala-hd/index.m3u8',
+    backupStreamUrl: 'https://hls01ns.antenaplay.ro/hls/tralala-hd/index.m3u8',
+    tags: ['tralalal', 'copii', 'cantece', 'animatie'],
+    views: 11200,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    isFeatured: true
+  },
 
   // --- MUZICĂ & TRADIȚII ---
   {
     id: 'kiss-tv',
-    title: 'Kiss TV',
+    title: 'Kiss TV HD',
     category: 'Muzică',
     status: 'online',
     quality: '1080p HD',
-    rating: 9.1,
+    rating: 9.3,
     description: 'Kiss TV live - Cele mai noi hituri românești și internaționale, topuri muzicale și videoclipuri 24/7.',
     thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
     logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/kiss-tv.jpg',
     banner: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&auto=format&fit=crop&q=80',
     embedCode: '',
-    streamUrl: 'https://streamw.m.ro/Aleph/ngrp:Alephbiz.stream_all/playlist.m3u8',
+    streamUrl: 'https://tv.broadcasting.ro/kisstv/85c83a80-4f71-4f2d-a8d6-43f676896bcb.m3u8',
+    backupStreamUrl: 'https://tv.broadcasting.ro/kisstv/85c83a80-4f71-4f2d-a8d6-43f676896bcb.m3u8',
     tags: ['kisstv', 'muzica', 'hituri', 'pop'],
-    views: 12700,
+    views: 14700,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    isFeatured: true
+  },
+  {
+    id: 'magic-tv',
+    title: 'Magic TV HD',
+    category: 'Muzică',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 9.1,
+    description: 'Magic TV live - Muzică clasică, hituri de aur ale anilor 80, 90 și cele mai frumoase balade.',
+    thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/magic-tv.jpg',
+    banner: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tv.broadcasting.ro/magictv/85c83a80-4f71-4f2d-a8d6-43f676896bcb.m3u8',
+    backupStreamUrl: 'https://tv.broadcasting.ro/magictv/85c83a80-4f71-4f2d-a8d6-43f676896bcb.m3u8',
+    tags: ['magictv', 'magicfm', 'nostalgia', 'muzica'],
+    views: 8900,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'rock-tv',
+    title: 'Rock TV HD',
+    category: 'Muzică',
+    status: 'online',
+    quality: '1080p HD',
+    rating: 9.2,
+    description: 'Rock TV live - Cele mai bune piese rock, heavy metal, classic rock și concerte legendare.',
+    thumbnail: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80',
+    logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/rock-tv.jpg',
+    banner: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=1200&auto=format&fit=crop&q=80',
+    embedCode: '',
+    streamUrl: 'https://tv.broadcasting.ro/rocktv/85c83a80-4f71-4f2d-a8d6-43f676896bcb.m3u8',
+    backupStreamUrl: 'https://tv.broadcasting.ro/rocktv/85c83a80-4f71-4f2d-a8d6-43f676896bcb.m3u8',
+    tags: ['rocktv', 'rock', 'metal', 'muzica'],
+    views: 9400,
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
@@ -1155,6 +1384,7 @@ export const MASTER_CHANNELS_LIST: TVProgram[] = [
     banner: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
     embedCode: '',
     streamUrl: 'https://live4dai.antenaplay.ro/live2_sdi18/live2_sdi18_600k.m3u8',
+    backupStreamUrl: 'https://live4dai.antenaplay.ro/live2_sdi18/live2_sdi18_600k.m3u8',
     tags: ['zutv', 'radiozu', 'muzica', 'topuri'],
     views: 10600,
     createdAt: '2026-01-01T00:00:00.000Z'
@@ -1239,7 +1469,8 @@ export const MASTER_CHANNELS_LIST: TVProgram[] = [
     logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/trinitas-tv-hd.jpg',
     banner: 'https://images.unsplash.com/photo-1519817650390-64a93db51149?w=1200&auto=format&fit=crop&q=80',
     embedCode: '',
-    streamUrl: 'https://streamw.m.ro/Aleph/ngrp:Alephbiz.stream_all/playlist.m3u8',
+    streamUrl: 'https://live.trinitas.ro/hls/stream.m3u8',
+    backupStreamUrl: 'https://live.trinitas.ro/hls/stream.m3u8',
     tags: ['trinitas', 'biserica', 'ortodox', 'religie'],
     views: 6200,
     createdAt: '2026-01-01T00:00:00.000Z'
@@ -1256,7 +1487,8 @@ export const MASTER_CHANNELS_LIST: TVProgram[] = [
     logo: 'https://static.cinemagia.ro/img/tv/stations_logo/40/speranta-tv.jpg',
     banner: 'https://images.unsplash.com/photo-1519817650390-64a93db51149?w=1200&auto=format&fit=crop&q=80',
     embedCode: '',
-    streamUrl: 'https://streamw.m.ro/Aleph/ngrp:Alephbiz.stream_all/playlist.m3u8',
+    streamUrl: 'https://live.sperantatv.ro/hls/sperantatv.m3u8',
+    backupStreamUrl: 'https://live.sperantatv.ro/hls/sperantatv.m3u8',
     tags: ['sperantatv', 'spiritualitate', 'sanatate'],
     views: 4100,
     createdAt: '2026-01-01T00:00:00.000Z'
@@ -1324,6 +1556,11 @@ export function createDynamicChannelFallback(id: string): TVProgram {
   const found = MASTER_CHANNELS_LIST.find(c => c.id === normId || c.id === id);
   if (found) return found;
 
+  const proTv = MASTER_CHANNELS_LIST.find(c => c.id === 'pro-tv');
+  if (!id || id === ':id' || id === 'id' || normId === 'pro-tv') {
+    return proTv || MASTER_CHANNELS_LIST[0];
+  }
+
   const prettyTitle = id
     .replace(/-/g, ' ')
     .replace(/\.ro$/i, '')
@@ -1341,6 +1578,23 @@ export function createDynamicChannelFallback(id: string): TVProgram {
   else if (lower.includes('kid') || lower.includes('cartoon') || lower.includes('disney') || lower.includes('nick') || lower.includes('junior') || lower.includes('minimax')) category = 'Copii';
   else if (lower.includes('music') || lower.includes('muzic') || lower.includes('kiss') || lower.includes('zu') || lower.includes('etno') || lower.includes('taraf') || lower.includes('folk')) category = 'Muzică';
 
+  let defaultStream = 'https://stream1.kanald.ro/iphone/knd-live.m3u8';
+  let defaultBackup = 'https://tvr-1.lg.mncdn.com/tvr1/smil:tvr1.smil/playlist.m3u8';
+
+  if (category === 'Sport') {
+    defaultStream = 'https://stream.realitatea.net/realitatea/sportiva_md/ts:playlist.m3u8';
+    defaultBackup = 'https://tvr-sport.lg.mncdn.com/tvrsport/smil:tvrsport.smil/playlist.m3u8';
+  } else if (category === 'Știri') {
+    defaultStream = 'https://edge-ar.rcs-rds.ro/digi24ar/index.m3u8';
+    defaultBackup = 'https://stream-aleph.m.ro/Aleph/ngrp:Alephnewsmain.stream_all/playlist.m3u8';
+  } else if (category === 'Muzică') {
+    defaultStream = 'https://tv.broadcasting.ro/rocktv/85c83a80-4f71-4f2d-a8d6-43f676896bcb.m3u8';
+    defaultBackup = 'https://live.tele7music.ro/hls/stream/index.m3u8';
+  } else if (category === 'Copii') {
+    defaultStream = 'https://hls01ns.antenaplay.ro/hls/tralala-hd/index.m3u8';
+    defaultBackup = 'https://hls01ns.antenaplay.ro/hls/tralala-hd/index.m3u8';
+  }
+
   return {
     id: normId,
     title: prettyTitle,
@@ -1353,7 +1607,8 @@ export function createDynamicChannelFallback(id: string): TVProgram {
     logo: `https://static.cinemagia.ro/img/tv/stations_logo/40/${normId}.jpg`,
     banner: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=1200&auto=format&fit=crop&q=80',
     embedCode: '',
-    streamUrl: 'https://live4dai.antenaplay.ro/live2_sdi14/live2_sdi14_600k.m3u8',
+    streamUrl: defaultStream,
+    backupStreamUrl: defaultBackup,
     tags: [normId, category.toLowerCase()],
     views: 1200,
     createdAt: new Date().toISOString()

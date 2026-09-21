@@ -8,16 +8,15 @@ import {
   Maximize2, 
   Minimize2, 
   RotateCw, 
-  Server, 
-  ExternalLink, 
-  AlertTriangle,
   Radio,
   Tv,
-  Layers
+  AlertCircle,
+  ExternalLink
 } from 'lucide-react';
 
 interface TvLivePlayerProps {
   streamUrl?: string;
+  backupStreamUrl?: string;
   embedCode?: string;
   title: string;
   thumbnail?: string;
@@ -28,7 +27,7 @@ export function cleanAndSanitizeIframe(rawHtml: string): string {
   if (!rawHtml) return '';
   let clean = rawHtml.trim();
 
-  // If raw URL, wrap in iframe or video
+  // If raw URL, wrap in iframe
   if (/^https?:\/\/[^\s<>\"]+$/i.test(clean)) {
     if (clean.includes('youtube.com') || clean.includes('youtu.be')) {
       const match = clean.match(/(?:v=|v\/|embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -59,32 +58,45 @@ export function cleanAndSanitizeIframe(rawHtml: string): string {
   return clean;
 }
 
-export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, isDark = true }: TvLivePlayerProps) {
+export default function TvLivePlayer({ 
+  streamUrl, 
+  backupStreamUrl,
+  embedCode, 
+  title, 
+  thumbnail, 
+  isDark = true 
+}: TvLivePlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
-  // Determine available sources
-  const hasDirectStream = !!streamUrl && streamUrl.trim().length > 0;
+  const primaryStream = (streamUrl || '').trim();
+  const secondaryStream = (backupStreamUrl || '').trim();
   
-  // Extract iframe src if present
-  const rawEmbed = embedCode?.trim() || '';
+  const rawEmbed = (embedCode || '').trim();
   const iframeSrcMatch = rawEmbed.match(/src=["']([^"']+)["']/i);
   const embedIframeSrc = iframeSrcMatch ? iframeSrcMatch[1] : '';
   const isEmbedM3u8 = embedIframeSrc.includes('.m3u8') || rawEmbed.includes('.m3u8');
-  
-  // Real valid embed code that is not just an m3u8 wrapped in an iframe
-  const hasHtmlEmbed = !isEmbedM3u8 && rawEmbed.length > 0 && !rawEmbed.includes('canale-tv.net');
+  const hasHtmlEmbed = !isEmbedM3u8 && rawEmbed.length > 0;
 
-  // Server modes:
-  // 1: Direct CDN HLS
-  // 2: HTTPS Proxy Stream (bypasses CORS & mixed content)
-  // 3: HTML Embed / External Player
-  type ServerType = 1 | 2 | 3;
-  const [activeServer, setActiveServer] = useState<ServerType>(() => {
-    if (hasDirectStream) return 1;
-    if (hasHtmlEmbed) return 3;
-    return 2;
+  // Stream stage auto-progression:
+  // 0: Primary Direct Stream
+  // 1: Primary Stream via Secure HTTPS Proxy
+  // 2: Backup Direct Stream
+  // 3: Backup Stream via Proxy
+  // 4: HTML Embed (if available)
+  const [streamStage, setStreamStage] = useState<number>(() => {
+    if (primaryStream) {
+      // If starts with http://, go directly to secure proxy to avoid browser Mixed Content blocks
+      if (primaryStream.startsWith('http://')) return 1;
+      return 0;
+    }
+    if (secondaryStream) {
+      if (secondaryStream.startsWith('http://')) return 3;
+      return 2;
+    }
+    if (hasHtmlEmbed) return 4;
+    return 1;
   });
 
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -94,25 +106,51 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorState, setErrorState] = useState<string | null>(null);
   const [showControls, setShowControls] = useState<boolean>(true);
-  const [retryCount, setRetryCount] = useState<number>(0);
+  const [retryNonce, setRetryNonce] = useState<number>(0);
   const controlsTimeoutRef = useRef<any>(null);
 
-  // Compute the exact stream URL for the active server
+  // Compute active target stream URL based on stage
   const effectiveStreamUrl = useMemo(() => {
-    let base = streamUrl || (isEmbedM3u8 ? embedIframeSrc : '');
-    if (!base) return '';
-
-    if (activeServer === 2) {
-      // Proxy through our backend
-      return `/api/media/stream-proxy?url=${encodeURIComponent(base)}`;
+    if (streamStage === 0 && primaryStream) {
+      return primaryStream;
     }
-    return base;
-  }, [streamUrl, isEmbedM3u8, embedIframeSrc, activeServer]);
+    if (streamStage === 1 && primaryStream) {
+      return `/api/media/stream-proxy?url=${encodeURIComponent(primaryStream)}`;
+    }
+    if (streamStage === 2 && secondaryStream) {
+      return secondaryStream;
+    }
+    if (streamStage === 3 && secondaryStream) {
+      return `/api/media/stream-proxy?url=${encodeURIComponent(secondaryStream)}`;
+    }
+    if (streamStage === 4 && !hasHtmlEmbed && primaryStream) {
+      // Final fallback to proxied primary
+      return `/api/media/stream-proxy?url=${encodeURIComponent(primaryStream)}`;
+    }
+    return primaryStream ? `/api/media/stream-proxy?url=${encodeURIComponent(primaryStream)}` : '';
+  }, [streamStage, primaryStream, secondaryStream, hasHtmlEmbed]);
 
-  // HLS stream loader & error handler
+  // Handle stage failure / auto fallback seamlessly
+  const advanceToNextFallback = useCallback(() => {
+    setStreamStage((prev) => {
+      if (prev === 0) return 1; // Try proxied
+      if (prev === 1) {
+        if (secondaryStream && secondaryStream !== primaryStream) return 2; // Try backup direct
+        if (hasHtmlEmbed) return 4; // Try web embed
+        return 1; // Stay on proxy with reload
+      }
+      if (prev === 2) return 3; // Try backup proxied
+      if (prev === 3) {
+        if (hasHtmlEmbed) return 4;
+        return 1;
+      }
+      return prev;
+    });
+  }, [primaryStream, secondaryStream, hasHtmlEmbed]);
+
+  // Main HLS Stream Loader
   useEffect(() => {
-    if (activeServer === 3) {
-      // In embed mode, Hls is not needed
+    if (streamStage === 4 && hasHtmlEmbed) {
       setIsLoading(false);
       setErrorState(null);
       return;
@@ -121,13 +159,16 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
     const video = videoRef.current;
     if (!video || !effectiveStreamUrl) {
       setIsLoading(false);
+      if (!primaryStream && !secondaryStream && !hasHtmlEmbed) {
+        setErrorState('Fluxul transmisiunii este momentan în curs de sincronizare.');
+      }
       return;
     }
 
     setIsLoading(true);
     setErrorState(null);
 
-    // Destroy existing Hls instance
+    // Destroy existing HLS instance
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -141,15 +182,15 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
         lowLatencyMode: true,
         backBufferLength: 60,
         maxBufferLength: 30,
-        maxMaxBufferLength: 600,
-        maxBufferSize: 60 * 1000 * 1000,
+        maxMaxBufferLength: 300,
+        maxBufferSize: 30 * 1000 * 1000,
         maxBufferHole: 0.5,
-        manifestLoadingTimeOut: 15000,
+        manifestLoadingTimeOut: 12000,
         manifestLoadingMaxRetry: 4,
-        manifestLoadingRetryDelay: 1000,
-        fragLoadingTimeOut: 20000,
-        fragLoadingMaxRetry: 6,
-        fragLoadingRetryDelay: 1000,
+        manifestLoadingRetryDelay: 800,
+        fragLoadingTimeOut: 15000,
+        fragLoadingMaxRetry: 5,
+        fragLoadingRetryDelay: 800,
       });
 
       hlsRef.current = hls;
@@ -160,7 +201,7 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
         setIsLoading(false);
         setErrorState(null);
         video.play().then(() => setIsPlaying(true)).catch(() => {
-          // Autoplay policy might require mute
+          // Handle browser autoplay policy by auto-muting
           video.muted = true;
           setIsMuted(true);
           video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
@@ -169,30 +210,24 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
 
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (data.fatal) {
-          console.warn('[TvPlayer] Fatal HLS error:', data.type, data.details);
+          console.warn('[TvPlayer] HLS fatal error on stage', streamStage, data.type, data.details);
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              // If Server 1 failed with network/CORS error, auto-fallback to Server 2 (Secure Proxy)
-              if (activeServer === 1) {
-                console.info('[TvPlayer] Switching to Server 2 (Secure Proxy) fallback...');
-                setActiveServer(2);
-              } else {
-                hls.startLoad();
-                setErrorState('Reîncărcare flux transmisiune...');
-              }
+              // Intelligent auto-recovery
+              advanceToNextFallback();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
               hls.recoverMediaError();
               break;
             default:
               hls.destroy();
-              setErrorState('Fluxul este momentan indisponibil pe acest server.');
+              advanceToNextFallback();
               break;
           }
         }
       });
     } else if (canPlayHlsNative) {
-      // Safari iOS native HLS
+      // Safari / iOS WebKit native playback
       video.src = effectiveStreamUrl;
       video.addEventListener('loadedmetadata', () => {
         setIsLoading(false);
@@ -204,11 +239,7 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
         });
       });
       video.addEventListener('error', () => {
-        if (activeServer === 1) {
-          setActiveServer(2);
-        } else {
-          setErrorState('Transmisiunea nu a putut fi pornită pe acest dispozitiv.');
-        }
+        advanceToNextFallback();
       });
     } else {
       setErrorState('Browserul dumneavoastră nu suportă redarea fluxurilor HLS.');
@@ -221,10 +252,10 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
         hlsRef.current = null;
       }
     };
-  }, [effectiveStreamUrl, activeServer, retryCount]);
+  }, [effectiveStreamUrl, streamStage, retryNonce, primaryStream, secondaryStream, hasHtmlEmbed, advanceToNextFallback]);
 
-  // Handle Play/Pause
-  const togglePlay = () => {
+  // Play / Pause toggle
+  const togglePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
     if (isPlaying) {
@@ -233,17 +264,18 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
     } else {
       video.play().then(() => setIsPlaying(true)).catch(() => {});
     }
-  };
+  }, [isPlaying]);
 
-  // Handle Mute/Unmute
-  const toggleMute = () => {
+  // Mute toggle
+  const toggleMute = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
-    video.muted = !isMuted;
-    setIsMuted(!isMuted);
-  };
+    const nextMuted = !isMuted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
+  }, [isMuted]);
 
-  // Handle Volume change
+  // Volume slider
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVol = parseFloat(e.target.value);
     setVolume(newVol);
@@ -256,7 +288,7 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
   };
 
   // Fullscreen toggle
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
     if (!document.fullscreenElement) {
@@ -264,16 +296,35 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
     } else {
       document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
     }
-  };
+  }, []);
 
-  // Refresh stream
+  // Reload / Reconnect stream
   const handleReload = () => {
     setIsLoading(true);
     setErrorState(null);
-    setRetryCount(prev => prev + 1);
+    setStreamStage(primaryStream && primaryStream.startsWith('http://') ? 1 : 0);
+    setRetryNonce(prev => prev + 1);
   };
 
-  // Handle user activity to show/hide controls
+  // Keyboard shortcuts (Space, M, F)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleMute();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay, toggleMute, toggleFullscreen]);
+
+  // Mouse move control visibility
   const handleMouseMove = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
@@ -288,76 +339,40 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
       id="tv-live-player-container"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setShowControls(false)}
-      className="w-full aspect-video rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative bg-black select-none group border border-zinc-800/80"
+      className="w-full aspect-video rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative bg-black select-none group border border-zinc-800"
     >
-      {/* Top Bar: Channel Badge & Server Switcher */}
-      <div className={`absolute top-0 inset-x-0 z-30 p-3 sm:p-4 bg-gradient-to-b from-black/85 via-black/40 to-transparent flex items-center justify-between transition-opacity duration-300 ${
+      {/* Top Bar: Channel Header & Live Badge */}
+      <div className={`absolute top-0 inset-x-0 z-30 p-3 sm:p-5 bg-gradient-to-b from-black/90 via-black/40 to-transparent flex items-center justify-between transition-opacity duration-300 ${
         showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}>
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-2 bg-red-600/90 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-xs font-bold tracking-wider uppercase shadow-md shadow-red-950/40">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full text-white text-xs font-bold tracking-wider uppercase shadow-lg shadow-red-950/50">
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
             LIVE
           </div>
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/80 backdrop-blur-md text-zinc-300 text-xs font-medium border border-zinc-700/50">
-            <Radio className="w-3.5 h-3.5 text-emerald-400" />
-            <span>HD 1080p</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/80 backdrop-blur-md text-emerald-400 text-xs font-semibold border border-zinc-700/60 shadow-sm">
+            <Radio className="w-3.5 h-3.5" />
+            <span>1080p HD</span>
           </div>
-          <span className="text-white text-sm sm:text-base font-bold drop-shadow-md truncate max-w-[200px] sm:max-w-xs">
+          <span className="text-white text-sm sm:text-base font-bold drop-shadow-md truncate max-w-[200px] sm:max-w-md">
             {title}
           </span>
         </div>
 
-        {/* Server Selector Bar */}
-        <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-xl border border-zinc-800/80 text-xs">
-          <button
-            id="btn-server-1"
-            onClick={() => { setActiveServer(1); setErrorState(null); }}
-            className={`px-2.5 py-1 rounded-lg font-semibold transition-all flex items-center gap-1 ${
-              activeServer === 1 
-                ? 'bg-indigo-600 text-white shadow-sm' 
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-            }`}
-            title="Server 1: Flux Direct CDN de mare viteză"
-          >
-            <Server className="w-3 h-3" />
-            <span>Server 1</span>
-          </button>
-
-          <button
-            id="btn-server-2"
-            onClick={() => { setActiveServer(2); setErrorState(null); }}
-            className={`px-2.5 py-1 rounded-lg font-semibold transition-all flex items-center gap-1 ${
-              activeServer === 2 
-                ? 'bg-emerald-600 text-white shadow-sm' 
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-            }`}
-            title="Server 2: Conexiune HTTPS Securizată fără blocaje"
-          >
-            <Server className="w-3 h-3" />
-            <span>Server 2 (Securizat)</span>
-          </button>
-
-          {hasHtmlEmbed && (
-            <button
-              id="btn-server-3"
-              onClick={() => { setActiveServer(3); setErrorState(null); }}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all flex items-center gap-1 ${
-                activeServer === 3 
-                  ? 'bg-amber-600 text-white shadow-sm' 
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-              }`}
-              title="Server 3: Player Oficial Embed"
-            >
-              <Layers className="w-3 h-3" />
-              <span>Server 3 (Embed)</span>
-            </button>
-          )}
-        </div>
+        {/* Quick Reconnect Action */}
+        <button
+          id="btn-quick-reload"
+          onClick={handleReload}
+          className="p-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all border border-zinc-700/60 shadow-sm flex items-center gap-1.5 text-xs font-medium"
+          title="Reîmprospătează transmisiunea"
+        >
+          <RotateCw className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Reconectează</span>
+        </button>
       </div>
 
-      {/* Main Video Element (for Server 1 & 2) */}
-      {activeServer !== 3 && (
+      {/* Main Video Element */}
+      {!(streamStage === 4 && hasHtmlEmbed) && (
         <video
           ref={videoRef}
           id="tv-video-element"
@@ -370,108 +385,99 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
         />
       )}
 
-      {/* Embedded Iframe Player (for Server 3) */}
-      {activeServer === 3 && hasHtmlEmbed && (
+      {/* HTML Embed Player (if active) */}
+      {streamStage === 4 && hasHtmlEmbed && (
         <div 
           id="tv-iframe-wrapper"
-          className="w-full h-full relative"
+          className="w-full h-full relative bg-black flex items-center justify-center"
           dangerouslySetInnerHTML={{ __html: cleanAndSanitizeIframe(rawEmbed) }}
         />
       )}
 
-      {/* Loading Overlay */}
+      {/* Loading Spinner with Channel Logo */}
       {isLoading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xs text-white">
-          <div className="relative flex items-center justify-center mb-3">
-            <div className="w-14 h-14 rounded-full border-3 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/75 backdrop-blur-xs text-white">
+          <div className="relative flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full border-3 border-indigo-500/20 border-t-indigo-500 animate-spin" />
             {thumbnail ? (
               <img 
                 src={thumbnail} 
                 alt="" 
-                className="w-8 h-8 rounded-full object-contain absolute opacity-80"
+                className="w-9 h-9 rounded-full object-contain absolute opacity-90 shadow-sm"
                 onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
               />
             ) : (
-              <Tv className="w-6 h-6 text-indigo-400 absolute" />
+              <Tv className="w-7 h-7 text-indigo-400 absolute" />
             )}
           </div>
-          <p className="text-sm font-medium text-zinc-300">Conectare la fluxul live...</p>
+          <p className="text-sm font-semibold text-zinc-200">Se încarcă {title}...</p>
+          <span className="text-xs text-zinc-400 mt-1">Conectare la serverul de streaming</span>
         </div>
       )}
 
-      {/* Error Fallback Banner */}
+      {/* Error Fallback */}
       {errorState && !isLoading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-md p-6 text-center">
-          <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-3 text-red-400">
-            <AlertTriangle className="w-6 h-6" />
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-md p-6 text-center">
+          <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-3 text-red-400">
+            <AlertCircle className="w-7 h-7" />
           </div>
-          <h4 className="text-base font-bold text-white mb-1">
-            Transmisia a întâmpinat o problemă
+          <h4 className="text-base sm:text-lg font-bold text-white mb-1">
+            Transmisia {title} întâmpină dificultăți
           </h4>
-          <p className="text-xs text-zinc-400 max-w-sm mb-4">
-            {errorState} Puteți încerca să reîncărcați sau să comutați pe un server alternativ mai rapid.
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-md mb-5">
+            Fluxul nu a răspuns la conexiunea directă. Apăsați butonul de mai jos pentru a reîncerca prin conexiunea securizată.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex items-center gap-3">
             <button
-              id="btn-retry-player"
+              id="btn-reconnect-stream"
               onClick={handleReload}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/30 active:scale-95"
             >
-              <RotateCw className="w-3.5 h-3.5" />
-              Reîncearcă Fluxul
+              <RotateCw className="w-4 h-4" />
+              Reîncearcă Transmisiunea
             </button>
-            {activeServer !== 2 && (
-              <button
-                id="btn-switch-server-2"
-                onClick={() => { setActiveServer(2); setErrorState(null); }}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
-              >
-                <Server className="w-3.5 h-3.5" />
-                Comută pe Server 2 (Securizat)
-              </button>
-            )}
-            {streamUrl && (
+            {effectiveStreamUrl && (
               <a
-                id="link-open-external-stream"
-                href={streamUrl}
+                id="link-external-source"
+                href={effectiveStreamUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition-all"
+                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition-all"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                Deschide în player extern
+                Deschide sursa
               </a>
             )}
           </div>
         </div>
       )}
 
-      {/* Bottom Controls Bar (Custom for HLS) */}
-      {activeServer !== 3 && (
-        <div className={`absolute bottom-0 inset-x-0 z-30 p-3 sm:p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-center justify-between transition-opacity duration-300 ${
+      {/* Bottom Controls Bar */}
+      {!(streamStage === 4 && hasHtmlEmbed) && (
+        <div className={`absolute bottom-0 inset-x-0 z-30 p-3 sm:p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-center justify-between transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}>
           {/* Left: Play/Pause, Volume */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               id="btn-play-pause"
               onClick={togglePlay}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
-              title={isPlaying ? 'Pauză' : 'Redare'}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+              title={isPlaying ? 'Pauză (Spațiu)' : 'Redare (Spațiu)'}
             >
-              {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white translate-x-0.5" />}
+              {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white translate-x-0.5" />}
             </button>
 
             <button
               id="btn-toggle-mute"
               onClick={toggleMute}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
-              title={isMuted ? 'Activează sunetul' : 'Oprește sunetul'}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+              title={isMuted ? 'Activează sunetul (M)' : 'Oprește sunetul (M)'}
             >
-              {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
+              {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5" />}
             </button>
 
-            <div className="hidden sm:flex items-center w-20">
+            <div className="hidden sm:flex items-center w-24">
               <input
                 id="input-player-volume"
                 type="range"
@@ -484,15 +490,20 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
                 title="Volum"
               />
             </div>
+
+            <div className="flex items-center gap-2 pl-2 text-xs text-zinc-300 font-medium">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+              <span>În direct</span>
+            </div>
           </div>
 
-          {/* Right: Reload & Fullscreen */}
-          <div className="flex items-center gap-2">
+          {/* Right: Reconnect & Fullscreen */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
-              id="btn-reload-stream"
+              id="btn-bottom-reload"
               onClick={handleReload}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
-              title="Reîmprospătează transmisia"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+              title="Reîmprospătează transmisiunea"
             >
               <RotateCw className="w-4 h-4" />
             </button>
@@ -500,10 +511,10 @@ export default function TvLivePlayer({ streamUrl, embedCode, title, thumbnail, i
             <button
               id="btn-fullscreen"
               onClick={toggleFullscreen}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
-              title={isFullscreen ? 'Ieși din ecran complet' : 'Ecran complet'}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+              title={isFullscreen ? 'Ieși din ecran complet (F)' : 'Ecran complet (F)'}
             >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
             </button>
           </div>
         </div>

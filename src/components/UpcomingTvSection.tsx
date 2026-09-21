@@ -151,7 +151,7 @@ export default function UpcomingTvSection({ channels, customSchedule = [], isDar
               {/* Action Buttons */}
               <div className="pt-3 border-t border-inherit flex items-center justify-between gap-2 relative z-10">
                 <Link
-                  to={`/play/${item.channelId}`}
+                  to={`/ro/play/${item.channelId}`}
                   className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />

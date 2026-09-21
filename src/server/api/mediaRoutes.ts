@@ -1,9 +1,14 @@
 import express from 'express';
 import axios from 'axios';
+import https from 'https';
+import http from 'http';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { getDb } from '../firebaseAdmin.js';
 
 const router = express.Router();
+
+const httpsAgent = new https.Agent({ rejectUnauthorized: false, keepAlive: true });
+const httpAgent = new http.Agent({ keepAlive: true });
 
 // Professional local reference index containing secure sources (Wikimedia Commons high-resolution Vectors & PNGs) as requested.
 const STABLE_LOGO_MAP: Record<string, string> = {
@@ -268,9 +273,11 @@ router.get('/stream-proxy', async (req, res) => {
 
     const response = await axios.get(targetUrl, {
       headers,
+      httpsAgent,
+      httpAgent,
       responseType: 'stream',
       validateStatus: () => true,
-      timeout: 12000,
+      timeout: 15000,
     });
 
     const contentType = String(response.headers['content-type'] || '');

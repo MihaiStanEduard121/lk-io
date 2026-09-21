@@ -4,6 +4,8 @@ export interface TVProgram {
   description: string;
   category: string;
   streamUrl: string;
+  backupStreamUrl?: string;
+  alternativeStreams?: string[];
   embedCode: string;
   thumbnail: string;
   logo?: string;

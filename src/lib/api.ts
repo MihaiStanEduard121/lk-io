@@ -42,12 +42,16 @@ export const api = {
           return MASTER_CHANNELS_LIST;
         }
         
-        // Merge Firestore programs with MASTER_CHANNELS_LIST so no channel is missing
+        // Merge Firestore programs with MASTER_CHANNELS_LIST
+        // MASTER_CHANNELS_LIST is the source of truth for standard TV channels
         const dbPrograms = snapshot.docs.map(mapDoc);
-        const dbIds = new Set(dbPrograms.map((p: any) => p.id));
-        const missingFromDb = MASTER_CHANNELS_LIST.filter(p => !dbIds.has(p.id));
+        const masterIds = new Set(MASTER_CHANNELS_LIST.map(p => p.id));
         
-        return [...dbPrograms, ...missingFromDb];
+        // Custom channels created by admin in DB that are not part of standard list
+        const customDbPrograms = dbPrograms.filter((p: any) => !masterIds.has(p.id));
+        
+        // Return full list: master channels + any custom added ones
+        return [...MASTER_CHANNELS_LIST, ...customDbPrograms];
       } catch(err) {
         console.warn('Failed to load programs from Firestore, using master list:', err);
         return MASTER_CHANNELS_LIST;
@@ -58,14 +62,21 @@ export const api = {
     if (!rawId) rawId = 'pro-tv';
     const canonicalId = normalizeChannelId(rawId);
 
-    // Check cached programs first for immediate resolution
+    // 1. Instant check in MASTER_CHANNELS_LIST by canonical ID or raw ID
+    const foundMaster = MASTER_CHANNELS_LIST.find(p => 
+      p.id === canonicalId || 
+      p.id === rawId || 
+      p.id.toLowerCase() === rawId.toLowerCase()
+    );
+    if (foundMaster) return foundMaster;
+
+    // 2. Check cached programs
     const cachedPrograms = clientCache.get<any[]>('programs');
     const fromList = cachedPrograms?.find(p => p.id === canonicalId || p.id === rawId);
     if (fromList) return fromList;
 
-    // Fetch or verify from server
+    // 3. Fetch from Firestore for custom admin channels
     return clientCache.fetchWithCache(`program_${canonicalId}`, async () => {
-      // 1. Try Firestore with canonical ID
       try {
         const programRef = doc(db, 'programs', canonicalId);
         const d = await getDoc(programRef);
@@ -75,10 +86,9 @@ export const api = {
           return { id: d.id, ...currentData, views: (currentData.views || 0) + 1 } as any;
         }
       } catch (e) {
-        // Firestore fetch error (offline or rules)
+        // Firestore fetch error
       }
 
-      // 2. Try Firestore with raw ID if different
       if (rawId !== canonicalId) {
         try {
           const rawRef = doc(db, 'programs', rawId);
@@ -91,15 +101,7 @@ export const api = {
         } catch (e) {}
       }
 
-      // 3. Search in MASTER_CHANNELS_LIST
-      const foundMaster = MASTER_CHANNELS_LIST.find(p => 
-        p.id === canonicalId || 
-        p.id === rawId || 
-        p.id.toLowerCase() === rawId.toLowerCase()
-      );
-      if (foundMaster) return foundMaster;
-
-      // 4. Dynamic safe fallback: ALWAYS return a valid channel object instead of crashing with 404
+      // 4. Dynamic safe fallback: Return a valid channel object named after the ID
       return createDynamicChannelFallback(rawId);
     }, 5 * 60 * 1000);
   },

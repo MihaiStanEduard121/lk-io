@@ -506,7 +506,7 @@ export default function Home() {
                         {viewers > 1 ? `${viewers} telespectatori` : 'Transmisiune HD'}
                       </span>
                       <Link
-                        to={`/play/${p.id}`}
+                        to={`/ro/play/${p.id}`}
                         className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                       >
                         <span>Urmărește</span>
@@ -692,7 +692,7 @@ export default function Home() {
                       </div>
 
                       {/* Logo and Info */}
-                      <Link to={`/play/${p.id}`} className="block group/link mb-4">
+                      <Link to={`/ro/play/${p.id}`} className="block group/link mb-4">
                         <div className="w-full h-28 rounded-xl bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800/80 p-3 flex items-center justify-center mb-3 group-hover/link:border-indigo-500/40 transition-colors">
                           {p.logo ? (
                             <img 
@@ -733,7 +733,7 @@ export default function Home() {
                       </span>
 
                       <Link
-                        to={`/play/${p.id}`}
+                        to={`/ro/play/${p.id}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-xs"
                       >
                         <Play className="w-3 h-3 fill-current" />

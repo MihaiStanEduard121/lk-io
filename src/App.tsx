@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import React, { Suspense, lazy } from 'react';
 import { inject } from '@vercel/analytics';
 import { LanguageInitializer } from './components/LanguageInitializer';
@@ -12,6 +12,22 @@ import AdminLayout from './components/layout/AdminLayout';
 import Loading from './components/Loading';
 import PresenceTracker from './components/PresenceTracker';
 import CookieConsent from './components/CookieConsent';
+
+function DynamicPlayRedirect() {
+  const { id } = useParams<{ id: string }>();
+  const cleanId = (!id || id === ':id' || id === 'id') ? 'pro-tv' : id;
+  return <Navigate to={`/ro/play/${cleanId}`} replace />;
+}
+
+function DynamicNewsRedirect() {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={slug ? `/ro/news/${slug}` : '/ro/news'} replace />;
+}
+
+function DynamicShowsRedirect() {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={slug ? `/ro/shows/${slug}` : '/ro/shows'} replace />;
+}
 
 const Home = lazy(() => import('./pages/public/Home'));
 const PlayerPage = lazy(() => import('./pages/public/PlayerPage'));
@@ -76,9 +92,20 @@ export default function App() {
           <Route path="/adminadmin/*" element={<Navigate to="/ro/adminadmin" replace />} />
           <Route path="/favorite" element={<Navigate to="/ro/favorite" replace />} />
           <Route path="/schedule" element={<Navigate to="/ro/schedule" replace />} />
+          <Route path="/program-tv" element={<Navigate to="/ro/schedule" replace />} />
+          <Route path="/ghid-tv" element={<Navigate to="/ro/schedule" replace />} />
           <Route path="/shows" element={<Navigate to="/ro/shows" replace />} />
+          <Route path="/emisiuni" element={<Navigate to="/ro/shows" replace />} />
+          <Route path="/shows/:slug" element={<DynamicShowsRedirect />} />
+          <Route path="/emisiuni/:slug" element={<DynamicShowsRedirect />} />
+          <Route path="/emisiune/:slug" element={<DynamicShowsRedirect />} />
           <Route path="/news" element={<Navigate to="/ro/news" replace />} />
-          <Route path="/play/:id" element={<Navigate to="/ro/play/:id" replace />} />
+          <Route path="/news/:slug" element={<DynamicNewsRedirect />} />
+          <Route path="/play" element={<Navigate to="/ro/play/pro-tv" replace />} />
+          <Route path="/play/:id" element={<DynamicPlayRedirect />} />
+          <Route path="/canal/:id" element={<DynamicPlayRedirect />} />
+          <Route path="/tv/:id" element={<DynamicPlayRedirect />} />
+          <Route path="/channel/:id" element={<DynamicPlayRedirect />} />
 
           <Route path="/:lang/*" element={
             <LanguageInitializer>
